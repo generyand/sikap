@@ -10,6 +10,18 @@ const prisma = new PrismaClient()
 const app: Express = express()
 // const PORT = process.env.PORT || 3000
 
+// Add database connection check
+export async function checkDatabaseConnection(): Promise<void> {
+  try {
+    // Try to query the database
+    await prisma.$queryRaw`SELECT 1`
+    console.log('✅ Database connection successful')
+  } catch (error) {
+    console.error('❌ Database connection failed:', error)
+    throw new Error('Database connection failed')
+  }
+}
+
 // Middleware
 app.use(helmet()) // Security headers
 app.use(

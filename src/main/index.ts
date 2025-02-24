@@ -3,11 +3,8 @@ import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 // Import the server app (but don't start it yet)
-import { app as serverApp, prisma } from '../server'
-import { createServer } from 'http'
+import { prisma, server as serverInstance, checkDatabaseConnection } from '../server'
 
-// Create server instance
-const server = createServer(serverApp)
 const SERVER_PORT = process.env.PORT || 3000
 
 function createWindow(): void {
@@ -43,16 +40,22 @@ function createWindow(): void {
 }
 
 async function startServer(): Promise<void> {
-  return new Promise((resolve) => {
-    server.listen(SERVER_PORT, () => {
-      console.log(`Server running on port ${SERVER_PORT}`)
-      resolve()
+  try {
+    await checkDatabaseConnection()
+    return new Promise((resolve) => {
+      serverInstance.listen(SERVER_PORT, () => {
+        console.log(`✅ Server running on port ${SERVER_PORT}`)
+        resolve()
+      })
     })
-  })
+  } catch (error) {
+    console.error('❌ Failed to start server:', error)
+    throw error
+  }
 }
 
 async function stopServer(): Promise<void> {
-  await new Promise<void>((resolve) => server.close(() => resolve()))
+  await new Promise<void>((resolve) => serverInstance.close(() => resolve()))
   await prisma.$disconnect()
 }
 
