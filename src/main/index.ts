@@ -2,6 +2,13 @@ import { app, shell, BrowserWindow, ipcMain } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
+// Import the server app (but don't start it yet)
+import { app as serverApp, prisma } from '../server'
+import { createServer } from 'http'
+
+// Create server instance
+const server = createServer(serverApp)
+const SERVER_PORT = process.env.PORT || 3000
 
 function createWindow(): void {
   // Create the browser window.
@@ -38,7 +45,12 @@ function createWindow(): void {
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
+  // Start the server
+  server.listen(SERVER_PORT, () => {
+    console.log(`Server running on port ${SERVER_PORT}`)
+  })
+
   // Set app user model id for windows
   electronApp.setAppUserModelId('com.electron')
 
@@ -64,7 +76,11 @@ app.whenReady().then(() => {
 // Quit when all windows are closed, except on macOS. There, it's common
 // for applications and their menu bar to stay active until the user quits
 // explicitly with Cmd + Q.
-app.on('window-all-closed', () => {
+app.on('window-all-closed', async () => {
+  // Close server and disconnect prisma when app is closing
+  await new Promise<void>((resolve) => server.close(() => resolve()))
+  await prisma.$disconnect()
+
   if (process.platform !== 'darwin') {
     app.quit()
   }
