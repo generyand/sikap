@@ -25,16 +25,19 @@
     "@electron-toolkit/utils": "^4.0.0",
     "@prisma/client": "^6.4.0",
     "@tailwindcss/vite": "^4.0.8",
+    "bcrypt": "^5.1.1",
     "cors": "^2.8.5",
     "electron-updater": "^6.3.9",
     "express": "^4.21.2",
     "helmet": "^8.0.0",
-    "tailwindcss": "^4.0.8"
+    "tailwindcss": "^4.0.8",
+    "zod": "^3.24.2"
   },
   "devDependencies": {
     "@electron-toolkit/eslint-config-prettier": "^3.0.0",
     "@electron-toolkit/eslint-config-ts": "^3.0.0",
     "@electron-toolkit/tsconfig": "^1.0.1",
+    "@types/bcrypt": "^5.0.2",
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.0",
     "@types/helmet": "^0.0.48",

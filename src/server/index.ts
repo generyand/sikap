@@ -5,6 +5,7 @@ import { PrismaClient } from '@prisma/client'
 import { errorHandler } from './middleware/error-handler'
 import { apiRoutes } from './routes'
 import { createServer } from 'http'
+import { authRoutes } from './routes/auth.routes'
 
 const prisma = new PrismaClient()
 const app: Express = express()
@@ -51,7 +52,7 @@ app.get('/health', (_req: Request, res: Response) => {
 
 // API routes
 app.use('/api', apiRoutes)
-
+app.use("/api/auth", authRoutes);
 // Error handling
 app.use(errorHandler)
 

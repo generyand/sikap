@@ -1,8 +1,13 @@
 import { Router } from 'express';
+import { authRoutes } from './auth.routes';
 
-export const apiRoutes = Router();
+const router = Router();
+
+router.use('/auth', authRoutes);
 
 // Add your routes here
-apiRoutes.get('/', (_req, res) => {
+router.get('/', (_req, res) => {
   res.json({ message: 'API is working' });
 });
+
+export const apiRoutes = router;
