@@ -6,7 +6,18 @@ import tailwindcss from '@tailwindcss/vite'
 
 export default defineConfig({
   main: {
-    plugins: [externalizeDepsPlugin()]
+    plugins: [externalizeDepsPlugin()],
+    build: {
+      rollupOptions: {
+        external: [
+          '@supabase/supabase-js',
+          'better-sqlite3',
+          'prisma',
+          '@prisma/client',
+          'bcrypt'
+        ]
+      }
+    }
   },
   preload: {
     plugins: [externalizeDepsPlugin()]

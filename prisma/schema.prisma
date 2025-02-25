@@ -9,9 +9,8 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  provider = "sqlite"
+  url      = "file:./local.db"
 }
 
 model User {
@@ -21,6 +20,40 @@ model User {
   password  String
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
+  syncedAt  DateTime? @map("synced_at") // Track last sync
+  isLocal   Boolean  @default(true) // Track if record exists in cloud
+  tasks     Task[]
 
   @@map("users") // This maps the model to a table named "users"
+}
+
+// Add SyncQueue model for tracking pending changes
+model SyncQueue {
+  id        String   @id @default(uuid())
+  table     String   // The table being modified
+  recordId  String   // ID of the modified record
+  operation String   // CREATE, UPDATE, DELETE
+  data      String   // JSON string of the changes
+  createdAt DateTime @default(now())
+  status    String   @default("pending") // pending, completed, failed
+
+  @@map("sync_queue")
+}
+
+model Task {
+  id          String    @id @default(uuid())
+  title       String
+  description String?
+  dueDate     DateTime?
+  priority    String    @default("medium")
+  status      String    @default("todo")
+  completedAt DateTime?
+  userId      String
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  syncedAt    DateTime? @map("synced_at")
+  isLocal     Boolean   @default(true)
+  user        User      @relation(fields: [userId], references: [id])
+
+  @@map("tasks")
 }

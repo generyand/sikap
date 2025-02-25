@@ -11,36 +11,46 @@ const prisma = new PrismaClient()
 const app: Express = express()
 // const PORT = process.env.PORT || 3000
 
-// Add database connection check
+// Add connection retry logic
 export async function checkDatabaseConnection(): Promise<void> {
-  try {
-    // Try to query the database
-    await prisma.$queryRaw`SELECT 1`
-    console.log('✅ Database connection successful')
-  } catch (error) {
-    console.error('❌ Database connection failed:', error)
-    throw new Error('Database connection failed')
+  const maxRetries = 5;
+  let currentTry = 0;
+
+  while (currentTry < maxRetries) {
+    try {
+      await prisma.$queryRaw`SELECT 1`
+      console.log('✅ Database connection successful')
+      return
+    } catch (error) {
+      currentTry++
+      console.error(`❌ Database connection attempt ${currentTry} failed:`, error)
+      if (currentTry === maxRetries) {
+        throw new Error('Database connection failed after maximum retries')
+      }
+      // Wait 2 seconds before retrying
+      await new Promise(resolve => setTimeout(resolve, 2000))
+    }
   }
+  return
 }
 
 // Middleware
-app.use(helmet()) // Security headers
-app.use(
-  cors({
-    origin:
-      process.env.NODE_ENV === 'development'
-        ? 'http://localhost:5173' // Electron dev server default port
-        : 'app://*', // Electron production protocol
-    credentials: true
-  })
-)
-app.use(express.json())
+app.use(express.json())  // Make sure this is before routes
 app.use(express.urlencoded({ extended: true }))
+app.use(cors({
+  origin: process.env.NODE_ENV === 'development'
+    ? 'http://localhost:5173'
+    : 'app://*',
+  credentials: true
+}))
+app.use(helmet())
 
-// Request logging in development
+// Request logging
 if (process.env.NODE_ENV === 'development') {
   app.use((req: Request, _res: Response, next: NextFunction) => {
     console.log(`${req.method} ${req.url}`)
+    console.log('Headers:', req.headers)
+    console.log('Body:', req.body)
     next()
   })
 }

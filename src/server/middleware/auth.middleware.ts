@@ -9,7 +9,7 @@ const signupSchema = z.object({
 
 export const validateSignup = (req: Request, res: Response, next: NextFunction): void => {
   try {
-    console.log(req.body);
+    console.log('Request body:', req.body)
     signupSchema.parse(req.body)
     next()
   } catch (error) {
