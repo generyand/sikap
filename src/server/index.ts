@@ -6,10 +6,27 @@ import { errorHandler } from './middleware/error-handler'
 import { apiRoutes } from './routes'
 import { createServer } from 'http'
 import { authRoutes } from './routes/auth.routes'
+import { SyncService } from './services/sync.service'
 
 const prisma = new PrismaClient()
 const app: Express = express()
 // const PORT = process.env.PORT || 3000
+
+// Add this function
+async function initializeSyncService(): Promise<void> {
+  try {
+    console.log('🔄 Initializing sync service...')
+    const syncService = SyncService.getInstance()
+    
+    // Check for any pending items from previous sessions
+    await syncService.syncWithCloud()
+    
+    console.log('✅ Sync service initialized successfully')
+  } catch (error) {
+    console.error('❌ Failed to initialize sync service:', error)
+    throw error
+  }
+}
 
 // Add connection retry logic
 export async function checkDatabaseConnection(): Promise<void> {
@@ -20,6 +37,10 @@ export async function checkDatabaseConnection(): Promise<void> {
     try {
       await prisma.$queryRaw`SELECT 1`
       console.log('✅ Database connection successful')
+      
+      // Initialize sync service after database connection is established
+      await initializeSyncService()
+      
       return
     } catch (error) {
       currentTry++

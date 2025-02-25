@@ -1,5 +1,4 @@
 import { Request, Response } from 'express'
-import { prisma } from '../index'
 import bcrypt from 'bcrypt'
 import { CreateUserDto } from '../types/auth.types'
 import { DatabaseService } from '../services/database.service'

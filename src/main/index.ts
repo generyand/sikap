@@ -6,6 +6,7 @@ import icon from '../../resources/icon.png?asset'
 // Import the server app (but don't start it yet)
 import { prisma, server as serverInstance, checkDatabaseConnection } from '../server'
 import { createClient } from '@supabase/supabase-js'
+import { SyncService } from '../server/services/sync.service'
 
 const SERVER_PORT = process.env.PORT || 3000
 
@@ -79,6 +80,18 @@ app.whenReady().then(async () => {
     // IPC test
     ipcMain.on('ping', () => console.log('pong'))
 
+    // Add near your other server routes
+    ipcMain.handle('get-database-data', async () => {
+      try {
+        // Example query - adjust according to your schema
+        const data = await prisma.user.findMany();
+        return data;
+      } catch (error) {
+        console.error('Failed to fetch data:', error);
+        throw error;
+      }
+    });
+
     createWindow()
 
     app.on('activate', function () {
@@ -96,9 +109,10 @@ app.whenReady().then(async () => {
 // for applications and their menu bar to stay active until the user quits
 // explicitly with Cmd + Q.
 app.on('window-all-closed', async () => {
-  await stopServer()
+  SyncService.getInstance().cleanup();
+  await stopServer();
   if (process.platform !== 'darwin') {
-    app.quit()
+    app.quit();
   }
 })
 
