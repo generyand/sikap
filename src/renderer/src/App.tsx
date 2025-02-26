@@ -1,6 +1,6 @@
 import React from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import { ProfileSelector } from './components/ProfileSelector'
+import { ProfileSelector } from './pages/ProfileSelector'
 import { TaskDashboard } from './pages/TaskDashboard'
 import { ProtectedRoute } from './components/ProtectedRoute'
 

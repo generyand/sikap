@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Profile } from '@prisma/client'
 import { UserCircle2, Check, Plus } from 'lucide-react'
-import { CreateProfileModal } from './CreateProfileModal'
+import { CreateProfileModal } from '../components/CreateProfileModal'
 
 export const ProfileSelector: React.FC = () => {
   const navigate = useNavigate()
