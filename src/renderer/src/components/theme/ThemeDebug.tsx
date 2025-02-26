@@ -1,4 +1,4 @@
-import { useTheme } from './theme-provider'
+import { useTheme } from "../../providers/ThemeProvider"
 import { useEffect } from 'react'
 
 export function ThemeDebug() {

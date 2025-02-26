@@ -171,25 +171,32 @@ export const ProfileSelector: React.FC = () => {
         </header>
 
         <main className="flex-1 flex items-center justify-center px-4">
-          <div className="w-full max-w-5xl mx-auto">
+          <div className={cn(
+            "w-full mx-auto",
+            // Adjust max width based on whether there are profiles
+            profiles.length === 0 ? "max-w-md" : "max-w-5xl"
+          )}>
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, ease: "easeOut" }}
-              className="relative bg-background/60 dark:bg-card/40 backdrop-blur-xl 
-                        border border-border/50 dark:border-border/10
-                        rounded-2xl shadow-xl shadow-primary/5
-                        dark:shadow-primary/10
-                        p-6 md:p-8
-                        before:absolute before:inset-0 before:-z-10 
-                        before:bg-gradient-to-b before:from-primary/5 before:to-transparent
-                        before:rounded-2xl"
+              className={cn(
+                "relative backdrop-blur-xl border rounded-2xl",
+                "bg-background/60 dark:bg-card/40",
+                "border-border/50 dark:border-border/10",
+                "shadow-xl shadow-primary/5 dark:shadow-primary/5",
+                // Adjust padding based on whether there are profiles
+                profiles.length === 0 ? "p-6" : "p-6 md:p-8",
+                "before:absolute before:inset-0 before:-z-10",
+                "before:bg-gradient-to-b before:from-primary/5 before:to-transparent",
+                "before:rounded-2xl"
+              )}
             >
-              {/* Card glow effect */}
-              <div className="absolute -inset-px bg-gradient-to-b from-primary/20 via-transparent to-transparent 
-                            rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              
-              <div className="max-w-3xl mx-auto space-y-8">
+              <div className={cn(
+                "mx-auto space-y-8",
+                // Adjust max width based on whether there are profiles
+                profiles.length === 0 ? "" : "max-w-3xl"
+              )}>
                 <div className="space-y-2 text-center">
                   <h2 className="text-2xl font-semibold tracking-tight text-foreground/90">
                     {getContentMessage().title}
@@ -202,7 +209,7 @@ export const ProfileSelector: React.FC = () => {
                 <div className={cn(
                   "grid gap-4",
                   profiles.length === 0 
-                    ? "grid-cols-1 sm:grid-cols-1 max-w-xs mx-auto" 
+                    ? "grid-cols-1" // Single column for empty state
                     : "grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
                 )}>
                   {profiles.map(profile => (
@@ -281,27 +288,29 @@ export const ProfileSelector: React.FC = () => {
                     variant="outline"
                     onClick={handleCreateProfile}
                     className={cn(
-                      "h-auto aspect-square flex flex-col items-center justify-center gap-3",
                       "relative overflow-hidden",
-                      "border-2 border-dashed",
                       "transition-all duration-200",
-                      "hover:border-primary/50 hover:bg-accent/50",
-                      "dark:border-border/30 dark:hover:border-primary/50 dark:hover:bg-accent/10",
                       "group",
-                      "before:absolute before:inset-0 before:-z-10",
-                      "before:bg-gradient-to-b before:from-primary/5 before:to-transparent",
-                      "before:opacity-0 before:group-hover:opacity-100",
-                      "before:transition-opacity before:duration-200",
-                      profiles.length === 0 && "p-8"
+                      profiles.length === 0 
+                        ? "h-24 flex flex-row items-center justify-center gap-3 w-full" // Horizontal layout for empty state
+                        : cn( // Original layout for non-empty state
+                          "h-auto aspect-square flex flex-col items-center justify-center gap-3",
+                          "border-2 border-dashed",
+                          "hover:border-primary/50 hover:bg-accent/50",
+                          "dark:border-border/30 dark:hover:border-primary/50 dark:hover:bg-accent/10",
+                          "before:absolute before:inset-0 before:-z-10",
+                          "before:bg-gradient-to-b before:from-primary/5 before:to-transparent",
+                          "before:opacity-0 before:group-hover:opacity-100",
+                          "before:transition-opacity before:duration-200"
+                        )
                     )}
                   >
                     <Plus className={cn(
                       "text-muted-foreground group-hover:text-primary transition-colors duration-200",
-                      profiles.length === 0 ? "h-12 w-12" : "h-8 w-8"
+                      profiles.length === 0 ? "h-6 w-6" : "h-8 w-8"
                     )} />
                     <span className={cn(
                       "text-muted-foreground group-hover:text-primary transition-colors duration-200",
-                      profiles.length === 0 ? "text-base" : "text-sm",
                       "font-medium"
                     )}>
                       {profiles.length === 0 ? "Create Profile" : "New Profile"}
