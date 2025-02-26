@@ -24,10 +24,11 @@ export default defineConfig({
   },
   renderer: {
     resolve: {
-      alias: {
-        '@renderer': resolve('src/renderer/src'),
-        '@': resolve('src/renderer/src')
-      }
+      alias: [
+        { find: '@', replacement: resolve(__dirname, 'src/renderer/src') },
+        { find: '@components', replacement: resolve(__dirname, 'src/renderer/src/components') },
+        { find: '@lib', replacement: resolve(__dirname, 'src/renderer/src/lib') }
+      ]
     },
     css: {
       postcss: './postcss.config.js'

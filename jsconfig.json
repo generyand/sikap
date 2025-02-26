@@ -1,6 +1,4 @@
 {
-  "files": [],
-  "references": [{ "path": "./tsconfig.node.json" }, { "path": "./tsconfig.web.json" }],
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
@@ -9,4 +7,4 @@
       "@lib/*": ["src/renderer/src/lib/*"]
     }
   }
-}
+} 

@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Profile } from '@prisma/client'
 import { UserCircle2, Check, Plus, Trash2 } from 'lucide-react'
-import { CreateProfileModal } from '../components/CreateProfileModal'
-import { ConfirmDialog } from '../components/ConfirmDialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
+import { cn } from '@/lib/utils'
 
 export const ProfileSelector: React.FC = () => {
   const navigate = useNavigate()
@@ -58,145 +60,104 @@ export const ProfileSelector: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-      {/* Main container with responsive padding */}
-      <div className="h-screen flex flex-col p-[var(--spacing-page)] 
-                      lg:p-[var(--spacing-section)] xl:p-12">
-        {/* App header with adaptive sizing */}
-        <header className="flex-none text-center mb-6 lg:mb-8">
-          <h1 className="text-[2rem] lg:text-[2.5rem] font-semibold tracking-tight 
-                         bg-gradient-to-r from-primary-600 to-primary-700 
-                         bg-clip-text text-transparent">
+    <div className="min-h-screen bg-[conic-gradient(at_top_right,_var(--tw-gradient-stops))] from-sky-50 via-background to-sky-50/40">
+      <div className="h-screen flex flex-col p-4 md:p-6 lg:p-8">
+        {/* Header with modern gradient and animation */}
+        <header className="text-center space-y-3 mb-12 animate-fade-down">
+          <h1 className="font-display text-4xl md:text-5xl font-bold tracking-tight 
+                         bg-gradient-to-r from-primary-gradient-from to-primary-gradient-to
+                         bg-clip-text text-transparent
+                         drop-shadow-sm">
             SIKAP
           </h1>
-          <p className="mt-1.5 text-base lg:text-lg text-gray-600">
+          <p className="font-sans text-muted-foreground text-base md:text-lg font-medium">
             Intelligent planning, effortless productivity
           </p>
         </header>
 
-        {/* Main content area with improved desktop layout */}
-        <main className="flex-1 flex items-center justify-center">
-          <div className="w-full max-w-[90rem] mx-auto">
-            {/* Card with responsive width and padding */}
-            <div className="bg-white/80 backdrop-blur-sm rounded-[var(--radius-lg)] 
-                          border border-gray-200
-                          shadow-lg shadow-primary-950/5
-                          p-6 lg:p-8 mx-auto
-                          w-full max-w-screen-md lg:max-w-screen-lg">
+        {/* Main Content with glass effect and animations */}
+        <main className="flex-1 flex items-center justify-center px-4 animate-fade-up">
+          <div className="w-full max-w-5xl mx-auto">
+            <div className="bg-white/60 backdrop-blur-xl 
+                          border border-white/20
+                          rounded-2xl shadow-xl shadow-sky-900/5
+                          p-6 md:p-8">
               
-              <div className="max-w-3xl mx-auto flex flex-col gap-4">
-                <h2 className="text-xl lg:text-2xl font-semibold text-gray-900">
-                  Select Profile
-                </h2>
-                <p className="mt-1 text-gray-600">
-                  Choose a profile to continue or create a new one
-                </p>
+              <div className="max-w-3xl mx-auto space-y-8">
+                <div className="space-y-2 text-center md:text-left">
+                  <h2 className="text-2xl font-semibold tracking-tight text-foreground/90">
+                    Select Profile
+                  </h2>
+                  <p className="text-muted-foreground/80">
+                    Choose a profile to continue or create a new one
+                  </p>
+                </div>
 
-                {/* Responsive grid with better space utilization */}
-                <div className="mt-8 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 lg:gap-6">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                   {profiles.map(profile => (
                     <div 
                       key={profile.id}
                       onClick={() => handleProfileSelect(profile.id)}
-                      className={`
-                        group relative rounded-[var(--radius-md)] overflow-hidden 
-                        transition-all duration-300 ease-[var(--ease-productive)]
-                        cursor-pointer border hover:shadow-md
-                        ${selectedProfile === profile.id 
-                          ? 'border-primary-300 bg-primary-50 ring-2 ring-primary-200' 
-                          : 'border-gray-200 bg-white hover:border-primary-200 hover:bg-gradient-to-b hover:from-white hover:to-primary-50'
-                        }
-                      `}
+                      className={cn(
+                        "group relative rounded-xl overflow-hidden transition-all duration-300",
+                        "cursor-pointer border p-4 md:p-5",
+                        "hover:shadow-lg hover:shadow-sky-900/5 hover:scale-[1.02]",
+                        "animate-scale-up",
+                        selectedProfile === profile.id 
+                          ? "border-sky-500/50 bg-sky-50/50 ring-2 ring-sky-500/20" 
+                          : "border-border/50 bg-white/60 hover:border-sky-200 hover:bg-sky-50/30"
+                      )}
                     >
-                      <div className="p-4 lg:p-5">
-                        {/* Responsive avatar sizing */}
-                        <div className="aspect-square w-12 h-12 lg:w-16 lg:h-16 mx-auto mb-3 
-                                      rounded-[var(--radius-full)] bg-gray-100 
-                                      overflow-hidden ring-2 ring-gray-200 ring-offset-2">
-                          {profile.avatar ? (
-                            <img 
-                              src={profile.avatar} 
-                              alt={profile.name}
-                              className="w-full h-full object-cover 
-                                       transition-transform duration-300 ease-[var(--ease-productive)]
-                                       group-hover:scale-105"
-                            />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center">
-                              <UserCircle2 
-                                className="w-8 h-8 lg:w-10 lg:h-10 text-gray-400 
-                                         group-hover:text-primary-400 
-                                         transition-colors duration-300"
-                              />
-                            </div>
-                          )}
+                      <Avatar className="w-16 h-16 mx-auto mb-3 
+                                       ring-2 ring-white shadow-md">
+                        <AvatarImage src={profile.avatar || ''} alt={profile.name} />
+                        <AvatarFallback className="bg-sky-50 text-sky-700">
+                          <UserCircle2 className="w-8 h-8" />
+                        </AvatarFallback>
+                      </Avatar>
+
+                      <h3 className="text-sm font-medium text-center truncate
+                                   text-foreground/80 group-hover:text-sky-700
+                                   transition-colors duration-200">
+                        {profile.name}
+                      </h3>
+
+                      {selectedProfile === profile.id && (
+                        <div className="absolute top-3 right-3 
+                                      bg-sky-500 rounded-full p-1.5
+                                      shadow-sm animate-in fade-in zoom-in
+                                      duration-200">
+                          <Check className="w-3 h-3 text-white" />
                         </div>
+                      )}
 
-                        <h3 className="text-sm lg:text-base font-medium text-center 
-                                     text-gray-900
-                                     group-hover:text-primary-600 
-                                     transition-colors duration-300 truncate px-1">
-                          {profile.name}
-                        </h3>
-
-                        {selectedProfile === profile.id && (
-                          <div className="absolute top-2 right-2 lg:top-3 lg:right-3 
-                                        bg-primary-500 
-                                        rounded-full p-1 shadow-sm animate-in fade-in duration-300">
-                            <Check className="h-3 w-3 lg:h-4 lg:w-4 text-white" />
-                          </div>
-                        )}
-
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            handleDeleteProfile(profile)
-                          }}
-                          className="absolute top-2 right-2 p-1.5
-                                   bg-white/80 backdrop-blur-sm
-                                   rounded-full opacity-0 group-hover:opacity-100
-                                   hover:bg-error-50 hover:text-error-500
-                                   focus:outline-none focus:ring-2 focus:ring-error-500
-                                   transition-all duration-200"
-                          aria-label={`Delete ${profile.name}'s profile`}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleDeleteProfile(profile)
+                        }}
+                        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100
+                                 transition-all duration-200 hover:bg-destructive/10"
+                      >
+                        <Trash2 className="w-4 h-4 text-destructive" />
+                      </Button>
                     </div>
                   ))}
 
-                  {/* Create New Profile Card */}
-                  <div 
+                  <Button
+                    variant="outline"
                     onClick={handleCreateProfile}
-                    className="
-                      relative rounded-[var(--radius-md)] overflow-hidden 
-                      border-2 border-dashed border-gray-200 
-                      hover:border-primary-300
-                      transition-all duration-300 ease-[var(--ease-productive)]
-                      cursor-pointer bg-white hover:bg-gradient-to-b 
-                      hover:from-white hover:to-primary-50
-                      hover:shadow-md group
-                    "
+                    className="h-auto aspect-square flex flex-col items-center justify-center gap-3
+                             border-2 border-dashed border-sky-200/50
+                             hover:border-sky-300 hover:bg-sky-50/50
+                             transition-all duration-200
+                             animate-scale-up"
                   >
-                    <div className="p-4 lg:p-5 text-center">
-                      <div className="aspect-square w-12 h-12 lg:w-16 lg:h-16 mx-auto mb-3 
-                                    flex items-center justify-center rounded-[var(--radius-full)] 
-                                    bg-primary-50 
-                                    group-hover:bg-primary-100 
-                                    ring-2 ring-primary-100 ring-offset-2
-                                    transition-colors duration-300">
-                        <Plus className="h-6 w-6 lg:h-8 lg:w-8 text-primary-600" />
-                      </div>
-                      <p className="text-sm lg:text-base font-medium 
-                                  text-primary-600 
-                                  group-hover:text-primary-700 
-                                  transition-colors duration-300">
-                        New Profile
-                      </p>
-                    </div>
-                  </div>
+                    <Plus className="h-8 w-8 text-sky-600" />
+                    <span className="text-sm font-medium text-sky-700">New Profile</span>
+                  </Button>
                 </div>
               </div>
             </div>
@@ -204,20 +165,28 @@ export const ProfileSelector: React.FC = () => {
         </main>
       </div>
 
-      {/* Add Modal */}
-      <CreateProfileModal 
-        isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
-        onSuccess={loadProfiles}
-      />
-
-      <ConfirmDialog
-        isOpen={!!profileToDelete}
-        onClose={() => setProfileToDelete(null)}
-        onConfirm={handleConfirmDelete}
-        title="Delete Profile"
-        message={`Are you sure you want to delete ${profileToDelete?.name}'s profile? This action cannot be undone.`}
-      />
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={!!profileToDelete} onOpenChange={() => setProfileToDelete(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Delete Profile</DialogTitle>
+            <DialogDescription className="text-muted-foreground/80">
+              Are you sure you want to delete {profileToDelete?.name}'s profile? 
+              This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => setProfileToDelete(null)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleConfirmDelete}
+                    className="gap-2">
+              <Trash2 className="w-4 h-4" />
+              Delete Profile
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 } 
