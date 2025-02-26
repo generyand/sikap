@@ -1,13 +1,14 @@
 import { Router } from 'express'
-import { createTask, updateTask, deleteTask, getTask, getUserTasks } from '../controllers/task.controller'
+import { TaskController } from '../controllers/task.controller'
 import { validateTask } from '../middleware/task.middleware'
 
 const router = Router()
+const taskController = TaskController.getInstance()
 
-router.post('/', validateTask, createTask)
-router.put('/:id', validateTask, updateTask)
-router.delete('/:id', deleteTask)
-router.get('/:id', getTask)
-router.get('/user/:userId', getUserTasks)
+router.post('/:profileId', validateTask, taskController.createTask)
+router.put('/:id', validateTask, taskController.updateTask)
+router.delete('/:id', taskController.deleteTask)
+router.get('/:id', taskController.getTask)
+router.get('/profile/:profileId', taskController.getProfileTasks)
 
 export const taskRoutes = router
