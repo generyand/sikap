@@ -1,6 +1,8 @@
+import {ProfileSelector} from "./components/ProfileSelector";
+
 const App = () => {
   return (
-    <div className="bg-red-700">App</div>
+    <ProfileSelector />
   )
 }
 

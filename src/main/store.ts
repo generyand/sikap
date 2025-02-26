@@ -1,5 +1,3 @@
-import Store from 'electron-store'
-
 interface StoreSchema {
   currentProfile: string | null
   profiles: {
@@ -11,9 +9,19 @@ interface StoreSchema {
   }
 }
 
-export const store = new Store<StoreSchema>({
-  defaults: {
-    currentProfile: null,
-    profiles: {}
-  }
-}) 
+let store: any
+
+// Initialize store synchronously
+const initStore = () => {
+  return import('electron-store').then(({ default: Store }) => {
+    store = new Store<StoreSchema>({
+      defaults: {
+        currentProfile: null,
+        profiles: {}
+      }
+    })
+  })
+}
+
+// Export both the store and the initialization function
+export { store, initStore } 

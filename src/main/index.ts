@@ -5,6 +5,7 @@ import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 // Import the server app (but don't start it yet)
 import { prisma, server as serverInstance, checkDatabaseConnection } from '../server'
+import { store, initStore } from './store'
 
 const SERVER_PORT = process.env.PORT || 3000
 
@@ -65,6 +66,7 @@ async function stopServer(): Promise<void> {
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(async () => {
   try {
+    await initStore()
     await startServer()
     electronApp.setAppUserModelId('com.electron')
 
@@ -81,14 +83,32 @@ app.whenReady().then(async () => {
     // Add near your other server routes
     ipcMain.handle('get-database-data', async () => {
       try {
-        // Example query - adjust according to your schema
-        const data = await prisma.user.findMany();
-        return data;
+        // Change user to profile
+        const data = await prisma.profile.findMany()
+        return data
       } catch (error) {
-        console.error('Failed to fetch data:', error);
-        throw error;
+        console.error('Failed to fetch data:', error)
+        throw error
       }
-    });
+    })
+
+    ipcMain.handle('get-profiles', async () => {
+      try {
+        return await prisma.profile.findMany()
+      } catch (error) {
+        console.error('Failed to fetch profiles:', error)
+        throw error
+      }
+    })
+
+    // Add with other IPC handlers
+    ipcMain.handle('electron-store-set', async (_, key, value) => {
+      store.set(key, value)
+    })
+
+    ipcMain.handle('electron-store-get', async (_, key) => {
+      return store.get(key)
+    })
 
     createWindow()
 
