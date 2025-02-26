@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Profile } from '@prisma/client'
 import { UserCircle2, Check, Plus } from 'lucide-react'
 
 export const ProfileSelector: React.FC = () => {
+  const navigate = useNavigate()
   const [profiles, setProfiles] = useState<Profile[]>([])
   const [selectedProfile, setSelectedProfile] = useState<string>()
 
@@ -19,10 +21,16 @@ export const ProfileSelector: React.FC = () => {
     loadProfiles()
   }, [])
 
-  const handleProfileSelect = (profileId: string) => {
+  const handleProfileSelect = async (profileId: string) => {
     setSelectedProfile(profileId)
-    // Store selected profile in electron-store
-    window.electron.ipcRenderer.invoke('set-current-profile', profileId)
+    try {
+      // Store selected profile in electron-store
+      await window.electron.ipcRenderer.invoke('set-current-profile', profileId)
+      // Navigate to dashboard using router
+      navigate(`/dashboard/${profileId}`)
+    } catch (error) {
+      console.error('Failed to set profile:', error)
+    }
   }
 
   const handleCreateProfile = () => {

@@ -61,6 +61,17 @@ async function stopServer(): Promise<void> {
   await prisma.$disconnect()
 }
 
+function handleSetCurrentProfile(profileId: string) {
+  // Store the selected profile ID
+  store.set('currentProfileId', profileId)
+  return profileId
+}
+
+// Add this with your other handlers
+function handleGetCurrentProfile() {
+  return store.get('currentProfileId')
+}
+
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
@@ -109,6 +120,10 @@ app.whenReady().then(async () => {
     ipcMain.handle('electron-store-get', async (_, key) => {
       return store.get(key)
     })
+
+    ipcMain.handle('set-current-profile', (_, profileId) => handleSetCurrentProfile(profileId))
+
+    ipcMain.handle('get-current-profile', () => handleGetCurrentProfile())
 
     createWindow()
 
