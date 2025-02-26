@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Profile } from '@prisma/client'
-import { UserCircle2, Check, Plus } from 'lucide-react'
+import { UserCircle2, Check, Plus, Trash2 } from 'lucide-react'
 import { CreateProfileModal } from '../components/CreateProfileModal'
+import { ConfirmDialog } from '../components/ConfirmDialog'
 
 export const ProfileSelector: React.FC = () => {
   const navigate = useNavigate()
   const [profiles, setProfiles] = useState<Profile[]>([])
   const [selectedProfile, setSelectedProfile] = useState<string>()
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
+  const [profileToDelete, setProfileToDelete] = useState<Profile | null>(null)
 
   const loadProfiles = async () => {
     try {
@@ -37,6 +39,22 @@ export const ProfileSelector: React.FC = () => {
 
   const handleCreateProfile = () => {
     setIsCreateModalOpen(true)
+  }
+
+  const handleDeleteProfile = async (profile: Profile) => {
+    setProfileToDelete(profile)
+  }
+
+  const handleConfirmDelete = async () => {
+    if (!profileToDelete) return
+
+    try {
+      await window.electron.ipcRenderer.invoke('delete-profile', profileToDelete.id)
+      await loadProfiles()
+      setProfileToDelete(null)
+    } catch (error) {
+      console.error('Failed to delete profile:', error)
+    }
   }
 
   return (
@@ -128,6 +146,23 @@ export const ProfileSelector: React.FC = () => {
                             <Check className="h-3 w-3 lg:h-4 lg:w-4 text-white" />
                           </div>
                         )}
+
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleDeleteProfile(profile)
+                          }}
+                          className="absolute top-2 right-2 p-1.5
+                                   bg-white/80 backdrop-blur-sm
+                                   rounded-full opacity-0 group-hover:opacity-100
+                                   hover:bg-error-50 hover:text-error-500
+                                   focus:outline-none focus:ring-2 focus:ring-error-500
+                                   transition-all duration-200"
+                          aria-label={`Delete ${profile.name}'s profile`}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
                       </div>
                     </div>
                   ))}
@@ -174,6 +209,14 @@ export const ProfileSelector: React.FC = () => {
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
         onSuccess={loadProfiles}
+      />
+
+      <ConfirmDialog
+        isOpen={!!profileToDelete}
+        onClose={() => setProfileToDelete(null)}
+        onConfirm={handleConfirmDelete}
+        title="Delete Profile"
+        message={`Are you sure you want to delete ${profileToDelete?.name}'s profile? This action cannot be undone.`}
       />
     </div>
   )

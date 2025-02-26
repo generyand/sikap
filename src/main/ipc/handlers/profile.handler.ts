@@ -1,6 +1,7 @@
 import { ipcMain } from 'electron'
 import { ProfileService } from '../../services/profile.service'
 import { IProfileHandler } from '../types'
+import { DatabaseService } from '../../services/database.service'
 
 export class ProfileHandler implements IProfileHandler {
   private static instance: ProfileHandler
@@ -54,12 +55,15 @@ export class ProfileHandler implements IProfileHandler {
     })
 
     // Delete profile
-    ipcMain.handle('delete-profile', async (_, id) => {
+    ipcMain.handle('delete-profile', async (_, profileId: string) => {
       try {
-        await this.profileService.deleteProfile(id)
+        const db = DatabaseService.getInstance()
+        await db.profile.delete({
+          where: { id: profileId }
+        })
         return true
       } catch (error) {
-        console.error('IPC delete-profile error:', error)
+        console.error('Failed to delete profile:', error)
         throw error
       }
     })

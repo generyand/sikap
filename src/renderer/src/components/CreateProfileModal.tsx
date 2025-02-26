@@ -48,27 +48,21 @@ export const CreateProfileModal: React.FC<CreateProfileModalProps> = ({
   // Handle file selection
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (!file) return
+    if (!file) return undefined
 
     // Validate file type
     if (!file.type.startsWith('image/')) {
       setError('Please select an image file')
-      return
+      return undefined
     }
 
     // Validate file size (e.g., max 5MB)
     if (file.size > 5 * 1024 * 1024) {
       setError('Image size should be less than 5MB')
-      return
+      return undefined
     }
 
     try {
-      // Clean up previous preview URL if it exists
-      if (avatarPreview) {
-        URL.revokeObjectURL(avatarPreview)
-      }
-
-      // Read file as Data URL
       const reader = new FileReader()
       
       const previewPromise = new Promise<string>((resolve, reject) => {
@@ -89,25 +83,26 @@ export const CreateProfileModal: React.FC<CreateProfileModalProps> = ({
       setAvatarFile(file)
       setAvatarPreview(dataUrl)
       setError('')
+      return dataUrl
     } catch (error) {
       console.error('Error loading image:', error)
       setError('Failed to load image. Please try another file.')
-      if (avatarPreview) {
-        URL.revokeObjectURL(avatarPreview)
-      }
       setAvatarFile(null)
       setAvatarPreview('')
+      return undefined
     }
   }
 
-  // Cleanup preview URL when component unmounts or modal closes
-  useEffect(() => {
-    if (!isOpen && avatarPreview) {
-      URL.revokeObjectURL(avatarPreview)
-      setAvatarPreview('')
-      setAvatarFile(null)
+  // Update the remove image handler to reset the file input
+  const handleRemoveImage = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    setAvatarFile(null)
+    setAvatarPreview('')
+    // Reset the file input so the same file can be selected again
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
     }
-  }, [isOpen, avatarPreview])
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -250,11 +245,7 @@ export const CreateProfileModal: React.FC<CreateProfileModalProps> = ({
                     </span>
                     <button
                       type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setAvatarFile(null);
-                        setAvatarPreview('');
-                      }}
+                      onClick={handleRemoveImage}
                       className="text-gray-400 hover:text-error-500 transition-colors"
                       aria-label="Remove selected image"
                     >
