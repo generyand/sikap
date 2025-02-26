@@ -6,6 +6,7 @@ import icon from '../../resources/icon.png?asset'
 // Import the server app (but don't start it yet)
 import { store, initStore } from './store'
 import { DatabaseService } from './services/database.service'
+import { ProfileHandler } from './ipc/handlers/profile.handler'
 
 function createWindow(): void {
   // Create the browser window.
@@ -50,12 +51,36 @@ function handleGetCurrentProfile() {
   return store.get('currentProfileId')
 }
 
+// Initialize database before creating window
+async function initialize() {
+  try {
+    const db = DatabaseService.getInstance()
+    await db.checkConnection()
+    console.log('✅ Database initialized successfully')
+    return true
+  } catch (error) {
+    console.error('❌ Database initialization failed:', error)
+    return false
+  }
+}
+
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(async () => {
   try {
     await initStore()
+    
+    // Check database connection first
+    const dbInitialized = await initialize()
+    if (!dbInitialized) {
+      throw new Error('Failed to initialize database')
+    }
+
+    // Initialize all IPC handlers
+    const profileHandler = ProfileHandler.getInstance()
+    profileHandler.registerHandlers()  // This will handle all profile-related IPC
+
     electronApp.setAppUserModelId('com.electron')
 
     // Default open or close DevTools by F12 in development
@@ -68,29 +93,7 @@ app.whenReady().then(async () => {
     // IPC test
     ipcMain.on('ping', () => console.log('pong'))
 
-    // Add near your other server routes
-    ipcMain.handle('get-database-data', async () => {
-      try {
-        const db = DatabaseService.getInstance()
-        const data = await db.getPrisma().profile.findMany()
-        return data
-      } catch (error) {
-        console.error('Failed to fetch data:', error)
-        throw error
-      }
-    })
-
-    ipcMain.handle('get-profiles', async () => {
-      try {
-        const db = DatabaseService.getInstance()
-        return await db.getPrisma().profile.findMany()
-      } catch (error) {
-        console.error('Failed to fetch profiles:', error)
-        throw error
-      }
-    })
-
-    // Add with other IPC handlers
+    // Store-related handlers only
     ipcMain.handle('electron-store-set', async (_, key, value) => {
       store.set(key, value)
     })
@@ -100,7 +103,6 @@ app.whenReady().then(async () => {
     })
 
     ipcMain.handle('set-current-profile', (_, profileId) => handleSetCurrentProfile(profileId))
-
     ipcMain.handle('get-current-profile', () => handleGetCurrentProfile())
 
     createWindow()
@@ -111,17 +113,18 @@ app.whenReady().then(async () => {
       if (BrowserWindow.getAllWindows().length === 0) createWindow()
     })
   } catch (error) {
-    console.error('Failed to start server:', error)
+    console.error('Failed to initialize app:', error)
     app.quit()
   }
 })
 
-// Quit when all windows are closed, except on macOS. There, it's common
-// for applications and their menu bar to stay active until the user quits
-// explicitly with Cmd + Q.
+// Update window-closed handler to disconnect database
 app.on('window-all-closed', async () => {
+  const db = DatabaseService.getInstance()
+  await db.disconnect()
+  
   if (process.platform !== 'darwin') {
-    app.quit();
+    app.quit()
   }
 })
 

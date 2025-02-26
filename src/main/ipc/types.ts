@@ -1,8 +1,16 @@
 import { Profile } from '@prisma/client'
 
 export interface IProfileHandler {
-  getInstance(): ProfileHandler
+  registerHandlers(): void
 }
+
+export type CreateProfileData = {
+  name: string
+  avatar?: string
+  theme?: string
+}
+
+export type UpdateProfileData = Partial<Profile>
 
 export type IPCResponse<T> = {
   success: boolean

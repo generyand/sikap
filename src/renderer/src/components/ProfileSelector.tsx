@@ -2,11 +2,13 @@ import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Profile } from '@prisma/client'
 import { UserCircle2, Check, Plus } from 'lucide-react'
+import { CreateProfileModal } from './CreateProfileModal'
 
 export const ProfileSelector: React.FC = () => {
   const navigate = useNavigate()
   const [profiles, setProfiles] = useState<Profile[]>([])
   const [selectedProfile, setSelectedProfile] = useState<string>()
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
 
   const loadProfiles = async () => {
     try {
@@ -34,7 +36,7 @@ export const ProfileSelector: React.FC = () => {
   }
 
   const handleCreateProfile = () => {
-    // Show profile creation modal
+    setIsCreateModalOpen(true)
   }
 
   return (
@@ -64,7 +66,7 @@ export const ProfileSelector: React.FC = () => {
                           p-6 lg:p-8 mx-auto
                           w-full max-w-screen-md lg:max-w-screen-lg">
               
-              <div className="max-w-3xl mx-auto">
+              <div className="max-w-3xl mx-auto flex flex-col gap-4">
                 <h2 className="text-xl lg:text-2xl font-semibold text-gray-900">
                   Select Profile
                 </h2>
@@ -166,6 +168,13 @@ export const ProfileSelector: React.FC = () => {
           </div>
         </main>
       </div>
+
+      {/* Add Modal */}
+      <CreateProfileModal 
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onSuccess={loadProfiles}
+      />
     </div>
   )
 } 
