@@ -1,43 +1,43 @@
 @import "tailwindcss";
 
 @theme {
-    /* Primary Colors - Professional Indigo/Purple */
-    --color-primary-50: oklch(0.97 0.02 275);    /* Lightest - subtle backgrounds */
-    --color-primary-100: oklch(0.95 0.03 275);   /* Light hover states */
-    --color-primary-200: oklch(0.92 0.05 275);   /* Subtle backgrounds */
-    --color-primary-300: oklch(0.88 0.07 275);   /* Borders */
-    --color-primary-400: oklch(0.82 0.09 275);   /* Secondary text */
-    --color-primary-500: oklch(0.75 0.11 275);   /* Primary buttons */
-    --color-primary-600: oklch(0.68 0.13 275);   /* Hover state */
-    --color-primary-700: oklch(0.60 0.14 275);   /* Active state */
-    --color-primary-800: oklch(0.52 0.15 275);   /* Dark variant */
-    --color-primary-900: oklch(0.44 0.16 275);   /* Darker variant */
-    --color-primary-950: oklch(0.36 0.17 275);   /* Darkest - for emphasis */
+    /* Primary Colors - Professional Blue */
+    --color-primary-50: oklch(0.97 0.02 230);    /* Lightest - subtle backgrounds */
+    --color-primary-100: oklch(0.95 0.03 230);   /* Light hover states */
+    --color-primary-200: oklch(0.92 0.05 230);   /* Subtle backgrounds */
+    --color-primary-300: oklch(0.88 0.07 230);   /* Borders */
+    --color-primary-400: oklch(0.82 0.09 230);   /* Secondary text */
+    --color-primary-500: oklch(0.75 0.11 230);   /* Primary buttons */
+    --color-primary-600: oklch(0.68 0.13 230);   /* Hover state */
+    --color-primary-700: oklch(0.60 0.14 230);   /* Active state */
+    --color-primary-800: oklch(0.52 0.15 230);   /* Dark variant */
+    --color-primary-900: oklch(0.44 0.16 230);   /* Darker variant */
+    --color-primary-950: oklch(0.36 0.17 230);   /* Darkest - for emphasis */
 
-    /* Neutral Colors - Warm Gray (slightly purple tinted for cohesion) */
-    --color-gray-50: oklch(0.98 0.003 275);     /* Page background */
-    --color-gray-100: oklch(0.95 0.003 275);    /* Card background */
-    --color-gray-200: oklch(0.90 0.003 275);    /* Input background */
-    --color-gray-300: oklch(0.85 0.003 275);    /* Borders */
-    --color-gray-400: oklch(0.75 0.003 275);    /* Placeholder text */
-    --color-gray-500: oklch(0.65 0.003 275);    /* Secondary text */
-    --color-gray-600: oklch(0.55 0.003 275);    /* Body text */
-    --color-gray-700: oklch(0.45 0.003 275);    /* Headings */
-    --color-gray-800: oklch(0.35 0.003 275);    /* Emphasized text */
-    --color-gray-900: oklch(0.25 0.003 275);    /* High contrast text */
-    --color-gray-950: oklch(0.15 0.003 275);    /* Maximum contrast */
+    /* Neutral Colors - Cool Gray (blue tinted for cohesion) */
+    --color-gray-50: oklch(0.98 0.003 230);     /* Page background */
+    --color-gray-100: oklch(0.95 0.003 230);    /* Card background */
+    --color-gray-200: oklch(0.90 0.003 230);    /* Input background */
+    --color-gray-300: oklch(0.85 0.003 230);    /* Borders */
+    --color-gray-400: oklch(0.75 0.003 230);    /* Placeholder text */
+    --color-gray-500: oklch(0.65 0.003 230);    /* Secondary text */
+    --color-gray-600: oklch(0.55 0.003 230);    /* Body text */
+    --color-gray-700: oklch(0.45 0.003 230);    /* Headings */
+    --color-gray-800: oklch(0.35 0.003 230);    /* Emphasized text */
+    --color-gray-900: oklch(0.25 0.003 230);    /* High contrast text */
+    --color-gray-950: oklch(0.15 0.003 230);    /* Maximum contrast */
 
     /* Semantic Colors with Purpose */
     --color-success-500: oklch(0.75 0.12 155);  /* Green - Achievement/Completion */
     --color-warning-500: oklch(0.75 0.12 85);   /* Amber - Attention needed */
     --color-error-500: oklch(0.75 0.12 25);     /* Red - Urgent/Blocked */
-    --color-info-500: oklch(0.75 0.12 195);     /* Teal - Information/Tips */
+    --color-info-500: oklch(0.75 0.12 210);     /* Cyan - Information/Tips */
 
     /* Supporting Colors for Data Visualization */
-    --color-viz-1: oklch(0.75 0.12 275);        /* Primary Purple */
-    --color-viz-2: oklch(0.75 0.12 195);        /* Teal - Focus */
-    --color-viz-3: oklch(0.75 0.12 155);        /* Green - Progress */
-    --color-viz-4: oklch(0.75 0.12 235);        /* Blue - Communication */
+    --color-viz-1: oklch(0.75 0.12 230);        /* Primary Blue */
+    --color-viz-2: oklch(0.75 0.12 210);        /* Cyan - Focus */
+    --color-viz-3: oklch(0.75 0.12 190);        /* Turquoise - Progress */
+    --color-viz-4: oklch(0.75 0.12 250);        /* Azure - Communication */
 
     /* Animation */
     --ease-productive: cubic-bezier(0.2, 0, 0.2, 1);  /* Smooth, professional transitions */
