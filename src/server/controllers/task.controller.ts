@@ -16,7 +16,7 @@ export class TaskController {
     return TaskController.instance
   }
 
-  async createTask(req: Request, res: Response): Promise<void> {
+  createTask = async (req: Request, res: Response): Promise<void> => {
     try {
       const result = await this.taskService.createTask({
         ...req.body,
@@ -36,7 +36,7 @@ export class TaskController {
     }
   }
 
-  async updateTask(req: Request, res: Response): Promise<void> {
+  updateTask = async (req: Request, res: Response): Promise<void> => {
     try {
       const result = await this.taskService.updateTask(req.params.id, req.body)
       res.status(result.success ? 200 : 400).json(result)
@@ -49,7 +49,7 @@ export class TaskController {
     }
   }
 
-  async deleteTask(req: Request, res: Response): Promise<void> {
+  deleteTask = async (req: Request, res: Response): Promise<void> => {
     try {
       const result = await this.taskService.deleteTask(req.params.id)
       res.status(result.success ? 200 : 400).json(result)
@@ -62,7 +62,7 @@ export class TaskController {
     }
   }
 
-  async getTask(req: Request, res: Response): Promise<void> {
+  getTask = async (req: Request, res: Response): Promise<void> => {
     try {
       const result = await this.taskService.getTaskById(req.params.id)
       res.status(result.success ? 200 : 400).json(result)
@@ -75,7 +75,7 @@ export class TaskController {
     }
   }
 
-  async getProfileTasks(req: Request, res: Response): Promise<void> {
+  getProfileTasks = async (req: Request, res: Response): Promise<void> => {
     try {
       const result = await this.taskService.getTasksByProfile(req.params.profileId)
       res.status(result.success ? 200 : 400).json(result)

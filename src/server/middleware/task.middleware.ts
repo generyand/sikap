@@ -7,7 +7,6 @@ const taskSchema = z.object({
   dueDate: z.string().datetime().optional(),
   priority: z.enum(['low', 'medium', 'high']).optional(),
   status: z.enum(['todo', 'in_progress', 'completed']),
-  userId: z.string().uuid()
 })
 
 export const validateTask = (req: Request, res: Response, next: NextFunction): void => {

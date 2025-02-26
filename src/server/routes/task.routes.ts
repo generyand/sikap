@@ -5,10 +5,10 @@ import { validateTask } from '../middleware/task.middleware'
 const router = Router()
 const taskController = TaskController.getInstance()
 
-router.post('/:profileId', validateTask, taskController.createTask.bind(taskController))
-router.put('/:id', validateTask, taskController.updateTask.bind(taskController))
-router.delete('/:id', taskController.deleteTask.bind(taskController))
-router.get('/:id', taskController.getTask.bind(taskController))
-router.get('/profile/:profileId', taskController.getProfileTasks.bind(taskController))
+router.post('/:profileId', validateTask, taskController.createTask)
+router.put('/:id', validateTask, taskController.updateTask)
+router.delete('/:id', taskController.deleteTask)
+router.get('/:id', taskController.getTask)
+router.get('/profile/:profileId', taskController.getProfileTasks)
 
 export const taskRoutes = router
