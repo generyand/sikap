@@ -4,10 +4,8 @@ import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 // Import the server app (but don't start it yet)
-import { prisma, server as serverInstance, checkDatabaseConnection } from '../server'
 import { store, initStore } from './store'
-
-const SERVER_PORT = process.env.PORT || 3000
+import { DatabaseService } from './services/database.service'
 
 function createWindow(): void {
   // Create the browser window.
@@ -41,26 +39,6 @@ function createWindow(): void {
   }
 }
 
-async function startServer(): Promise<void> {
-  try {
-    await checkDatabaseConnection()
-    return new Promise((resolve) => {
-      serverInstance.listen(SERVER_PORT, () => {
-        console.log(`✅ Server running on port ${SERVER_PORT}`)
-        resolve()
-      })
-    })
-  } catch (error) {
-    console.error('❌ Failed to start server:', error)
-    throw error
-  }
-}
-
-async function stopServer(): Promise<void> {
-  await new Promise<void>((resolve) => serverInstance.close(() => resolve()))
-  await prisma.$disconnect()
-}
-
 function handleSetCurrentProfile(profileId: string) {
   // Store the selected profile ID
   store.set('currentProfileId', profileId)
@@ -78,7 +56,6 @@ function handleGetCurrentProfile() {
 app.whenReady().then(async () => {
   try {
     await initStore()
-    await startServer()
     electronApp.setAppUserModelId('com.electron')
 
     // Default open or close DevTools by F12 in development
@@ -94,8 +71,8 @@ app.whenReady().then(async () => {
     // Add near your other server routes
     ipcMain.handle('get-database-data', async () => {
       try {
-        // Change user to profile
-        const data = await prisma.profile.findMany()
+        const db = DatabaseService.getInstance()
+        const data = await db.getPrisma().profile.findMany()
         return data
       } catch (error) {
         console.error('Failed to fetch data:', error)
@@ -105,7 +82,8 @@ app.whenReady().then(async () => {
 
     ipcMain.handle('get-profiles', async () => {
       try {
-        return await prisma.profile.findMany()
+        const db = DatabaseService.getInstance()
+        return await db.getPrisma().profile.findMany()
       } catch (error) {
         console.error('Failed to fetch profiles:', error)
         throw error
@@ -142,7 +120,6 @@ app.whenReady().then(async () => {
 // for applications and their menu bar to stay active until the user quits
 // explicitly with Cmd + Q.
 app.on('window-all-closed', async () => {
-  await stopServer();
   if (process.platform !== 'darwin') {
     app.quit();
   }
