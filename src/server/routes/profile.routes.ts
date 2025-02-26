@@ -1,47 +1,19 @@
 import { Router } from 'express'
-import { ProfileService } from '../services/profile.service'
+import { ProfileController } from '../controllers/profile.controller'
 
 const router = Router()
-const profileService = ProfileService.getInstance()
+const profileController = ProfileController.getInstance()
 
 // GET all profiles
-router.get('/', async (_req, res) => {
-  try {
-    const profiles = await profileService.getProfiles()
-    res.json(profiles)
-  } catch (error) {
-    res.status(500).json({ message: 'Error fetching profiles', error })
-  }
-})
+router.get('/', profileController.getProfiles)
 
 // POST create profile
-router.post('/', async (req, res) => {
-  try {
-    const profile = await profileService.createProfile(req.body)
-    res.status(201).json(profile)
-  } catch (error) {
-    res.status(500).json({ message: 'Error creating profile', error })
-  }
-})
+router.post('/', profileController.createProfile)
 
 // PUT update profile
-router.put('/:id', async (req, res) => {
-  try {
-    const profile = await profileService.updateProfile(req.params.id, req.body)
-    res.json(profile)
-  } catch (error) {
-    res.status(500).json({ message: 'Error updating profile', error })
-  }
-})
+router.put('/:id', profileController.updateProfile)
 
 // DELETE profile
-router.delete('/:id', async (req, res) => {
-  try {
-    await profileService.deleteProfile(req.params.id)
-    res.status(204).send()
-  } catch (error) {
-    res.status(500).json({ message: 'Error deleting profile', error })
-  }
-})
+router.delete('/:id', profileController.deleteProfile)
 
 export const profileRoutes = router 

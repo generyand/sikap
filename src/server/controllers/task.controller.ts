@@ -1,74 +1,90 @@
 import { Request, Response } from 'express'
 import { TaskService } from '../services/task.service'
-import { CreateTaskDto, UpdateTaskDto } from '../types/task.types'
 
-export const createTask = async (req: Request, res: Response): Promise<void> => {
-  try {
-    const taskData: CreateTaskDto = req.body
-    const taskService = TaskService.getInstance()
-    const task = await taskService.createTask(taskData)
+export class TaskController {
+  private static instance: TaskController
+  private taskService: TaskService
 
-    res.status(201).json({
-      message: 'Task created successfully',
-      task
-    })
-  } catch (error) {
-    res.status(500).json({ message: 'Error creating task', error })
+  private constructor() {
+    this.taskService = TaskService.getInstance()
   }
-}
 
-export const updateTask = async (req: Request, res: Response): Promise<void> => {
-  try {
-    const { id } = req.params
-    const taskData: UpdateTaskDto = req.body
-    const taskService = TaskService.getInstance()
-
-    const task = await taskService.updateTask(id, taskData)
-    res.json({
-      message: 'Task updated successfully',
-      task
-    })
-  } catch (error) {
-    res.status(500).json({ message: 'Error updating task', error })
-  }
-}
-
-export const deleteTask = async (req: Request, res: Response): Promise<void> => {
-  try {
-    const { id } = req.params
-    const taskService = TaskService.getInstance()
-
-    await taskService.deleteTask(id)
-    res.json({ message: 'Task deleted successfully' })
-  } catch (error) {
-    res.status(500).json({ message: 'Error deleting task', error })
-  }
-}
-
-export const getTask = async (req: Request, res: Response): Promise<void> => {
-  try {
-    const { id } = req.params
-    const taskService = TaskService.getInstance()
-
-    const task = await taskService.getTaskById(id)
-    if (!task) {
-      res.status(404).json({ message: 'Task not found' })
-      return
+  static getInstance(): TaskController {
+    if (!TaskController.instance) {
+      TaskController.instance = new TaskController()
     }
-    res.json(task)
-  } catch (error) {
-    res.status(500).json({ message: 'Error fetching task', error })
+    return TaskController.instance
   }
-}
 
-export const getUserTasks = async (req: Request, res: Response): Promise<void> => {
-  try {
-    const { userId } = req.params
-    const taskService = TaskService.getInstance()
+  async createTask(req: Request, res: Response): Promise<void> {
+    try {
+      const result = await this.taskService.createTask({
+        ...req.body,
+        profileId: req.params.profileId
+      })
+      if (result.success) {
+        res.status(201).json(result)
+      } else {
+        res.status(400).json(result)
+      }
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: 'Internal server error',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      })
+    }
+  }
 
-    const tasks = await taskService.getTasksByUser(userId)
-    res.json(tasks)
-  } catch (error) {
-    res.status(500).json({ message: 'Error fetching tasks', error })
+  async updateTask(req: Request, res: Response): Promise<void> {
+    try {
+      const result = await this.taskService.updateTask(req.params.id, req.body)
+      res.status(result.success ? 200 : 400).json(result)
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: 'Internal server error',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      })
+    }
+  }
+
+  async deleteTask(req: Request, res: Response): Promise<void> {
+    try {
+      const result = await this.taskService.deleteTask(req.params.id)
+      res.status(result.success ? 200 : 400).json(result)
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: 'Internal server error',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      })
+    }
+  }
+
+  async getTask(req: Request, res: Response): Promise<void> {
+    try {
+      const result = await this.taskService.getTaskById(req.params.id)
+      res.status(result.success ? 200 : 400).json(result)
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: 'Internal server error',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      })
+    }
+  }
+
+  async getProfileTasks(req: Request, res: Response): Promise<void> {
+    try {
+      const result = await this.taskService.getTasksByProfile(req.params.profileId)
+      res.status(result.success ? 200 : 400).json(result)
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: 'Internal server error',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      })
+    }
   }
 }
