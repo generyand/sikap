@@ -6,20 +6,17 @@
 
 ## Overview
 
-Sikap is a powerful cross-platform smart daily planner and task management application designed to streamline your daily productivity. It combines intelligent scheduling with task management capabilities, providing a seamless experience for organizing your day-to-day activities. Built with modern technologies and cloud synchronization, Sikap helps you stay on top of your schedule and tasks effortlessly.
+Sikap is a powerful cross-platform smart daily planner and task management application designed to streamline your daily productivity. It combines intelligent scheduling with task management capabilities, providing a seamless experience for organizing your day-to-day activities. Built with modern technologies, Sikap helps you stay on top of your schedule and tasks effortlessly.
 
 ## Features
 
 - 🖥️ Cross-platform support (Windows, macOS, Linux)
-- 🔄 Cloud synchronization with Supabase
 - 📱 Responsive and modern UI
 - 🌙 Dark mode support
-- 🚀 Offline-first architecture
 - 🔒 Secure data handling
 - ⭐ Task Prioritization
 - 📅 Due Dates & Recurring Tasks
 - 🗓️ Calendar Integration
-  - Unified scheduling with Google Calendar
   - Intuitive drag-and-drop scheduling
 - 🔔 Smart Reminders & Notifications
 
@@ -33,7 +30,7 @@ Sikap is a powerful cross-platform smart daily planner and task management appli
 - **Backend**:
   - ExpressJS - API Server
   - Prisma - Database ORM
-  - Supabase - Backend as a Service
+  - SQLite - Local Database
 
 ## Installation
 
@@ -112,7 +109,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - Built with [electron-vite](https://electron-vite.org/)
 - Powered by [Electron](https://www.electronjs.org/)
-- Database hosting by [Supabase](https://supabase.com/)
 
 ---
 

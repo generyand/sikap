@@ -13,31 +13,16 @@ datasource db {
   url      = "file:./local.db"
 }
 
-model User {
+model Profile {
   id        String   @id @default(uuid())
-  email     String   @unique
-  name      String?
-  password  String
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-  syncedAt  DateTime? @map("synced_at") // Track last sync
-  isLocal   Boolean  @default(true) // Track if record exists in cloud
+  name      String
+  avatar    String?  // Path to local avatar image
+  theme     String   @default("light") // UI preferences
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
   tasks     Task[]
 
-  @@map("users") // This maps the model to a table named "users"
-}
-
-// Add SyncQueue model for tracking pending changes
-model SyncQueue {
-  id        String   @id @default(uuid())
-  table     String   // The table being modified
-  recordId  String   // ID of the modified record
-  operation String   // CREATE, UPDATE, DELETE
-  data      String   // JSON string of the changes
-  createdAt DateTime @default(now())
-  status    String   @default("pending") // pending, completed, failed
-
-  @@map("sync_queue")
+  @@map("profiles")
 }
 
 model Task {
@@ -48,12 +33,10 @@ model Task {
   priority    String    @default("medium")
   status      String    @default("todo")
   completedAt DateTime?
-  userId      String
+  profileId   String    // Changed from userId to profileId
   createdAt   DateTime  @default(now()) @map("created_at")
   updatedAt   DateTime  @updatedAt @map("updated_at")
-  syncedAt    DateTime? @map("synced_at")
-  isLocal     Boolean   @default(true)
-  user        User      @relation(fields: [userId], references: [id])
+  profile     Profile   @relation(fields: [profileId], references: [id])
 
   @@map("tasks")
 }

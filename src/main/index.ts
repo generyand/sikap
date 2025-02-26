@@ -5,8 +5,6 @@ import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 // Import the server app (but don't start it yet)
 import { prisma, server as serverInstance, checkDatabaseConnection } from '../server'
-import { createClient } from '@supabase/supabase-js'
-import { SyncService } from '../server/services/sync.service'
 
 const SERVER_PORT = process.env.PORT || 3000
 
@@ -109,7 +107,6 @@ app.whenReady().then(async () => {
 // for applications and their menu bar to stay active until the user quits
 // explicitly with Cmd + Q.
 app.on('window-all-closed', async () => {
-  SyncService.getInstance().cleanup();
   await stopServer();
   if (process.platform !== 'darwin') {
     app.quit();
@@ -118,26 +115,3 @@ app.on('window-all-closed', async () => {
 
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and require them here.
-
-export class DatabaseService {
-  private supabase: ReturnType<typeof createClient>;
-  private static instance: DatabaseService;
-
-  private constructor() {
-    this.supabase = createClient(
-      process.env.SUPABASE_URL!,
-      process.env.SUPABASE_ANON_KEY!
-    );
-  }
-
-  public getClient() {
-    return this.supabase;
-  }
-
-  public static getInstance(): DatabaseService {
-    if (!DatabaseService.instance) {
-      DatabaseService.instance = new DatabaseService();
-    }
-    return DatabaseService.instance;
-  }
-}

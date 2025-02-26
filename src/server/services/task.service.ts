@@ -18,10 +18,7 @@ export class TaskService {
 
   async createTask(data: CreateTaskDto): Promise<Task> {
     return this.db.task.create({
-      data: {
-        ...data,
-        isLocal: true
-      }
+      data
     })
   }
 

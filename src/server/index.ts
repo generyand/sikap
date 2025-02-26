@@ -5,30 +5,12 @@ import { PrismaClient } from '@prisma/client'
 import { errorHandler } from './middleware/error-handler'
 import { apiRoutes } from './routes'
 import { createServer } from 'http'
-import { authRoutes } from './routes/auth.routes'
-import { SyncService } from './services/sync.service'
 
 const prisma = new PrismaClient()
 const app: Express = express()
 // const PORT = process.env.PORT || 3000
 
-// Add this function
-async function initializeSyncService(): Promise<void> {
-  try {
-    console.log('🔄 Initializing sync service...')
-    const syncService = SyncService.getInstance()
-    
-    // Check for any pending items from previous sessions
-    await syncService.syncWithCloud()
-    
-    console.log('✅ Sync service initialized successfully')
-  } catch (error) {
-    console.error('❌ Failed to initialize sync service:', error)
-    throw error
-  }
-}
-
-// Add connection retry logic
+// Update the checkDatabaseConnection function
 export async function checkDatabaseConnection(): Promise<void> {
   const maxRetries = 5;
   let currentTry = 0;
@@ -37,10 +19,6 @@ export async function checkDatabaseConnection(): Promise<void> {
     try {
       await prisma.$queryRaw`SELECT 1`
       console.log('✅ Database connection successful')
-      
-      // Initialize sync service after database connection is established
-      await initializeSyncService()
-      
       return
     } catch (error) {
       currentTry++
@@ -48,11 +26,9 @@ export async function checkDatabaseConnection(): Promise<void> {
       if (currentTry === maxRetries) {
         throw new Error('Database connection failed after maximum retries')
       }
-      // Wait 2 seconds before retrying
       await new Promise(resolve => setTimeout(resolve, 2000))
     }
   }
-  return
 }
 
 // Middleware
@@ -83,7 +59,7 @@ app.get('/health', (_req: Request, res: Response) => {
 
 // API routes
 app.use('/api', apiRoutes)
-app.use("/api/auth", authRoutes);
+
 // Error handling
 app.use(errorHandler)
 

@@ -24,7 +24,6 @@
     "@electron-toolkit/preload": "^3.0.1",
     "@electron-toolkit/utils": "^4.0.0",
     "@prisma/client": "^6.4.0",
-    "@supabase/supabase-js": "^2.49.1",
     "@tailwindcss/vite": "^4.0.8",
     "bcrypt": "^5.1.1",
     "cors": "^2.8.5",
