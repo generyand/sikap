@@ -101,11 +101,21 @@ module.exports = {
           "0%": { transform: "scale(0.95)" },
           "100%": { transform: "scale(1)" },
         },
+        glow: {
+          '0%': { 'box-shadow': '0 0 20px -10px rgba(var(--primary))' },
+          '100%': { 'box-shadow': '0 0 30px -5px rgba(var(--primary))' }
+        },
+        float: {
+          '0%, 100%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(-20px)' }
+        }
       },
       animation: {
         "fade-up": "fade-up 0.5s ease-out",
         "fade-down": "fade-down 0.5s ease-out",
         "scale-up": "scale-up 0.3s ease-out",
+        'glow': 'glow 2s ease-in-out infinite alternate',
+        'float': 'float 6s ease-in-out infinite',
       },
     },
   },
