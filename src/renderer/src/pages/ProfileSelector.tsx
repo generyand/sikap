@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { cn } from '@/lib/utils'
+import { CreateProfileModal } from '@/components/CreateProfileModal'
 
 export const ProfileSelector: React.FC = () => {
   const navigate = useNavigate()
@@ -43,6 +44,10 @@ export const ProfileSelector: React.FC = () => {
     setIsCreateModalOpen(true)
   }
 
+  const handleCloseCreateModal = () => {
+    setIsCreateModalOpen(false)
+  }
+
   const handleDeleteProfile = async (profile: Profile) => {
     setProfileToDelete(profile)
   }
@@ -60,12 +65,14 @@ export const ProfileSelector: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[conic-gradient(at_top_right,_var(--tw-gradient-stops))] from-sky-50 via-background to-sky-50/40">
+    <div className="min-h-screen bg-[conic-gradient(at_top_right,_var(--tw-gradient-stops))] 
+                    dark:from-slate-950 dark:via-background dark:to-slate-950/90
+                    from-sky-50 via-background to-sky-50/40">
       <div className="h-screen flex flex-col p-4 md:p-6 lg:p-8">
-        {/* Header with modern gradient and animation */}
-        <header className="text-center space-y-3 mb-12 animate-fade-down">
+        <header className="text-center space-y-3 mb-12">
           <h1 className="font-display text-4xl md:text-5xl font-bold tracking-tight 
-                         bg-gradient-to-r from-primary-gradient-from to-primary-gradient-to
+                         bg-gradient-to-r from-primary to-primary-gradient-to
+                         dark:from-primary dark:to-sky-400
                          bg-clip-text text-transparent
                          drop-shadow-sm">
             SIKAP
@@ -75,12 +82,12 @@ export const ProfileSelector: React.FC = () => {
           </p>
         </header>
 
-        {/* Main Content with glass effect and animations */}
-        <main className="flex-1 flex items-center justify-center px-4 animate-fade-up">
+        <main className="flex-1 flex items-center justify-center px-4">
           <div className="w-full max-w-5xl mx-auto">
-            <div className="bg-white/60 backdrop-blur-xl 
-                          border border-white/20
+            <div className="bg-background/60 dark:bg-card/40 backdrop-blur-xl 
+                          border border-border/50 dark:border-border/10
                           rounded-2xl shadow-xl shadow-sky-900/5
+                          dark:shadow-sky-950/5
                           p-6 md:p-8">
               
               <div className="max-w-3xl mx-auto space-y-8">
@@ -100,36 +107,51 @@ export const ProfileSelector: React.FC = () => {
                       onClick={() => handleProfileSelect(profile.id)}
                       className={cn(
                         "group relative rounded-xl overflow-hidden transition-all duration-300",
-                        "cursor-pointer border p-4 md:p-5",
-                        "hover:shadow-lg hover:shadow-sky-900/5 hover:scale-[1.02]",
+                        "cursor-pointer p-4 md:p-5",
+                        "hover:scale-[1.02]",
                         "animate-scale-up",
                         selectedProfile === profile.id 
-                          ? "border-sky-500/50 bg-sky-50/50 ring-2 ring-sky-500/20" 
-                          : "border-border/50 bg-white/60 hover:border-sky-200 hover:bg-sky-50/30"
+                          ? "bg-primary/10 dark:bg-primary/20 border-primary/50 ring-2 ring-primary/30" 
+                          : cn(
+                              "border border-border/50 hover:border-primary/30",
+                              "bg-card dark:bg-card/50",
+                              "hover:bg-accent/50 dark:hover:bg-accent/10",
+                              "dark:shadow-none"
+                            )
                       )}
                     >
-                      <Avatar className="w-16 h-16 mx-auto mb-3 
-                                       ring-2 ring-white shadow-md">
-                        <AvatarImage src={profile.avatar || ''} alt={profile.name} />
-                        <AvatarFallback className="bg-sky-50 text-sky-700">
-                          <UserCircle2 className="w-8 h-8" />
-                        </AvatarFallback>
-                      </Avatar>
+                      <div className="relative mx-auto w-16 h-16 mb-3 rounded-full
+                                    ring-2 ring-border dark:ring-border/50 
+                                    shadow-lg shadow-primary/5
+                                    group-hover:ring-primary/50 
+                                    transition-all duration-300">
+                        <Avatar className="w-full h-full">
+                          <AvatarImage src={profile.avatar || ''} alt={profile.name} />
+                          <AvatarFallback 
+                            className="bg-primary/10 dark:bg-primary/20 
+                                     text-primary dark:text-primary/80">
+                            <UserCircle2 className="w-8 h-8" />
+                          </AvatarFallback>
+                        </Avatar>
+
+                        {selectedProfile === profile.id && (
+                          <div className="absolute -top-1 -right-1 
+                                        bg-primary dark:bg-primary/80 
+                                        rounded-full p-1.5
+                                        shadow-lg shadow-primary/30
+                                        animate-in fade-in zoom-in
+                                        duration-200">
+                            <Check className="w-3 h-3 text-primary-foreground" />
+                          </div>
+                        )}
+                      </div>
 
                       <h3 className="text-sm font-medium text-center truncate
-                                   text-foreground/80 group-hover:text-sky-700
+                                   text-foreground/80 group-hover:text-primary
+                                   dark:group-hover:text-primary/80
                                    transition-colors duration-200">
                         {profile.name}
                       </h3>
-
-                      {selectedProfile === profile.id && (
-                        <div className="absolute top-3 right-3 
-                                      bg-sky-500 rounded-full p-1.5
-                                      shadow-sm animate-in fade-in zoom-in
-                                      duration-200">
-                          <Check className="w-3 h-3 text-white" />
-                        </div>
-                      )}
 
                       <Button
                         variant="ghost"
@@ -138,10 +160,13 @@ export const ProfileSelector: React.FC = () => {
                           e.stopPropagation()
                           handleDeleteProfile(profile)
                         }}
-                        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100
-                                 transition-all duration-200 hover:bg-destructive/10"
+                        className="absolute top-2 right-2 h-7 w-7
+                                 opacity-0 group-hover:opacity-100
+                                 transition-all duration-200 
+                                 hover:bg-destructive/10 dark:hover:bg-destructive/20
+                                 hover:text-destructive"
                       >
-                        <Trash2 className="w-4 h-4 text-destructive" />
+                        <Trash2 className="w-4 h-4" />
                       </Button>
                     </div>
                   ))}
@@ -149,14 +174,24 @@ export const ProfileSelector: React.FC = () => {
                   <Button
                     variant="outline"
                     onClick={handleCreateProfile}
-                    className="h-auto aspect-square flex flex-col items-center justify-center gap-3
-                             border-2 border-dashed border-sky-200/50
-                             hover:border-sky-300 hover:bg-sky-50/50
-                             transition-all duration-200
-                             animate-scale-up"
+                    className={cn(
+                      "h-auto aspect-square flex flex-col items-center justify-center gap-3",
+                      "border-2 border-dashed",
+                      "transition-all duration-200",
+                      "animate-scale-up",
+                      "hover:border-primary/50 hover:bg-accent/50",
+                      "dark:border-border/30 dark:hover:border-primary/50 dark:hover:bg-accent/10",
+                      "group"
+                    )}
                   >
-                    <Plus className="h-8 w-8 text-sky-600" />
-                    <span className="text-sm font-medium text-sky-700">New Profile</span>
+                    <Plus className="h-8 w-8 text-muted-foreground 
+                                   group-hover:text-primary
+                                   transition-colors duration-200" />
+                    <span className="text-sm font-medium text-muted-foreground
+                                   group-hover:text-primary
+                                   transition-colors duration-200">
+                      New Profile
+                    </span>
                   </Button>
                 </div>
               </div>
@@ -165,7 +200,12 @@ export const ProfileSelector: React.FC = () => {
         </main>
       </div>
 
-      {/* Delete Confirmation Dialog */}
+      <CreateProfileModal 
+        isOpen={isCreateModalOpen}
+        onClose={handleCloseCreateModal}
+        onSuccess={loadProfiles}
+      />
+
       <Dialog open={!!profileToDelete} onOpenChange={() => setProfileToDelete(null)}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>

@@ -1,11 +1,10 @@
 import { PrismaClient } from '@prisma/client'
 
-export class DatabaseService {
+export class DatabaseService extends PrismaClient {
   private static instance: DatabaseService
-  private prisma: PrismaClient
 
   private constructor() {
-    this.prisma = new PrismaClient()
+    super()
   }
 
   static getInstance(): DatabaseService {
@@ -15,8 +14,14 @@ export class DatabaseService {
     return DatabaseService.instance
   }
 
-  getPrisma(): PrismaClient {
-    return this.prisma
+  async connect() {
+    try {
+      await this.$connect()
+      console.log('Database connected successfully')
+    } catch (error) {
+      console.error('Failed to connect to database:', error)
+      throw error
+    }
   }
 
   async checkConnection(): Promise<void> {
@@ -25,7 +30,7 @@ export class DatabaseService {
 
     while (currentTry < maxRetries) {
       try {
-        await this.prisma.$queryRaw`SELECT 1`
+        await this.$queryRaw`SELECT 1`
         console.log('✅ Database connection successful')
         return
       } catch (error) {
@@ -40,6 +45,6 @@ export class DatabaseService {
   }
 
   async disconnect(): Promise<void> {
-    await this.prisma.$disconnect()
+    await this.$disconnect()
   }
 } 

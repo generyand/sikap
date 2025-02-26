@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import { app, shell, BrowserWindow, ipcMain } from 'electron'
+import { app, shell, BrowserWindow, ipcMain, nativeTheme } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
@@ -28,6 +28,7 @@ function createWindow(): void {
 
   mainWindow.on('ready-to-show', () => {
     mainWindow.show()
+    mainWindow.setTitle("Sikap")
   })
 
   mainWindow.webContents.setWindowOpenHandler((details) => {
@@ -108,6 +109,11 @@ app.whenReady().then(async () => {
 
     ipcMain.handle('set-current-profile', (_, profileId) => handleSetCurrentProfile(profileId))
     ipcMain.handle('get-current-profile', () => handleGetCurrentProfile())
+
+    // Log system theme changes
+    nativeTheme.on('updated', () => {
+      console.log('System theme updated:', nativeTheme.shouldUseDarkColors ? 'dark' : 'light')
+    })
 
     createWindow()
 

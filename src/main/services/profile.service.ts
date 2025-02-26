@@ -3,9 +3,11 @@ import { DatabaseService } from './database.service'
 
 export class ProfileService {
   private static instance: ProfileService
-  private db = DatabaseService.getInstance().getPrisma()
+  private db: DatabaseService
 
-  private constructor() {}
+  private constructor() {
+    this.db = DatabaseService.getInstance()
+  }
 
   static getInstance(): ProfileService {
     if (!ProfileService.instance) {
@@ -53,11 +55,12 @@ export class ProfileService {
     }
   }
 
-  async deleteProfile(id: string): Promise<void> {
+  async deleteProfile(profileId: string): Promise<boolean> {
     try {
       await this.db.profile.delete({
-        where: { id }
+        where: { id: profileId }
       })
+      return true
     } catch (error) {
       console.error('Failed to delete profile:', error)
       throw error

@@ -3,24 +3,29 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { ProfileSelector } from './pages/ProfileSelector'
 import { TaskDashboard } from './pages/TaskDashboard'
 import { ProtectedRoute } from './components/ProtectedRoute'
+import { ThemeProvider } from './components/theme-provider'
+import { ThemeDebug } from './components/theme-debug'
 
 const App: React.FC = () => {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<ProfileSelector />} />
-        <Route 
-          path="/dashboard/:profileId" 
-          element={
-            <ProtectedRoute>
-              <TaskDashboard />
-            </ProtectedRoute>
-          } 
-        />
-        {/* Catch all route - redirect to profile selection */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </BrowserRouter>
+    <ThemeProvider defaultTheme="system">
+      <ThemeDebug />
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<ProfileSelector />} />
+          <Route 
+            path="/dashboard/:profileId" 
+            element={
+              <ProtectedRoute>
+                <TaskDashboard />
+              </ProtectedRoute>
+            } 
+          />
+          {/* Catch all route - redirect to profile selection */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </BrowserRouter>
+    </ThemeProvider>
   )
 }
 
