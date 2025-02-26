@@ -24,7 +24,6 @@
     "@electron-toolkit/preload": "^3.0.1",
     "@electron-toolkit/utils": "^4.0.0",
     "@prisma/client": "^6.4.0",
-    "@tailwindcss/vite": "^4.0.8",
     "bcrypt": "^5.1.1",
     "cors": "^2.8.5",
     "electron-store": "^10.0.1",
@@ -33,7 +32,6 @@
     "helmet": "^8.0.0",
     "lucide-react": "^0.476.0",
     "react-router-dom": "^7.2.0",
-    "tailwindcss": "^4.0.8",
     "zod": "^3.24.2"
   },
   "devDependencies": {
@@ -48,6 +46,7 @@
     "@types/react": "^18.3.18",
     "@types/react-dom": "^18.3.5",
     "@vitejs/plugin-react": "^4.3.4",
+    "autoprefixer": "^10.4.20",
     "electron": "^34.2.0",
     "electron-builder": "^25.1.8",
     "electron-vite": "^3.0.0",
@@ -55,10 +54,13 @@
     "eslint-plugin-react": "^7.37.4",
     "eslint-plugin-react-hooks": "^5.1.0",
     "eslint-plugin-react-refresh": "^0.4.19",
+    "postcss": "^8.5.3",
     "prettier": "^3.5.1",
     "prisma": "^6.4.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "tailwindcss": "^3.4.17",
+    "tailwindcss-animate": "^1.0.7",
     "typescript": "^5.7.3",
     "vite": "^6.1.0"
   }

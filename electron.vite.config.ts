@@ -2,7 +2,7 @@ import { resolve } from 'path'
 import { defineConfig, externalizeDepsPlugin } from 'electron-vite'
 import react from '@vitejs/plugin-react'
 // @ts-ignore just ignore cuz tailwind version is new
-import tailwindcss from '@tailwindcss/vite'
+// import tailwindcss from '@tailwindcss/vite'
 
 export default defineConfig({
   main: {
@@ -28,6 +28,9 @@ export default defineConfig({
         '@renderer': resolve('src/renderer/src')
       }
     },
-    plugins: [react(), tailwindcss()]
+    css: {
+      postcss: './postcss.config.js'
+    },
+    plugins: [react()]
   }
 })
