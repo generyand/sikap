@@ -13,30 +13,73 @@ datasource db {
   url      = "file:./local.db"
 }
 
+// Add these enum definitions before your models
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  COMPLETED
+  ARCHIVED
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum RecurrencePattern {
+  DAILY
+  WEEKLY
+  MONTHLY
+  YEARLY
+  CUSTOM
+}
+
+// Add this enum with common task categories
+enum TaskCategory {
+  WORK
+  PERSONAL
+  SHOPPING
+  HEALTH
+  EDUCATION
+  FINANCE
+  HOME
+  OTHER
+}
 model Profile {
   id        String   @id @default(uuid())
   name      String
-  avatar    String?  // Path to local avatar image
+  avatar    String? // Path to local avatar image
   theme     String   @default("light") // UI preferences
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  tasks     Task[]
+  tasks     Task[]   @relation("ProfileTasks")
 
   @@map("profiles")
 }
 
 model Task {
-  id          String    @id @default(uuid())
+  id          String       @id @default(uuid())
   title       String
   description String?
   dueDate     DateTime?
-  priority    String    @default("medium")
-  status      String    @default("todo")
-  completedAt DateTime?
+  priority    TaskPriority @default(MEDIUM)
+  status      TaskStatus   @default(TODO)
   profileId   String
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  profile     Profile   @relation(fields: [profileId], references: [id])
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  completedAt DateTime?
+
+  // Optional but valuable fields
+  category   TaskCategory?
+  duration   Int?
+  reminder   DateTime?
+  recurrence RecurrencePattern?
+  notes      String?
+
+  // Relations
+  profile Profile @relation("ProfileTasks", fields: [profileId], references: [id], onDelete: Cascade)
 
   @@map("tasks")
 }
