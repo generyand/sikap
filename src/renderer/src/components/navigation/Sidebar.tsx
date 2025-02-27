@@ -4,7 +4,6 @@ import {
   CheckSquare, 
   Calendar, 
   Bell,
-  Clock,
   UserCircle2,
   LogOut,
   Settings,
@@ -62,8 +61,8 @@ export const Sidebar = () => {
   return (
     <aside className="flex flex-col min-h-0 w-[280px] border-r bg-card/50">
       <div className="shrink-0 flex items-center gap-3 border-b p-4">
-        <Avatar className="h-10 w-10">
-          <AvatarImage src={currentProfile?.avatar || ''} />
+        <Avatar className="h-10 w-10 overflow-hidden">
+          <AvatarImage src={currentProfile?.avatar || ''} className="object-cover" />
           <AvatarFallback>
             <UserCircle2 className="h-6 w-6" />
           </AvatarFallback>

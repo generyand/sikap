@@ -98,8 +98,8 @@ export function CreateProfileModal({ isOpen, onClose, onSuccess }: CreateProfile
           {/* Avatar Upload Section */}
           <div className="flex flex-col items-center gap-4">
             <div className="relative group">
-              <Avatar className="w-24 h-24 ring-2 ring-border">
-                <AvatarImage src={avatar || ''} />
+              <Avatar className="w-24 h-24 ring-2 ring-border overflow-hidden">
+                <AvatarImage src={avatar || ''} className="object-cover" />
                 <AvatarFallback className="bg-muted">
                   <UserCircle2 className="w-12 h-12 text-muted-foreground" />
                 </AvatarFallback>

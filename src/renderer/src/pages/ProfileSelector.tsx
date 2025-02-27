@@ -84,57 +84,36 @@ export const ProfileSelector = () => {
       {/* Decorative Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {/* Top-right decorative sphere */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.5 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 1.5, ease: "easeOut" }}
+        <div
           className="absolute -top-20 -right-20 w-96 h-96
                      bg-gradient-to-br from-primary/20 via-primary/5 to-transparent
                      rounded-full blur-3xl"
         />
         
         {/* Bottom-left decorative sphere */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.5 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 1.5, delay: 0.2, ease: "easeOut" }}
+        <div
           className="absolute -bottom-32 -left-32 w-[500px] h-[500px]
                      bg-gradient-to-tr from-primary/20 via-primary/5 to-transparent
                      rounded-full blur-3xl"
         />
 
-        {/* Floating circles */}
+        {/* Static circles instead of floating ones */}
         <div className="absolute inset-0">
           {[...Array(3)].map((_, i) => (
-            <motion.div
+            <div
               key={i}
-              initial={{ 
-                opacity: 0,
-                y: Math.random() * 100,
-                x: Math.random() * 100
-              }}
-              animate={{ 
-                opacity: [0.1, 0.3, 0.1],
-                y: [0, -50, 0],
-                x: [0, 30, 0]
-              }}
-              transition={{
-                duration: 10 + Math.random() * 5,
-                repeat: Infinity,
-                delay: i * 2,
-                ease: "easeInOut"
-              }}
               className="absolute"
               style={{
                 top: `${20 + Math.random() * 60}%`,
                 left: `${20 + Math.random() * 60}%`,
+                opacity: 0.2
               }}
             >
               <Circle 
                 className="text-primary/20" 
                 size={10 + Math.random() * 20} 
               />
-            </motion.div>
+            </div>
           ))}
         </div>
 
@@ -238,8 +217,8 @@ export const ProfileSelector = () => {
                         <Avatar className="w-full h-full ring-2 ring-border dark:ring-border/50 
                                        shadow-lg shadow-primary/5
                                        group-hover:ring-primary/50 
-                                       transition-all duration-300">
-                          <AvatarImage src={profile.avatar || ''} alt={profile.name} />
+                                       transition-all duration-300 overflow-hidden">
+                          <AvatarImage src={profile.avatar || ''} alt={profile.name} className="object-cover" />
                           <AvatarFallback 
                             className="bg-primary/10 dark:bg-primary/20 
                                      text-primary dark:text-primary/80">
