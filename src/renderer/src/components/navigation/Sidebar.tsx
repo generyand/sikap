@@ -60,9 +60,8 @@ export const Sidebar = () => {
   }
 
   return (
-    <aside className="flex flex-col w-[280px] border-r bg-card/50">
-      {/* Profile Section */}
-      <div className="flex items-center gap-3 border-b p-4 shrink-0">
+    <aside className="flex flex-col min-h-0 w-[280px] border-r bg-card/50">
+      <div className="shrink-0 flex items-center gap-3 border-b p-4">
         <Avatar className="h-10 w-10">
           <AvatarImage src={currentProfile?.avatar || ''} />
           <AvatarFallback>
@@ -79,8 +78,7 @@ export const Sidebar = () => {
         </div>
       </div>
       
-      {/* Navigation */}
-      <nav className="flex-1 space-y-1 p-4 overflow-y-auto">
+      <nav className="flex-1 overflow-y-auto p-4 space-y-1">
         {navItems.map((item) => {
           const isActive = location.pathname === item.path
           return (
@@ -101,8 +99,7 @@ export const Sidebar = () => {
         })}
       </nav>
 
-      {/* Sign Out Button */}
-      <div className="p-4 border-t shrink-0">
+      <div className="shrink-0 p-4 border-t">
         <Button 
           variant="ghost" 
           className="w-full justify-start text-muted-foreground hover:text-destructive"
@@ -113,7 +110,6 @@ export const Sidebar = () => {
         </Button>
       </div>
 
-      {/* Sign Out Confirmation Dialog */}
       <Dialog open={showSignOutDialog} onOpenChange={setShowSignOutDialog}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
@@ -140,11 +136,6 @@ export const Sidebar = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      {/* Theme Toggle */}
-      {/* <div className="border-t p-4">
-        <ThemeToggle />
-      </div> */}
     </aside>
   )
 } 

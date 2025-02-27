@@ -10,14 +10,12 @@ import { Sidebar } from './components/navigation/Sidebar'
 import { QueryProvider } from './providers/QueryProvider'
 import { ProfileProvider, useProfile } from './providers/ProfileProvider'
 import Settings from './pages/Settings'
-import { WindowControls } from './components/WindowControls'
-import './styles/titlebar.css'
 
 const MainLayout = () => {
   return (
-    <div className="flex flex-1">
+    <div className="flex h-full">
       <Sidebar />
-      <main className="flex-1 overflow-y-auto">
+      <main className="flex-1 min-h-0">
         <Routes>
           <Route path="/dashboard" element={<TaskDashboard />} />
           <Route path="/tasks" element={<Tasks />} />
@@ -37,11 +35,11 @@ const App: React.FC = () => {
         <ProfileProvider>
           <ThemeProvider defaultTheme="system">
             <div className="flex flex-col h-screen">
-              <div className="titlebar shrink-0 flex justify-between items-center p-2 bg-white dark:bg-gray-800">
-                <div>Sikap</div>
+              {/* <div className="titlebar h-10 shrink-0 flex justify-between items-center px-4 bg-background border-b sticky top-0 z-10">
+                <div className="text-sm font-medium">Sikap</div>
                 <WindowControls />
-              </div>
-              <div className="flex-1 flex">
+              </div> */}
+              <div className="flex-1 min-h-0">
                 <AppContent />
               </div>
             </div>

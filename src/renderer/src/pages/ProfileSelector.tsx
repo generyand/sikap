@@ -220,11 +220,16 @@ export const ProfileSelector = () => {
                       onClick={() => handleProfileSelect(profile.id)}
                       className={cn(
                         "group relative transition-all duration-300",
-                        // Fixed dimensions for uniform size
                         "w-[180px] h-[180px]",
                         "rounded-xl overflow-hidden",
                         "cursor-pointer p-4 md:p-5",
+                        "border border-border/40",
+                        "bg-card/30 dark:bg-card/20",
                         "hover:scale-[1.02]",
+                        "hover:border-primary/50",
+                        "hover:bg-card/50 dark:hover:bg-card/30",
+                        "hover:shadow-lg hover:shadow-primary/5",
+                        "hover:ring-1 hover:ring-primary/20",
                         profileToDelete === profile && "bg-destructive/10 dark:bg-destructive/20 border-destructive/50 ring-2 ring-destructive/30"
                       )}
                     >
@@ -286,15 +291,17 @@ export const ProfileSelector = () => {
                     variant="outline"
                     onClick={handleCreateProfile}
                     className={cn(
-                      // Match the dimensions of profile cards
                       "w-[180px] h-[180px]",
                       "relative overflow-hidden",
                       "transition-all duration-200",
                       "group",
                       "flex flex-col items-center justify-center gap-3",
-                      "border-2 border-dashed",
-                      "hover:border-primary/50 hover:bg-accent/50",
-                      "dark:border-border/30 dark:hover:border-primary/50 dark:hover:bg-accent/10",
+                      "border-2 border-dashed border-border/40",
+                      "bg-card/30 dark:bg-card/20",
+                      "hover:border-primary/50 hover:border-solid",
+                      "hover:bg-card/50 dark:hover:bg-card/30",
+                      "hover:shadow-lg hover:shadow-primary/5",
+                      "hover:ring-1 hover:ring-primary/20",
                       "before:absolute before:inset-0 before:-z-10",
                       "before:bg-gradient-to-b before:from-primary/5 before:to-transparent",
                       "before:opacity-0 before:group-hover:opacity-100",
