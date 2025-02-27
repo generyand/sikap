@@ -1,12 +1,8 @@
 import React from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { 
   Calendar, 
-  LayoutGrid, 
   ListTodo, 
-  Clock, 
-  Bell, 
-  Settings, 
   Search,
   Plus,
   Calendar as CalendarIcon,
@@ -16,7 +12,6 @@ import {
   MoreVertical
 } from 'lucide-react'
 import { Button } from "@/components/ui/button"
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
 
@@ -132,27 +127,6 @@ const TaskDashboard: React.FC = () => {
   )
 }
 
-// Helper Components
-const NavItem = ({ 
-  icon: Icon, 
-  children, 
-  active 
-}: { 
-  icon: any; 
-  children: React.ReactNode; 
-  active?: boolean 
-}) => (
-  <button
-    className={cn(
-      "flex items-center gap-3 w-full px-3 py-2 text-sm rounded-md transition-colors",
-      "hover:bg-accent hover:text-accent-foreground",
-      active ? "bg-accent text-accent-foreground" : "text-muted-foreground"
-    )}
-  >
-    <Icon className="h-4 w-4" />
-    <span>{children}</span>
-  </button>
-)
 
 const StatCard = ({ 
   title, 

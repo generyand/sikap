@@ -7,6 +7,9 @@ import icon from '../../resources/icon.png?asset'
 import { store, initStore } from './store'
 import { DatabaseService } from './services/database.service'
 import { ProfileHandler } from './ipc/handlers/profile.handler'
+import { PrismaClient } from '@prisma/client'
+
+const prisma = new PrismaClient()
 
 function createWindow(): void {
   // Create the browser window.
@@ -17,6 +20,7 @@ function createWindow(): void {
     minHeight: 600,
     show: false,
     autoHideMenuBar: true,
+    frame: false,
     ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
       nodeIntegration: true,
@@ -24,6 +28,23 @@ function createWindow(): void {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: false
     }
+  })
+
+  // Add window control handlers
+  ipcMain.handle('minimize-window', () => {
+    mainWindow.minimize()
+  })
+
+  ipcMain.handle('maximize-window', () => {
+    if (mainWindow.isMaximized()) {
+      mainWindow.unmaximize()
+    } else {
+      mainWindow.maximize()
+    }
+  })
+
+  ipcMain.handle('close-window', () => {
+    mainWindow.close()
   })
 
   mainWindow.on('ready-to-show', () => {
@@ -114,6 +135,13 @@ app.whenReady().then(async () => {
 
     ipcMain.handle('get-current-profile', () => {
       return store.get('currentProfile')
+    })
+
+    ipcMain.handle('get-profile', async (_, profileId: string) => {
+      const profile = await prisma.profile.findUnique({
+        where: { id: profileId }
+      })
+      return profile
     })
 
     // Log system theme changes

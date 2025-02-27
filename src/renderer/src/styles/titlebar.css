@@ -1,0 +1,9 @@
+.titlebar {
+  -webkit-app-region: drag; /* Makes the titlebar draggable */
+  user-select: none; /* Prevents text selection while dragging */
+}
+
+/* Make buttons in titlebar non-draggable */
+.titlebar button {
+  -webkit-app-region: no-drag;
+} 
