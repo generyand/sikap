@@ -25,22 +25,12 @@ export class TaskHandler implements ITaskHandler {
 
     // Get tasks for a profile
     ipcMain.handle('get-tasks', async (_, profileId: string) => {
-      try {
-        return await this.taskService.getTasksByProfile(profileId)
-      } catch (error) {
-        console.error('IPC get-tasks error:', error)
-        throw error
-      }
+      return await this.taskService.getTasksByProfile(profileId)
     })
 
     // Create task
     ipcMain.handle('create-task', async (_, taskData) => {
-      try {
-        return await this.taskService.createTask(taskData)
-      } catch (error) {
-        console.error('IPC create-task error:', error)
-        throw error
-      }
+      return await this.taskService.createTask(taskData)
     })
 
     this.handlersRegistered = true

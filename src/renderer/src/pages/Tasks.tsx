@@ -24,42 +24,59 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { TaskPriority, TaskStatus, TaskCategory, RecurrencePattern } from '@prisma/client'
+
+interface NewTask {
+  title: string
+  description: string | null
+  startDate: Date | null
+  dueDate: Date | null
+  priority: TaskPriority
+  status: TaskStatus
+  category: TaskCategory | null
+  reminder: Date | null
+  recurrence: RecurrencePattern | null
+  notes: string | null
+}
 
 export const Tasks = () => {
   const { profileId } = useProfile()
   const queryClient = useQueryClient()
   const [isAddTaskOpen, setIsAddTaskOpen] = useState(false)
-  const [newTask, setNewTask] = useState({
+  const [newTask, setNewTask] = useState<NewTask>({
     title: '',
-    description: '',
-    priority: 'medium' as 'low' | 'medium' | 'high',
-    dueDate: null as Date | null,
-    status: 'todo' as string
+    description: null,
+    startDate: null,
+    dueDate: null,
+    priority: TaskPriority.MEDIUM,
+    status: TaskStatus.TODO,
+    category: null,
+    reminder: null,
+    recurrence: null,
+    notes: null
   })
 
-  const { data: tasks, isLoading } = useQuery({
+  const { isLoading } = useQuery({
     queryKey: ['tasks', profileId],
     queryFn: () => fetchTasks(profileId),
   })
 
   const createTaskMutation = useMutation({
-    mutationFn: (taskData: { 
-      title: string
-      description: string
-      priority: 'low' | 'medium' | 'high'
-      profileId: string
-      dueDate: Date | null
-      status: string
-    }) => createTask(taskData),
+    mutationFn: (taskData: NewTask & { profileId: string }) => createTask(taskData),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks', profileId] })
       setIsAddTaskOpen(false)
       setNewTask({
         title: '',
-        description: '',
-        priority: 'medium' as 'low' | 'medium' | 'high',
+        description: null,
+        startDate: null,
         dueDate: null,
-        status: 'todo'
+        priority: TaskPriority.MEDIUM,
+        status: TaskStatus.TODO,
+        category: null,
+        reminder: null,
+        recurrence: null,
+        notes: null
       })
     }
   })
@@ -172,12 +189,13 @@ export const Tasks = () => {
           
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="title">Title</Label>
+              <Label htmlFor="title">Title *</Label>
               <Input
                 id="title"
                 value={newTask.title}
                 onChange={(e) => setNewTask(prev => ({ ...prev, title: e.target.value }))}
                 placeholder="Enter task title"
+                required
               />
             </div>
 
@@ -185,25 +203,71 @@ export const Tasks = () => {
               <Label htmlFor="description">Description</Label>
               <Textarea
                 id="description"
-                value={newTask.description}
-                onChange={(e) => setNewTask(prev => ({ ...prev, description: e.target.value }))}
+                value={newTask.description || ''}
+                onChange={(e) => setNewTask(prev => ({ ...prev, description: e.target.value || null }))}
                 placeholder="Enter task description"
               />
             </div>
 
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Start Date</Label>
+                <Input
+                  type="datetime-local"
+                  value={newTask.startDate?.toISOString().slice(0, 16) || ''}
+                  onChange={(e) => setNewTask(prev => ({
+                    ...prev,
+                    startDate: e.target.value ? new Date(e.target.value) : null
+                  }))}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Due Date</Label>
+                <Input
+                  type="datetime-local"
+                  value={newTask.dueDate?.toISOString().slice(0, 16) || ''}
+                  onChange={(e) => setNewTask(prev => ({
+                    ...prev,
+                    dueDate: e.target.value ? new Date(e.target.value) : null
+                  }))}
+                />
+              </div>
+            </div>
+
             <div className="space-y-2">
-              <Label>Priority</Label>
+              <Label>Priority *</Label>
               <Select
                 value={newTask.priority}
-                onValueChange={(value) => setNewTask(prev => ({ ...prev, priority: value as 'low' | 'medium' | 'high' }))}
+                onValueChange={(value) => setNewTask(prev => ({ ...prev, priority: value as TaskPriority }))}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select priority" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="low">Low</SelectItem>
-                  <SelectItem value="medium">Medium</SelectItem>
-                  <SelectItem value="high">High</SelectItem>
+                  <SelectItem value={TaskPriority.LOW}>Low</SelectItem>
+                  <SelectItem value={TaskPriority.MEDIUM}>Medium</SelectItem>
+                  <SelectItem value={TaskPriority.HIGH}>High</SelectItem>
+                  <SelectItem value={TaskPriority.URGENT}>Urgent</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Category</Label>
+              <Select
+                value={newTask.category || ''}
+                onValueChange={(value) => setNewTask(prev => ({ ...prev, category: value as TaskCategory || null }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select category" />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.values(TaskCategory).map((category) => (
+                    <SelectItem key={category} value={category}>
+                      {category.charAt(0) + category.slice(1).toLowerCase()}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>

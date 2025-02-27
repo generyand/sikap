@@ -1,4 +1,19 @@
 import { prisma } from '../prisma'
+import { Task, TaskPriority, TaskStatus, TaskCategory, RecurrencePattern } from '@prisma/client'
+
+interface CreateTaskData {
+  title: string
+  description?: string | null
+  startDate?: Date | null
+  dueDate?: Date | null
+  priority: TaskPriority
+  status?: TaskStatus
+  profileId: string
+  category?: TaskCategory | null
+  reminder?: Date | null
+  recurrence?: RecurrencePattern | null
+  notes?: string | null
+}
 
 export class TaskService {
   private static instance: TaskService
@@ -14,23 +29,36 @@ export class TaskService {
 
   async getTasksByProfile(profileId: string) {
     return await prisma.task.findMany({
-      where: { profileId }
+      where: { profileId },
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        startDate: true,
+        dueDate: true,
+        priority: true,
+        status: true,
+        profileId: true,
+        createdAt: true,
+        updatedAt: true,
+        completedAt: true,
+        category: true,
+        reminder: true,
+        recurrence: true,
+        notes: true,
+        profile: true
+      }
     })
   }
 
-  async createTask(taskData: {
-    title: string
-    description: string
-    priority: 'low' | 'medium' | 'high'
-    profileId: string
-    dueDate: Date | null
-    status: string
-  }) {
+  async createTask(taskData: CreateTaskData): Promise<Task> {
     return await prisma.task.create({
       data: {
         ...taskData,
-        status: 'todo',  // Default status
-        completedAt: null
+        status: taskData.status || TaskStatus.TODO,
+        completedAt: null,
+        createdAt: new Date(),
+        updatedAt: new Date()
       }
     })
   }
