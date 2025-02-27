@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Profile } from '@prisma/client'
 import { UserCircle2, Check, Plus, Trash2, Sparkles, ArrowRight, Circle } from 'lucide-react'
