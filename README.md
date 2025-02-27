@@ -47,7 +47,7 @@ npm install -g pnpm
 
 3. Install dependencies:
 ```bash
-pnpm install
+npm install
 ```
 
 4. Start the development server:

@@ -41,41 +41,13 @@ const MOCK_TASKS = [
   // Add more mock tasks...
 ]
 
-export const TaskDashboard: React.FC = () => {
+const TaskDashboard: React.FC = () => {
   const navigate = useNavigate()
 
   return (
     <div className="min-h-screen bg-background">
       {/* Main Layout */}
       <div className="flex h-screen">
-        {/* Sidebar */}
-        <aside className="w-64 border-r border-border bg-card/50 backdrop-blur-xl">
-          {/* Profile Section */}
-          <div className="p-4 border-b border-border">
-            <div className="flex items-center gap-3">
-              <Avatar className="h-10 w-10 ring-2 ring-primary/10">
-                <AvatarImage src="/avatars/01.png" alt="User" />
-                <AvatarFallback>JD</AvatarFallback>
-              </Avatar>
-              <div className="flex-1 min-w-0">
-                <h2 className="text-sm font-semibold truncate">John Doe</h2>
-                <p className="text-xs text-muted-foreground">Premium Plan</p>
-              </div>
-              <Button variant="ghost" size="icon" onClick={() => navigate('/')}>
-                <Settings className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-
-          {/* Navigation */}
-          <nav className="p-2 space-y-1">
-            <NavItem icon={LayoutGrid} active>Dashboard</NavItem>
-            <NavItem icon={ListTodo}>Tasks</NavItem>
-            <NavItem icon={Calendar}>Calendar</NavItem>
-            <NavItem icon={Clock}>Timeline</NavItem>
-            <NavItem icon={Bell}>Notifications</NavItem>
-          </nav>
-        </aside>
 
         {/* Main Content */}
         <main className="flex-1 flex flex-col min-w-0">
@@ -252,3 +224,5 @@ const TaskCard = ({ task }: { task: any }) => (
     </div>
   </div>
 ) 
+
+export default TaskDashboard

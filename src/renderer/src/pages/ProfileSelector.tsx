@@ -8,8 +8,10 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { cn } from '@/lib/utils'
 import { CreateProfileModal } from '@/components/CreateProfileModal'
 import { motion } from 'framer-motion'
+import { useProfile } from '../providers/ProfileProvider'
 
-export const ProfileSelector: React.FC = () => {
+export const ProfileSelector = () => {
+  const { setProfileId } = useProfile()
   const navigate = useNavigate()
   const [profiles, setProfiles] = useState<Profile[]>([])
   const [selectedProfile, setSelectedProfile] = useState<string>()
@@ -30,15 +32,12 @@ export const ProfileSelector: React.FC = () => {
   }, [])
 
   const handleProfileSelect = async (profileId: string) => {
+    setProfileId(profileId)
     setSelectedProfile(profileId)
-    try {
-      // Store selected profile in electron-store
-      await window.electron.ipcRenderer.invoke('set-current-profile', profileId)
-      // Navigate to dashboard using router
-      navigate(`/dashboard/${profileId}`)
-    } catch (error) {
-      console.error('Failed to set profile:', error)
-    }
+    // Store selected profile in electron-store
+    await window.electron.ipcRenderer.invoke('set-current-profile', profileId)
+    // Navigate to dashboard
+    navigate('/dashboard')
   }
 
   const handleCreateProfile = () => {
