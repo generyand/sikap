@@ -28,30 +28,18 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet'
 import { cn } from '@/lib/utils'
-import { useState, useMemo } from 'react'
+import { useState } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import type { Task } from '@prisma/client'
-import { TaskPriority, TaskStatus, TaskCategory, RecurrencePattern } from '../types/task'
+import { TaskPriority, TaskStatus, TaskCategory, RecurrencePattern, NewTask } from '../types/task'
 import React from 'react'
 import { format, isSameDay, formatDistanceToNow } from 'date-fns'
+import { Switch } from "@/components/ui/switch"
 
-interface NewTask {
-  title: string
-  description: string | null
-  startDate: Date | null
-  dueDate: Date | null
-  priority: TaskPriority
-  status: TaskStatus
-  category: TaskCategory | null
-  reminder: Date | null
-  recurrence: RecurrencePattern | null
-  notes: string | null
-}
-
-const categoryColorMap: Record<typeof TaskCategory[keyof typeof TaskCategory], { 
+const categoryColorMap: Record<TaskCategory, { 
   bg: string, 
   text: string, 
   border: string,
@@ -125,7 +113,7 @@ export const Tasks = () => {
   })
   const [selectedTask, setSelectedTask] = useState<Task | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
-  const [statusFilter, setStatusFilter] = useState<typeof TaskStatus[keyof typeof TaskStatus] | 'ALL'>('ALL')
+  const [statusFilter, setStatusFilter] = useState<TaskStatus | 'ALL'>('ALL')
 
   const { data: tasks, isLoading } = useQuery({
     queryKey: ['tasks', profileId],
@@ -135,11 +123,16 @@ export const Tasks = () => {
   const groupedTasks = React.useMemo(() => {
     if (!tasks) return { today: [], tomorrow: [], upcoming: [] }
     
+    const filtered = tasks.filter(task => 
+      task.title.toLowerCase().includes(searchTerm.toLowerCase()) &&
+      (statusFilter === 'ALL' || task.status === statusFilter)
+    )
+    
     const today = new Date()
     const tomorrow = new Date(today)
     tomorrow.setDate(tomorrow.getDate() + 1)
 
-    return tasks.reduce((acc, task) => {
+    return filtered.reduce((acc, task) => {
       const dueDate = task.dueDate ? new Date(task.dueDate) : null
       
       if (!dueDate) {
@@ -154,13 +147,6 @@ export const Tasks = () => {
       
       return acc
     }, { today: [], tomorrow: [], upcoming: [] } as Record<string, Task[]>)
-  }, [tasks])
-
-  const filteredTasks = useMemo(() => {
-    return tasks?.filter(task => 
-      task.title.toLowerCase().includes(searchTerm.toLowerCase()) &&
-      (statusFilter === 'ALL' || task.status === statusFilter)
-    )
   }, [tasks, searchTerm, statusFilter])
 
   const createTaskMutation = useMutation({
@@ -493,41 +479,87 @@ export const Tasks = () => {
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label>Priority *</Label>
-              <Select
-                value={newTask.priority}
-                onValueChange={(value) => setNewTask(prev => ({ ...prev, priority: value as typeof TaskPriority[keyof typeof TaskPriority] }))}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select priority" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={TaskPriority.LOW}>Low</SelectItem>
-                  <SelectItem value={TaskPriority.MEDIUM}>Medium</SelectItem>
-                  <SelectItem value={TaskPriority.HIGH}>High</SelectItem>
-                  <SelectItem value={TaskPriority.URGENT}>Urgent</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            <div className="space-y-4">
+              {/* Task Details Section */}
+              <div className="space-y-4 border-t pt-4">
+                <h4 className="text-sm font-medium">Task Details</h4>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Priority *</Label>
+                    <Select
+                      value={newTask.priority}
+                      onValueChange={(value) => setNewTask(prev => ({ ...prev, priority: value as TaskPriority }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select priority" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value={TaskPriority.LOW}>Low</SelectItem>
+                        <SelectItem value={TaskPriority.MEDIUM}>Medium</SelectItem>
+                        <SelectItem value={TaskPriority.HIGH}>High</SelectItem>
+                        <SelectItem value={TaskPriority.URGENT}>Urgent</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label>Category</Label>
+                    <Select
+                      value={newTask.category || ''}
+                      onValueChange={(value) => setNewTask(prev => ({ ...prev, category: value as TaskCategory || null }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Object.values(TaskCategory).map((category) => (
+                          <SelectItem key={category} value={category}>
+                            {category.charAt(0) + category.slice(1).toLowerCase()}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </div>
 
-            <div className="space-y-2">
-              <Label>Category</Label>
-              <Select
-                value={newTask.category || ''}
-                onValueChange={(value) => setNewTask(prev => ({ ...prev, category: value as typeof TaskCategory[keyof typeof TaskCategory] || null }))}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select category" />
-                </SelectTrigger>
-                <SelectContent>
-                  {Object.values(TaskCategory).map((category) => (
-                    <SelectItem key={category} value={category}>
-                      {category.charAt(0) + category.slice(1).toLowerCase()}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {/* Recurrence Section */}
+              <div className="space-y-4 border-t pt-4">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-sm font-medium">Recurrence</h4>
+                  <Switch
+                    checked={!!newTask.recurrence}
+                    onCheckedChange={(checked) => 
+                      setNewTask(prev => ({
+                        ...prev,
+                        recurrence: checked ? RecurrencePattern.DAILY : null
+                      }))
+                    }
+                  />
+                </div>
+
+                {newTask.recurrence && (
+                  <Select
+                    value={newTask.recurrence}
+                    onValueChange={(value) => setNewTask(prev => ({ 
+                      ...prev, 
+                      recurrence: value as RecurrencePattern
+                    }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select frequency" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={RecurrencePattern.DAILY}>Daily</SelectItem>
+                      <SelectItem value={RecurrencePattern.WEEKLY}>Weekly</SelectItem>
+                      <SelectItem value={RecurrencePattern.MONTHLY}>Monthly</SelectItem>
+                      <SelectItem value={RecurrencePattern.YEARLY}>Yearly</SelectItem>
+                      <SelectItem value={RecurrencePattern.CUSTOM}>Custom...</SelectItem>
+                    </SelectContent>
+                  </Select>
+                )}
+              </div>
             </div>
           </div>
 

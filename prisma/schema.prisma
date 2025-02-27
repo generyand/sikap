@@ -47,6 +47,7 @@ enum TaskCategory {
   HOME
   OTHER
 }
+
 model Profile {
   id        String   @id @default(uuid())
   name      String
@@ -63,7 +64,7 @@ model Task {
   id          String       @id @default(uuid())
   title       String
   description String?
-  startDate   DateTime?    // Add this field for multi-day tasks
+  startDate   DateTime? // Add this field for multi-day tasks
   dueDate     DateTime?
   priority    TaskPriority @default(MEDIUM)
   status      TaskStatus   @default(TODO)
@@ -73,13 +74,13 @@ model Task {
   completedAt DateTime?
 
   // Optional but valuable fields
-  category    TaskCategory?
-  reminder    DateTime?
-  recurrence  RecurrencePattern?
-  notes       String?
+  category   TaskCategory?
+  reminder   DateTime?
+  recurrence RecurrencePattern?
+  notes      String?
 
   // Relations
-  profile     Profile      @relation("ProfileTasks", fields: [profileId], references: [id], onDelete: Cascade)
+  profile Profile @relation("ProfileTasks", fields: [profileId], references: [id], onDelete: Cascade)
 
   @@map("tasks")
 }

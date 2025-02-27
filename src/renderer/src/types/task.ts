@@ -29,4 +29,17 @@ export enum RecurrencePattern {
   MONTHLY = 'MONTHLY',
   YEARLY = 'YEARLY',
   CUSTOM = 'CUSTOM'
-} 
+}
+
+export interface NewTask {
+    title: string
+    description: string | null
+    startDate: Date | null
+    dueDate: Date | null
+    priority: TaskPriority
+    status: TaskStatus
+    category: TaskCategory | null
+    reminder: Date | null
+    recurrence: RecurrencePattern | null
+    notes: string | null
+  }
