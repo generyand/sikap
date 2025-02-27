@@ -1,5 +1,4 @@
 import React from 'react'
-import { useNavigate } from 'react-router-dom'
 import { 
   Calendar, 
   ListTodo, 
@@ -9,11 +8,76 @@ import {
   Star,
   Clock3,
   Tag,
-  MoreVertical
+  MoreVertical,
+  CalendarRange,
+  LayoutDashboard,
+  Filter,
+  Download
 } from 'lucide-react'
+import { 
+  LineChart, 
+  Line, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  Legend,
+  PieChart,
+  Pie,
+  Cell,
+  BarChart,
+  Bar,
+  ResponsiveContainer 
+} from 'recharts'
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { cn } from "@/lib/utils"
+import { TaskCategory } from '@prisma/client'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+
+// Add color constants
+const PRIORITY_COLORS = {
+  LOW: '#10B981',    // Green
+  MEDIUM: '#F59E0B', // Yellow
+  HIGH: '#EF4444',   // Red
+  URGENT: '#7C3AED'  // Purple
+}
+
+const CATEGORY_COLORS = {
+  WORK: '#3B82F6',
+  PERSONAL: '#EC4899',
+  SHOPPING: '#F59E0B',
+  HEALTH: '#10B981',
+  EDUCATION: '#6366F1',
+  FINANCE: '#059669',
+  HOME: '#8B5CF6',
+  OTHER: '#6B7280'
+}
+
+// Mock data for charts
+const tasksByStatusData = [
+  { name: 'Todo', value: 30 },
+  { name: 'In Progress', value: 15 },
+  { name: 'Completed', value: 45 },
+  { name: 'Archived', value: 10 }
+]
+
+const taskCompletionTrendData = [
+  { date: '2024-03-01', completed: 5, created: 8 },
+  { date: '2024-03-02', completed: 7, created: 6 },
+  // ... more data points
+]
+
+const tasksByPriorityData = [
+  { priority: 'Low', count: 12 },
+  { priority: 'Medium', count: 24 },
+  { priority: 'High', count: 8 },
+  { priority: 'Urgent', count: 4 }
+]
 
 // Mock data for development
 const MOCK_TASKS = [
@@ -37,7 +101,6 @@ const MOCK_TASKS = [
 ]
 
 const TaskDashboard: React.FC = () => {
-  const navigate = useNavigate()
 
   return (
     <div className="min-h-screen bg-background">
@@ -49,19 +112,41 @@ const TaskDashboard: React.FC = () => {
           {/* Top Bar */}
           <header className="h-16 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
             <div className="flex items-center justify-between h-full px-6">
-              <div className="flex items-center gap-4 flex-1">
-                <div className="relative w-96">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input 
-                    placeholder="Search tasks..." 
-                    className="pl-10 bg-muted/50"
-                  />
-                </div>
+              <div className="flex items-center gap-4">
+                <h1 className="text-xl font-semibold flex items-center gap-2">
+                  <LayoutDashboard className="h-5 w-5" />
+                  Dashboard
+                </h1>
               </div>
-              <div className="flex items-center gap-2">
-                <Button>
-                  <Plus className="h-4 w-4 mr-2" />
-                  New Task
+
+              <div className="flex items-center gap-4">
+                {/* Date Range Selector */}
+                <div className="flex items-center gap-2">
+                  <CalendarRange className="h-4 w-4 text-muted-foreground" />
+                  <Select defaultValue="7days">
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue placeholder="Select timeframe" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="today">Today</SelectItem>
+                      <SelectItem value="7days">Last 7 days</SelectItem>
+                      <SelectItem value="30days">Last 30 days</SelectItem>
+                      <SelectItem value="90days">Last 90 days</SelectItem>
+                      <SelectItem value="custom">Custom Range</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Filter Button */}
+                <Button variant="outline" size="sm" className="flex items-center gap-2">
+                  <Filter className="h-4 w-4" />
+                  Filters
+                </Button>
+
+                {/* Export Button */}
+                <Button variant="outline" size="sm" className="flex items-center gap-2">
+                  <Download className="h-4 w-4" />
+                  Export
                 </Button>
               </div>
             </div>
@@ -97,28 +182,95 @@ const TaskDashboard: React.FC = () => {
               />
             </div>
 
-            {/* Tasks Section */}
-            <div className="grid grid-cols-3 gap-6">
-              {/* Today's Tasks */}
-              <TaskColumn 
-                title="Today's Tasks" 
-                count={5}
-                tasks={MOCK_TASKS.slice(0, 3)}
-              />
-              
-              {/* In Progress */}
-              <TaskColumn 
-                title="In Progress" 
-                count={3}
-                tasks={MOCK_TASKS.slice(1, 4)}
-              />
-              
-              {/* Completed */}
-              <TaskColumn 
-                title="Completed" 
-                count={8}
-                tasks={MOCK_TASKS.slice(2, 5)}
-              />
+            {/* Charts Grid */}
+            <div className="grid grid-cols-2 gap-6">
+              {/* Task Status Distribution */}
+              <div className="rounded-xl border bg-card p-4">
+                <h3 className="text-lg font-semibold mb-4">Task Status Distribution</h3>
+                <ResponsiveContainer width="100%" height={300}>
+                  <PieChart>
+                    <Pie
+                      data={tasksByStatusData}
+                      dataKey="value"
+                      nameKey="name"
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={100}
+                      label
+                    >
+                      {tasksByStatusData.map((entry, index) => (
+                        <Cell 
+                          key={`cell-${index}`} 
+                          fill={Object.values(CATEGORY_COLORS)[index % Object.values(CATEGORY_COLORS).length]} 
+                        />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+
+              {/* Task Completion Trend */}
+              <div className="rounded-xl border bg-card p-4">
+                <h3 className="text-lg font-semibold mb-4">Task Completion Trend</h3>
+                <ResponsiveContainer width="100%" height={300}>
+                  <LineChart data={taskCompletionTrendData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="date" />
+                    <YAxis />
+                    <Tooltip />
+                    <Legend />
+                    <Line type="monotone" dataKey="completed" stroke="#10B981" name="Completed" />
+                    <Line type="monotone" dataKey="created" stroke="#6366F1" name="Created" />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+
+              {/* Tasks by Priority */}
+              <div className="rounded-xl border bg-card p-4">
+                <h3 className="text-lg font-semibold mb-4">Tasks by Priority</h3>
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={tasksByPriorityData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="priority" />
+                    <YAxis />
+                    <Tooltip />
+                    <Bar dataKey="count" fill="#8884d8">
+                      {tasksByPriorityData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={Object.values(PRIORITY_COLORS)[index]} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+
+              {/* Category Distribution */}
+              <div className="rounded-xl border bg-card p-4">
+                <h3 className="text-lg font-semibold mb-4">Tasks by Category</h3>
+                <ResponsiveContainer width="100%" height={300}>
+                  <PieChart>
+                    <Pie
+                      data={Object.entries(TaskCategory).map(([category, count]) => ({
+                        name: category,
+                        value: Math.floor(Math.random() * 30) // Replace with actual data
+                      }))}
+                      dataKey="value"
+                      nameKey="name"
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={100}
+                      label
+                    >
+                      {Object.keys(CATEGORY_COLORS).map((category, index) => (
+                        <Cell key={`cell-${index}`} fill={CATEGORY_COLORS[category]} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
             </div>
           </div>
         </main>
@@ -150,53 +302,5 @@ const StatCard = ({
     </div>
   </div>
 )
-
-const TaskColumn = ({ 
-  title, 
-  count, 
-  tasks 
-}: { 
-  title: string; 
-  count: number;
-  tasks: any[];
-}) => (
-  <div className="rounded-xl border bg-card">
-    <div className="p-4 border-b">
-      <div className="flex items-center justify-between mb-1">
-        <h3 className="font-semibold">{title}</h3>
-        <span className="text-sm text-muted-foreground">{count}</span>
-      </div>
-    </div>
-    <div className="p-2">
-      {tasks.map(task => (
-        <TaskCard key={task.id} task={task} />
-      ))}
-    </div>
-  </div>
-)
-
-const TaskCard = ({ task }: { task: any }) => (
-  <div className="p-3 rounded-lg border bg-background/50 hover:bg-accent/5 
-                  cursor-pointer transition-colors mb-2 last:mb-0">
-    <div className="flex items-start justify-between gap-2">
-      <div className="flex-1 min-w-0">
-        <h4 className="text-sm font-medium truncate mb-1">{task.title}</h4>
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <div className="flex items-center gap-1">
-            <Calendar className="h-3 w-3" />
-            <span>{task.dueDate}</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <Tag className="h-3 w-3" />
-            <span>{task.tags.join(', ')}</span>
-          </div>
-        </div>
-      </div>
-      <Button variant="ghost" size="icon" className="h-6 w-6">
-        <MoreVertical className="h-3 w-3" />
-      </Button>
-    </div>
-  </div>
-) 
 
 export default TaskDashboard
