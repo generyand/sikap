@@ -107,8 +107,14 @@ app.whenReady().then(async () => {
       return store.get(key)
     })
 
-    ipcMain.handle('set-current-profile', (_, profileId) => handleSetCurrentProfile(profileId))
-    ipcMain.handle('get-current-profile', () => handleGetCurrentProfile())
+    ipcMain.handle('set-current-profile', (_, profileId: string) => {
+      store.set('currentProfile', profileId)
+      return true
+    })
+
+    ipcMain.handle('get-current-profile', () => {
+      return store.get('currentProfile')
+    })
 
     // Log system theme changes
     nativeTheme.on('updated', () => {

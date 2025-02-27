@@ -9,35 +9,42 @@ import { cn } from '@/lib/utils'
 import { CreateProfileModal } from '@/components/CreateProfileModal'
 import { motion } from 'framer-motion'
 import { useProfile } from '../providers/ProfileProvider'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { profileService } from '@/services/profileService'
 
 export const ProfileSelector = () => {
-  const { setProfileId } = useProfile()
+  const queryClient = useQueryClient()
   const navigate = useNavigate()
-  const [profiles, setProfiles] = useState<Profile[]>([])
-  const [selectedProfile, setSelectedProfile] = useState<string>()
+  const { setProfileId } = useProfile()
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [profileToDelete, setProfileToDelete] = useState<Profile | null>(null)
+  
+  // Query for profiles
+  const { data: profiles = [], isLoading } = useQuery({
+    queryKey: ['profiles'],
+    queryFn: profileService.getProfiles
+  })
 
-  const loadProfiles = async () => {
-    try {
-      const data = await window.electron.ipcRenderer.invoke('get-profiles')
-      setProfiles(data)
-    } catch (error) {
-      console.error('Failed to load profiles:', error)
+  // Delete mutation
+  const deleteMutation = useMutation({
+    mutationFn: profileService.deleteProfile,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['profiles'] })
+      setProfileToDelete(null)
     }
-  }
+  })
 
-  useEffect(() => {
-    loadProfiles()
-  }, [])
+  // Set current profile mutation
+  const setProfileMutation = useMutation({
+    mutationFn: profileService.setCurrentProfile,
+    onSuccess: (_, profileId) => {
+      setProfileId(profileId)
+      navigate('/dashboard')
+    }
+  })
 
-  const handleProfileSelect = async (profileId: string) => {
-    setProfileId(profileId)
-    setSelectedProfile(profileId)
-    // Store selected profile in electron-store
-    await window.electron.ipcRenderer.invoke('set-current-profile', profileId)
-    // Navigate to dashboard
-    navigate('/dashboard')
+  const handleProfileSelect = (profileId: string) => {
+    setProfileMutation.mutate(profileId)
   }
 
   const handleCreateProfile = () => {
@@ -52,16 +59,9 @@ export const ProfileSelector = () => {
     setProfileToDelete(profile)
   }
 
-  const handleConfirmDelete = async () => {
+  const handleConfirmDelete = () => {
     if (!profileToDelete) return
-
-    try {
-      await window.electron.ipcRenderer.invoke('delete-profile', profileToDelete.id)
-      await loadProfiles()
-      setProfileToDelete(null)
-    } catch (error) {
-      console.error('Failed to delete profile:', error)
-    }
+    deleteMutation.mutate(profileToDelete.id)
   }
 
   const getContentMessage = () => {
@@ -210,7 +210,11 @@ export const ProfileSelector = () => {
                   // Add max width to contain the flex items
                   "max-w-[1200px] mx-auto"
                 )}>
-                  {profiles.map(profile => (
+                  {isLoading ? (
+                    <div className="flex items-center justify-center h-64">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+                    </div>
+                  ) : profiles.map(profile => (
                     <div 
                       key={profile.id}
                       onClick={() => handleProfileSelect(profile.id)}
@@ -221,14 +225,7 @@ export const ProfileSelector = () => {
                         "rounded-xl overflow-hidden",
                         "cursor-pointer p-4 md:p-5",
                         "hover:scale-[1.02]",
-                        selectedProfile === profile.id 
-                          ? "bg-primary/10 dark:bg-primary/20 border-primary/50 ring-2 ring-primary/30" 
-                          : cn(
-                              "border border-border/50 hover:border-primary/30",
-                              "bg-card/50 dark:bg-card/50",
-                              "hover:bg-accent/50 dark:hover:bg-accent/10",
-                              "dark:shadow-none"
-                            )
+                        profileToDelete === profile && "bg-destructive/10 dark:bg-destructive/20 border-destructive/50 ring-2 ring-destructive/30"
                       )}
                     >
                       <div className="relative mx-auto w-16 h-16 mb-3">
@@ -245,12 +242,12 @@ export const ProfileSelector = () => {
                           </AvatarFallback>
                         </Avatar>
 
-                        {selectedProfile === profile.id && (
+                        {profileToDelete === profile && (
                           <div className="absolute -top-1 -right-1 
-                                        bg-primary dark:bg-primary/80 
+                                        bg-destructive dark:bg-destructive/80 
                                         rounded-full p-1.5
-                                        shadow-lg shadow-primary/30">
-                            <Check className="w-3 h-3 text-primary-foreground" />
+                                        shadow-lg shadow-destructive/30">
+                            <Check className="w-3 h-3 text-destructive-foreground" />
                           </div>
                         )}
                       </div>
@@ -263,7 +260,7 @@ export const ProfileSelector = () => {
                           {profile.name}
                         </h3>
                         <p className="text-xs text-muted-foreground/60">
-                          Click to continue {selectedProfile === profile.id && <ArrowRight className="inline w-3 h-3" />}
+                          Click to continue {profileToDelete === profile && <ArrowRight className="inline w-3 h-3" />}
                         </p>
                       </div>
 
@@ -323,7 +320,7 @@ export const ProfileSelector = () => {
       <CreateProfileModal 
         isOpen={isCreateModalOpen}
         onClose={handleCloseCreateModal}
-        onSuccess={loadProfiles}
+        onSuccess={() => queryClient.invalidateQueries({ queryKey: ['profiles'] })}
       />
 
       <Dialog open={!!profileToDelete} onOpenChange={() => setProfileToDelete(null)}>

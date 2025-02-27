@@ -6,6 +6,8 @@ import { Label } from "@/components/ui/label"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { UserCircle2, Upload, X } from "lucide-react"
 import { cn } from '@/lib/utils'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { profileService } from '@/services/profileService'
 
 interface CreateProfileModalProps {
   isOpen: boolean
@@ -18,6 +20,15 @@ export function CreateProfileModal({ isOpen, onClose, onSuccess }: CreateProfile
   const [avatar, setAvatar] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [dragActive, setDragActive] = useState(false)
+  const queryClient = useQueryClient()
+
+  const createMutation = useMutation({
+    mutationFn: profileService.createProfile,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['profiles'] })
+      onClose()
+    }
+  })
 
   const handleDrag = useCallback((e: React.DragEvent) => {
     e.preventDefault()
@@ -51,18 +62,16 @@ export function CreateProfileModal({ isOpen, onClose, onSuccess }: CreateProfile
     }
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!name.trim()) return
 
     setIsLoading(true)
     try {
-      await window.electron.ipcRenderer.invoke('create-profile', { 
+      createMutation.mutate({ 
         name, 
         avatar 
       })
-      onSuccess()
-      handleClose()
     } catch (error) {
       console.error('Failed to create profile:', error)
     } finally {

@@ -1,5 +1,5 @@
 import React from 'react'
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { ProfileSelector } from './pages/ProfileSelector'
 import TaskDashboard from './pages/TaskDashboard'
 import { ThemeProvider } from './providers/ThemeProvider'
@@ -9,6 +9,7 @@ import Notifications from './pages/Notifications'
 import { Sidebar } from './components/navigation/Sidebar'
 import { QueryProvider } from './providers/QueryProvider'
 import { ProfileProvider, useProfile } from './providers/ProfileProvider'
+import { RequireProfile } from '@/components/RequireProfile'
 
 const MainLayout = () => {
   return (
@@ -29,14 +30,14 @@ const MainLayout = () => {
 const App: React.FC = () => {
   return (
     <QueryProvider>
-      <ProfileProvider>
-        <ThemeProvider defaultTheme="system">
-          {/* <ThemeDebug /> */}
-          <BrowserRouter>
+      <BrowserRouter>
+        <ProfileProvider>
+          <ThemeProvider defaultTheme="system">
+            {/* <ThemeDebug /> */}
             <AppContent />
-          </BrowserRouter>
-        </ThemeProvider>
-      </ProfileProvider>
+          </ThemeProvider>
+        </ProfileProvider>
+      </BrowserRouter>
     </QueryProvider>
   )
 }
