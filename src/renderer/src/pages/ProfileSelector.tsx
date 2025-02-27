@@ -177,9 +177,9 @@ export const ProfileSelector: React.FC = () => {
             profiles.length === 0 ? "max-w-md" : "max-w-5xl"
           )}>
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, ease: "easeOut" }}
+              // initial={{ opacity: 0, y: 20 }}
+              // animate={{ opacity: 1, y: 0 }}
+              // transition={{ duration: 0.5, ease: "easeOut" }}
               className={cn(
                 "relative backdrop-blur-xl border rounded-2xl",
                 "bg-background/60 dark:bg-card/40",
@@ -207,17 +207,19 @@ export const ProfileSelector: React.FC = () => {
                 </div>
 
                 <div className={cn(
-                  "grid gap-4",
-                  profiles.length === 0 
-                    ? "grid-cols-1" // Single column for empty state
-                    : "grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
+                  "flex flex-wrap justify-center gap-4",
+                  // Add max width to contain the flex items
+                  "max-w-[1200px] mx-auto"
                 )}>
                   {profiles.map(profile => (
                     <div 
                       key={profile.id}
                       onClick={() => handleProfileSelect(profile.id)}
                       className={cn(
-                        "group relative rounded-xl overflow-hidden transition-all duration-300",
+                        "group relative transition-all duration-300",
+                        // Fixed dimensions for uniform size
+                        "w-[180px] h-[180px]",
+                        "rounded-xl overflow-hidden",
                         "cursor-pointer p-4 md:p-5",
                         "hover:scale-[1.02]",
                         selectedProfile === profile.id 
@@ -288,31 +290,27 @@ export const ProfileSelector: React.FC = () => {
                     variant="outline"
                     onClick={handleCreateProfile}
                     className={cn(
+                      // Match the dimensions of profile cards
+                      "w-[180px] h-[180px]",
                       "relative overflow-hidden",
                       "transition-all duration-200",
                       "group",
-                      profiles.length === 0 
-                        ? "h-24 flex flex-row items-center justify-center gap-3 w-full" // Horizontal layout for empty state
-                        : cn( // Original layout for non-empty state
-                          "h-auto aspect-square flex flex-col items-center justify-center gap-3",
-                          "border-2 border-dashed",
-                          "hover:border-primary/50 hover:bg-accent/50",
-                          "dark:border-border/30 dark:hover:border-primary/50 dark:hover:bg-accent/10",
-                          "before:absolute before:inset-0 before:-z-10",
-                          "before:bg-gradient-to-b before:from-primary/5 before:to-transparent",
-                          "before:opacity-0 before:group-hover:opacity-100",
-                          "before:transition-opacity before:duration-200"
-                        )
+                      "flex flex-col items-center justify-center gap-3",
+                      "border-2 border-dashed",
+                      "hover:border-primary/50 hover:bg-accent/50",
+                      "dark:border-border/30 dark:hover:border-primary/50 dark:hover:bg-accent/10",
+                      "before:absolute before:inset-0 before:-z-10",
+                      "before:bg-gradient-to-b before:from-primary/5 before:to-transparent",
+                      "before:opacity-0 before:group-hover:opacity-100",
+                      "before:transition-opacity before:duration-200"
                     )}
                   >
-                    <Plus className={cn(
-                      "text-muted-foreground group-hover:text-primary transition-colors duration-200",
-                      profiles.length === 0 ? "h-6 w-6" : "h-8 w-8"
-                    )} />
-                    <span className={cn(
-                      "text-muted-foreground group-hover:text-primary transition-colors duration-200",
-                      "font-medium"
-                    )}>
+                    <Plus className="h-8 w-8 text-muted-foreground 
+                                    group-hover:text-primary 
+                                    transition-colors duration-200" />
+                    <span className="text-sm font-medium text-muted-foreground
+                                    group-hover:text-primary
+                                    transition-colors duration-200">
                       {profiles.length === 0 ? "Create Profile" : "New Profile"}
                     </span>
                   </Button>
