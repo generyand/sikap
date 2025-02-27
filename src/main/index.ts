@@ -8,6 +8,7 @@ import { store, initStore } from './store'
 import { DatabaseService } from './services/database.service'
 import { ProfileHandler } from './ipc/handlers/profile.handler'
 import { PrismaClient } from '@prisma/client'
+import { TaskHandler } from './ipc/handlers/task.handler'
 
 const prisma = new PrismaClient()
 
@@ -106,6 +107,7 @@ app.whenReady().then(async () => {
     // Initialize all IPC handlers
     const profileHandler = ProfileHandler.getInstance()
     profileHandler.registerHandlers()  // This will handle all profile-related IPC
+    TaskHandler.getInstance().registerHandlers()  // Add this line
 
     electronApp.setAppUserModelId('com.electron')
 

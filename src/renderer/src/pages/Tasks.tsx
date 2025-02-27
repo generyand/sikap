@@ -19,22 +19,59 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet'
 import { cn } from '@/lib/utils'
+import { useState } from 'react'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 export const Tasks = () => {
   const { profileId } = useProfile()
   const queryClient = useQueryClient()
+  const [isAddTaskOpen, setIsAddTaskOpen] = useState(false)
+  const [newTask, setNewTask] = useState({
+    title: '',
+    description: '',
+    priority: 'medium' as 'low' | 'medium' | 'high',
+    dueDate: null as Date | null,
+    status: 'todo' as string
+  })
 
   const { data: tasks, isLoading } = useQuery({
     queryKey: ['tasks', profileId],
     queryFn: () => fetchTasks(profileId),
   })
 
-  const { mutate: addTask } = useMutation({
-    mutationFn: createTask,
+  const createTaskMutation = useMutation({
+    mutationFn: (taskData: { 
+      title: string
+      description: string
+      priority: 'low' | 'medium' | 'high'
+      profileId: string
+      dueDate: Date | null
+      status: string
+    }) => createTask(taskData),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks', profileId] })
-    },
+      setIsAddTaskOpen(false)
+      setNewTask({
+        title: '',
+        description: '',
+        priority: 'medium' as 'low' | 'medium' | 'high',
+        dueDate: null,
+        status: 'todo'
+      })
+    }
   })
+
+  const handleAddTask = () => {
+    if (!newTask.title.trim()) return
+
+    createTaskMutation.mutate({
+      ...newTask,
+      profileId: profileId as string
+    })
+  }
 
   if (isLoading) return <div>Loading...</div>
 
@@ -59,7 +96,7 @@ export const Tasks = () => {
                   <DropdownMenuItem>Completed</DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-              <Button>
+              <Button onClick={() => setIsAddTaskOpen(true)}>
                 <Plus className="mr-2 h-4 w-4" />
                 Add Task
               </Button>
@@ -125,6 +162,69 @@ export const Tasks = () => {
           {/* Task details content */}
         </SheetContent>
       </Sheet>
+
+      {/* Add Task Dialog */}
+      <Dialog open={isAddTaskOpen} onOpenChange={setIsAddTaskOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add New Task</DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="title">Title</Label>
+              <Input
+                id="title"
+                value={newTask.title}
+                onChange={(e) => setNewTask(prev => ({ ...prev, title: e.target.value }))}
+                placeholder="Enter task title"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="description">Description</Label>
+              <Textarea
+                id="description"
+                value={newTask.description}
+                onChange={(e) => setNewTask(prev => ({ ...prev, description: e.target.value }))}
+                placeholder="Enter task description"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Priority</Label>
+              <Select
+                value={newTask.priority}
+                onValueChange={(value) => setNewTask(prev => ({ ...prev, priority: value as 'low' | 'medium' | 'high' }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select priority" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="low">Low</SelectItem>
+                  <SelectItem value="medium">Medium</SelectItem>
+                  <SelectItem value="high">High</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsAddTaskOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleAddTask}
+              disabled={!newTask.title.trim()}
+            >
+              Create Task
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

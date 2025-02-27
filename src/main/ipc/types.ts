@@ -4,6 +4,10 @@ export interface IProfileHandler {
   registerHandlers(): void
 }
 
+export interface ITaskHandler {
+  registerHandlers(): void
+}
+
 export type CreateProfileData = {
   name: string
   avatar?: string
