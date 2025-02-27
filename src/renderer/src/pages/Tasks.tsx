@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useProfile } from '../providers/ProfileProvider'
 import { fetchTasks, createTask } from '../services/taskService'
 import { 
-  Plus, Search, Filter, MoreVertical, Calendar, Clock,
+  Plus, Search, MoreVertical, Calendar, Clock,
   Briefcase, // Work
   User, // Personal
   ShoppingCart, // Shopping
@@ -15,12 +15,6 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
 import {
   Sheet,
   SheetContent,
@@ -178,30 +172,6 @@ export const Tasks = () => {
     })
   }
 
-  const TaskFilter = () => {
-    return (
-      <div className="flex gap-2 mb-6">
-        {Object.values(TaskStatus).map(status => (
-          <Button
-            key={status}
-            variant={statusFilter === status ? "default" : "outline"}
-            size="sm"
-            onClick={() => setStatusFilter(status)}
-            className="gap-2"
-          >
-            <div className={cn(
-              "h-2 w-2 rounded-full",
-              status === TaskStatus.TODO && "bg-yellow-500",
-              status === TaskStatus.IN_PROGRESS && "bg-blue-500",
-              status === TaskStatus.COMPLETED && "bg-green-500"
-            )} />
-            {status.charAt(0) + status.slice(1).toLowerCase()}
-          </Button>
-        ))}
-      </div>
-    )
-  }
-
   if (isLoading) return <div>Loading...</div>
 
   return (
@@ -209,39 +179,70 @@ export const Tasks = () => {
       {/* Main Content */}
       <div className="flex-1 overflow-hidden">
         {/* Header */}
-        <header className="border-b bg-gradient-to-b from-background to-background/95 px-6 py-4 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-          <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-semibold tracking-tight">Tasks</h1>
-            <div className="flex items-center gap-2">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="icon">
-                    <Filter className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem>All Tasks</DropdownMenuItem>
-                  <DropdownMenuItem>Active</DropdownMenuItem>
-                  <DropdownMenuItem>Completed</DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-              <Button onClick={() => setIsAddTaskOpen(true)}>
-                <Plus className="mr-2 h-4 w-4" />
-                Add Task
-              </Button>
+        <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+          {/* Main Header */}
+          <div className="px-6 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <h1 className="text-2xl font-semibold tracking-tight">Tasks</h1>
+                <Badge variant="secondary" className="rounded-md px-2">
+                  {tasks?.length || 0} total
+                </Badge>
+              </div>
+
+              <div className="flex items-center gap-2">
+
+                <Button variant="outline" size="sm" className="hidden md:flex">
+                  <Calendar className="mr-2 h-4 w-4" />
+                  View
+                </Button>
+                <Button onClick={() => setIsAddTaskOpen(true)} size="sm">
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Task
+                </Button>
+              </div>
             </div>
-          </div>
-          
-          {/* Search */}
-          <div className="mt-4 flex gap-2">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input 
-                placeholder="Search tasks..." 
-                className="pl-9"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
+
+            {/* Search and Filters Bar */}
+            <div className="mt-4 flex flex-col gap-4 md:flex-row md:items-center">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input 
+                  placeholder="Search tasks..." 
+                  className="pl-9 w-full md:max-w-sm"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+
+              <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0">
+                <Button
+                  variant={statusFilter === 'ALL' ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setStatusFilter('ALL')}
+                  className="shrink-0"
+                >
+                  All
+                </Button>
+                {Object.values(TaskStatus).map(status => (
+                  <Button
+                    key={status}
+                    variant={statusFilter === status ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setStatusFilter(status)}
+                    className="gap-2 shrink-0"
+                  >
+                    <div className={cn(
+                      "h-2 w-2 rounded-full",
+                      status === TaskStatus.TODO && "bg-yellow-500",
+                      status === TaskStatus.IN_PROGRESS && "bg-blue-500",
+                      status === TaskStatus.COMPLETED && "bg-green-500",
+                      status === TaskStatus.ARCHIVED && "bg-gray-500"
+                    )} />
+                    {status.charAt(0) + status.slice(1).toLowerCase().replace('_', ' ')}
+                  </Button>
+                ))}
+              </div>
             </div>
           </div>
         </header>
@@ -249,8 +250,6 @@ export const Tasks = () => {
         {/* Tasks List */}
         <div className="h-[calc(100vh-8rem)] overflow-y-auto px-6 py-4">
           <div className="space-y-6">
-            <TaskFilter />
-            
             {/* Grid Layout */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {/* Today Section */}
