@@ -33,8 +33,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { TaskPriority, TaskStatus, TaskCategory, RecurrencePattern } from '@prisma/client'
 import type { Task } from '@prisma/client'
+import { TaskPriority, TaskStatus, TaskCategory, RecurrencePattern } from '../types/task'
 import React from 'react'
 import { format, isSameDay, formatDistanceToNow } from 'date-fns'
 
@@ -51,7 +51,7 @@ interface NewTask {
   notes: string | null
 }
 
-const categoryColorMap: Record<TaskCategory, { 
+const categoryColorMap: Record<typeof TaskCategory[keyof typeof TaskCategory], { 
   bg: string, 
   text: string, 
   border: string,
@@ -125,7 +125,7 @@ export const Tasks = () => {
   })
   const [selectedTask, setSelectedTask] = useState<Task | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
-  const [statusFilter, setStatusFilter] = useState<TaskStatus | 'ALL'>('ALL')
+  const [statusFilter, setStatusFilter] = useState<typeof TaskStatus[keyof typeof TaskStatus] | 'ALL'>('ALL')
 
   const { data: tasks, isLoading } = useQuery({
     queryKey: ['tasks', profileId],
@@ -497,7 +497,7 @@ export const Tasks = () => {
               <Label>Priority *</Label>
               <Select
                 value={newTask.priority}
-                onValueChange={(value) => setNewTask(prev => ({ ...prev, priority: value as TaskPriority }))}
+                onValueChange={(value) => setNewTask(prev => ({ ...prev, priority: value as typeof TaskPriority[keyof typeof TaskPriority] }))}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select priority" />
@@ -515,7 +515,7 @@ export const Tasks = () => {
               <Label>Category</Label>
               <Select
                 value={newTask.category || ''}
-                onValueChange={(value) => setNewTask(prev => ({ ...prev, category: value as TaskCategory || null }))}
+                onValueChange={(value) => setNewTask(prev => ({ ...prev, category: value as typeof TaskCategory[keyof typeof TaskCategory] || null }))}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select category" />
