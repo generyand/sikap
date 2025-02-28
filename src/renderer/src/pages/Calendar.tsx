@@ -1,19 +1,25 @@
-import { useState } from 'react'
 import { Calendar as BigCalendar, dateFnsLocalizer } from 'react-big-calendar'
 import { format, parse, startOfWeek, getDay } from 'date-fns'
 import { enUS } from 'date-fns/locale'
-import { useTheme } from '../providers/ThemeProvider' // Update the import path
+import { useTheme } from '../providers/ThemeProvider'
+import { useQuery } from '@tanstack/react-query'
+import { useProfile } from '../providers/ProfileProvider'
+import { fetchTasks } from '../services/taskService'
+import type { Task } from '@prisma/client'
+import { TaskStatus } from '@prisma/client'
 import 'react-big-calendar/lib/css/react-big-calendar.css'
 import './calendar.css'
+import { cn } from '../lib/utils'
 
 // Types
-type Event = {
+type CalendarEvent = {
   id: string
   title: string
   start: Date
   end: Date
-  type: 'meeting' | 'task' | 'reminder'
   description?: string
+  task?: Task // Original task data
+  status: TaskStatus
 }
 
 const locales = {
@@ -30,39 +36,29 @@ const localizer = dateFnsLocalizer({
 
 const Calendar = () => {
   const { theme } = useTheme()
-  // Check both theme setting and system preference
+  const { profileId } = useProfile()
   const isDark = theme === 'dark' || 
     (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)
 
-  const [events, setEvents] = useState<Event[]>([
-    {
-      id: '1',
-      title: 'Sample Meeting',
-      start: new Date(2024, 2, 20, 10, 0),
-      end: new Date(2024, 2, 20, 11, 0),
-      type: 'meeting',
-      description: 'Team sync meeting'
-    }
-  ])
+  // Fetch tasks
+  const { data: tasks = [] } = useQuery({
+    queryKey: ['tasks', profileId],
+    queryFn: () => fetchTasks(profileId),
+  })
 
-  const handleSelect = ({ start, end }: { start: Date; end: Date }) => {
-    const title = window.prompt('New Event name')
-    if (title) {
-      setEvents([
-        ...events,
-        {
-          id: String(events.length + 1),
-          title,
-          start,
-          end,
-          type: 'meeting' // Default type, you might want to add a type selector in a proper form
-        },
-      ])
-    }
-  }
+  // Convert tasks to calendar events
+  const events: CalendarEvent[] = tasks.map(task => ({
+    id: task.id,
+    title: task.title,
+    start: task.startDate || task.dueDate || task.createdAt,
+    end: task.dueDate || task.startDate || task.createdAt,
+    description: task.description || undefined,
+    task, // Keep reference to original task
+    status: task.status
+  }))
 
   // Custom event styling with theme awareness
-  const eventStyleGetter = (event: Event) => {
+  const eventStyleGetter = (event: CalendarEvent) => {
     const baseStyle = {
       borderRadius: '4px',
       opacity: 0.8,
@@ -70,22 +66,26 @@ const Calendar = () => {
       display: 'block'
     }
 
-    const colors = {
-      meeting: {
-        light: { bg: '#93c5fd', text: '#1e40af' },
+    const statusColors = {
+      [TaskStatus.TODO]: {
+        light: { bg: '#fef9c3', text: '#854d0e' },  // Yellow
+        dark: { bg: '#854d0e', text: '#fef9c3' }
+      },
+      [TaskStatus.IN_PROGRESS]: {
+        light: { bg: '#93c5fd', text: '#1e40af' },  // Blue
         dark: { bg: '#1e40af', text: '#93c5fd' }
       },
-      task: {
-        light: { bg: '#86efac', text: '#166534' },
+      [TaskStatus.COMPLETED]: {
+        light: { bg: '#86efac', text: '#166534' },  // Green
         dark: { bg: '#166534', text: '#86efac' }
       },
-      reminder: {
-        light: { bg: '#fde047', text: '#854d0e' },
-        dark: { bg: '#854d0e', text: '#fde047' }
+      [TaskStatus.ARCHIVED]: {
+        light: { bg: '#e5e7eb', text: '#374151' },  // Gray
+        dark: { bg: '#374151', text: '#e5e7eb' }
       }
     }
 
-    const themeColors = colors[event.type][isDark ? 'dark' : 'light']
+    const themeColors = statusColors[event.status][isDark ? 'dark' : 'light']
 
     return {
       style: {
@@ -96,8 +96,25 @@ const Calendar = () => {
     }
   }
 
+  // Custom event component
+  const EventComponent = ({ event }: { event: CalendarEvent }) => {
+    return (
+      <div className="p-1 w-full h-full">
+        <div className="font-medium text-xs truncate">{event.title}</div>
+        {event.task?.category && (
+          <div className="text-xs opacity-80 truncate">
+            {event.task.category.toLowerCase()}
+          </div>
+        )}
+      </div>
+    )
+  }
+
   return (
-    <div className={`h-screen p-6 rounded-lg shadow-sm ${isDark ? 'bg-gray-800' : 'bg-transparent'}`}>
+    <div className={cn(
+      "h-screen p-6 rounded-lg shadow-sm",
+      isDark ? "bg-gray-800" : "bg-transparent"
+    )}>
       <BigCalendar
         localizer={localizer}
         events={events}
@@ -105,12 +122,12 @@ const Calendar = () => {
         endAccessor="end"
         style={{ height: 'calc(100vh - 8rem)' }}
         selectable
-        onSelectSlot={handleSelect}
-        eventPropGetter={eventStyleGetter}
         views={['month', 'week', 'day', 'agenda']}
         defaultView="month"
         popup
-        tooltipAccessor={event => event.description || ''}
+        components={{
+          event: EventComponent
+        }}
         messages={{
           today: 'Today',
           previous: 'Back',
@@ -129,9 +146,11 @@ const Calendar = () => {
           agendaDateFormat: 'MMMM dd',
           dayHeaderFormat: 'MMMM dd, yyyy',
           dayRangeHeaderFormat: ({ start, end }) =>
-            `${format(start, 'MMMM dd')} - ${format(end, 'MMMM dd, yyyy')}`
+            `${format(start, 'MMMM dd')} - ${format(end, 'MMMM dd, yyyy')}`,
+          eventTimeRangeFormat: () => ''
         }}
         className={isDark ? 'calendar-dark' : 'calendar-light'}
+        eventPropGetter={eventStyleGetter}
       />
     </div>
   )

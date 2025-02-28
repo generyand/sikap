@@ -243,4 +243,21 @@
 
 .calendar-dark .rbc-header {
   background-color: var(--calendar-secondary-bg);
+}
+
+/* Adjust event height in month view */
+.rbc-month-view .rbc-event {
+  min-height: 2.5rem;
+  padding: 2px 4px;
+}
+
+/* Hide time label */
+.rbc-event-label {
+  display: none;
+}
+
+/* Allow events to grow taller when needed */
+.rbc-month-row {
+  min-height: 100px;
+  overflow: visible;
 } 
