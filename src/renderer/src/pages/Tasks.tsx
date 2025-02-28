@@ -12,7 +12,6 @@ import {
   Home, // Home
   FolderKanban, // Other
   FileText,
-  Bell,
   StickyNote,
   Trash2,
   Pencil,
@@ -139,7 +138,6 @@ export const Tasks = () => {
     priority: TaskPriority.MEDIUM,
     status: TaskStatus.TODO,
     category: null,
-    reminder: null,
     recurrence: null,
     notes: null
   })
@@ -194,7 +192,6 @@ export const Tasks = () => {
         priority: TaskPriority.MEDIUM,
         status: TaskStatus.TODO,
         category: null,
-        reminder: null,
         recurrence: null,
         notes: null
       })
@@ -446,18 +443,6 @@ export const Tasks = () => {
               </div>
             </div>
 
-            {/* Reminder Section */}
-            {selectedTask?.reminder && (
-              <div className="bg-muted/30 p-4 rounded-lg space-y-2">
-                <h3 className="text-sm font-medium flex items-center gap-2">
-                  <Bell className="h-4 w-4" />
-                  Reminder
-                </h3>
-                <p className="text-sm text-muted-foreground">
-                  {format(new Date(selectedTask.reminder), 'PPP p')}
-                </p>
-              </div>
-            )}
 
             {/* Notes Section */}
             {selectedTask?.notes && (
@@ -644,38 +629,6 @@ export const Tasks = () => {
 
             {/* Additional Options */}
             <div className="space-y-4">
-              {/* Reminder Toggle */}
-              <div className="flex items-center justify-between py-3 border-b">
-                <div className="space-y-0.5">
-                  <h4 className="text-sm font-medium">Reminder</h4>
-                  <p className="text-sm text-muted-foreground">Get notified when this task is due</p>
-                </div>
-                <Switch
-                  checked={!!newTask.reminder}
-                  onCheckedChange={(checked) => 
-                    setNewTask(prev => ({
-                      ...prev,
-                      reminder: checked ? new Date() : null
-                    }))
-                  }
-                />
-              </div>
-
-              {newTask.reminder && (
-                <div className="pl-0 md:pl-4">
-                  <Label className="text-sm">Reminder Time</Label>
-                  <Input
-                    type="datetime-local"
-                    value={newTask.reminder?.toISOString().slice(0, 16) || ''}
-                    onChange={(e) => setNewTask(prev => ({
-                      ...prev,
-                      reminder: e.target.value ? new Date(e.target.value) : null
-                    }))}
-                    className="mt-1.5"
-                  />
-                </div>
-              )}
-
               {/* Recurrence Toggle */}
               <div className="flex items-center justify-between py-3 border-b">
                 <div className="space-y-0.5">

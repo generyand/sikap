@@ -39,7 +39,6 @@ export interface NewTask {
     priority: TaskPriority
     status: TaskStatus
     category: TaskCategory | null
-    reminder: Date | null
     recurrence: RecurrencePattern | null
     notes: string | null
   }

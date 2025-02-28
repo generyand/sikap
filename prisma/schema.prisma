@@ -75,7 +75,6 @@ model Task {
 
   // Optional but valuable fields
   category   TaskCategory?
-  reminder   DateTime?
   recurrence RecurrencePattern?
   notes      String?
 

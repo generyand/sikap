@@ -43,7 +43,6 @@ export class TaskService {
         updatedAt: true,
         completedAt: true,
         category: true,
-        reminder: true,
         recurrence: true,
         notes: true,
         profile: true
