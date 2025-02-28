@@ -11,6 +11,12 @@ import {
   Wallet, // Finance
   Home, // Home
   FolderKanban, // Other
+  FileText,
+  Bell,
+  StickyNote,
+  Trash2,
+  Pencil,
+  CheckCircle2,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -86,6 +92,38 @@ const categoryColorMap: Record<TaskCategory, {
     text: "text-gray-700 dark:text-gray-300",
     border: "border-gray-200 dark:border-gray-800",
     icon: FolderKanban
+  }
+}
+
+const priorityColorMap: Record<TaskPriority, {
+  bg: string,
+  text: string,
+  border: string,
+  badge: string
+}> = {
+  URGENT: {
+    bg: "bg-destructive/10",
+    text: "text-destructive",
+    border: "border-destructive/20",
+    badge: "bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+  },
+  HIGH: {
+    bg: "bg-orange-500/10 dark:bg-orange-500/20",
+    text: "text-orange-700 dark:text-orange-300",
+    border: "border-orange-200 dark:border-orange-800",
+    badge: "bg-orange-500 hover:bg-orange-600 text-white dark:bg-orange-600"
+  },
+  MEDIUM: {
+    bg: "bg-primary/10",
+    text: "text-primary",
+    border: "border-primary/20",
+    badge: "bg-primary hover:bg-primary/90 text-primary-foreground"
+  },
+  LOW: {
+    bg: "bg-muted",
+    text: "text-muted-foreground",
+    border: "border-muted",
+    badge: "bg-secondary hover:bg-secondary/80 text-secondary-foreground"
   }
 }
 
@@ -191,11 +229,6 @@ export const Tasks = () => {
               </div>
 
               <div className="flex items-center gap-2">
-
-                <Button variant="outline" size="sm" className="hidden md:flex">
-                  <Calendar className="mr-2 h-4 w-4" />
-                  View
-                </Button>
                 <Button onClick={() => setIsAddTaskOpen(true)} size="sm">
                   <Plus className="mr-2 h-4 w-4" />
                   Add Task
@@ -311,113 +344,158 @@ export const Tasks = () => {
 
       <Sheet open={!!selectedTask} onOpenChange={() => setSelectedTask(null)}>
         <SheetContent className="sm:max-w-xl">
-          <SheetHeader className="space-y-4">
-            {/* Status Banner */}
-            <div className={cn(
-              "w-full h-1.5 rounded-full",
-              selectedTask?.status === TaskStatus.TODO && "bg-yellow-500",
-              selectedTask?.status === TaskStatus.IN_PROGRESS && "bg-blue-500",
-              selectedTask?.status === TaskStatus.COMPLETED && "bg-green-500"
-            )} />
-
-            {/* Title & Status */}
-            <div className="flex items-start justify-between">
-              <div className="space-y-1">
-                <SheetTitle className="text-xl">{selectedTask?.title}</SheetTitle>
-                <p className="text-sm text-muted-foreground">
-                  Created {selectedTask?.createdAt && format(new Date(selectedTask.createdAt), 'PPP')}
-                </p>
-              </div>
-              <Badge className="ml-2">{selectedTask?.status.toLowerCase()}</Badge>
+          <SheetHeader>
+            {/* Title & Close Section */}
+            <div className="flex items-start justify-between mb-4">
+              <SheetTitle className="text-xl font-semibold">{selectedTask?.title}</SheetTitle>
             </div>
-            
-            {/* Tags Row */}
-            <div className="flex flex-wrap gap-2">
-              {selectedTask?.category && (
-                <div className={cn(
-                  "px-2 py-1 rounded-md border shadow-sm flex items-center gap-1.5",
-                  categoryColorMap[selectedTask.category].bg,
-                  categoryColorMap[selectedTask.category].text,
-                  categoryColorMap[selectedTask.category].border
-                )}>
-                  {React.createElement(categoryColorMap[selectedTask.category].icon, { className: "h-3.5 w-3.5" })}
-                  <span>{selectedTask.category.charAt(0) + selectedTask.category.slice(1).toLowerCase()}</span>
+
+            {/* Metadata & Status Section */}
+            <div className="flex flex-col gap-4">
+              {/* Status & Date */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Calendar className="h-4 w-4" />
+                  Created {selectedTask?.createdAt && format(new Date(selectedTask.createdAt), 'PPP')}
                 </div>
-              )}
-              <Badge variant={
-                selectedTask?.priority === TaskPriority.HIGH ? 'destructive' :
-                selectedTask?.priority === TaskPriority.MEDIUM ? 'secondary' :
-                'outline'
-              }>
-                {selectedTask?.priority.toLowerCase()}
-              </Badge>
-              {selectedTask?.recurrence && (
-                <Badge variant="outline">
-                  <Clock className="mr-1 h-3 w-3" />
-                  Repeats {selectedTask.recurrence.toLowerCase()}
+                <Badge 
+                  className={cn(
+                    "px-3 py-1",
+                    selectedTask?.status === TaskStatus.TODO && "bg-yellow-500/10 text-yellow-600",
+                    selectedTask?.status === TaskStatus.IN_PROGRESS && "bg-blue-500/10 text-blue-600",
+                    selectedTask?.status === TaskStatus.COMPLETED && "bg-green-500/10 text-green-600",
+                    selectedTask?.status === TaskStatus.ARCHIVED && "bg-gray-500/10 text-gray-600"
+                  )}
+                >
+                  {selectedTask?.status.toLowerCase()}
                 </Badge>
+              </div>
+
+              {/* Tags Section */}
+              <div className="flex flex-wrap gap-2">
+                {selectedTask?.category && (
+                  <div className={cn(
+                    "px-3 py-1.5 rounded-md border shadow-sm flex items-center gap-2",
+                    categoryColorMap[selectedTask.category].bg,
+                    categoryColorMap[selectedTask.category].text,
+                    categoryColorMap[selectedTask.category].border
+                  )}>
+                    {React.createElement(categoryColorMap[selectedTask.category].icon, { className: "h-4 w-4" })}
+                    <span className="font-medium">{selectedTask.category.charAt(0) + selectedTask.category.slice(1).toLowerCase()}</span>
+                  </div>
+                )}
+                <Badge 
+                  className={cn(
+                    "px-3 py-1.5",
+                    priorityColorMap[selectedTask?.priority ?? TaskPriority.LOW].badge
+                  )}
+                >
+                  {(selectedTask?.priority ?? 'Low').charAt(0).toUpperCase() + 
+                   (selectedTask?.priority ?? 'Low').slice(1).toLowerCase()}
+                </Badge>
+                {selectedTask?.recurrence && (
+                  <Badge variant="outline" className="px-3 py-1.5">
+                    <Clock className="mr-2 h-4 w-4" />
+                    Repeats {selectedTask.recurrence.toLowerCase()}
+                  </Badge>
+                )}
+              </div>
+
+              {/* Completion Status */}
+              {selectedTask?.completedAt && (
+                <div className="text-sm text-muted-foreground flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-green-500" />
+                  Completed {format(new Date(selectedTask.completedAt), 'PPP')}
+                </div>
               )}
             </div>
           </SheetHeader>
 
-          <div className="mt-6 space-y-6">
-            {/* Description */}
-            <div className="space-y-2">
-              <h3 className="text-sm font-medium">Description</h3>
-              <p className="text-sm text-muted-foreground">{selectedTask?.description || 'No description'}</p>
+          {/* Enhanced Content Section */}
+          <div className="mt-6 space-y-6 max-h-[calc(100vh-300px)] overflow-y-auto pr-4">
+            {/* Description Card */}
+            <div className="space-y-2 bg-muted/30 p-4 rounded-lg">
+              <h3 className="text-sm font-medium flex items-center gap-2">
+                <FileText className="h-4 w-4" />
+                Description
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                {selectedTask?.description || 'No description provided'}
+              </p>
             </div>
 
-            {/* Dates Grid */}
+            {/* Dates Section */}
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <h3 className="text-sm font-medium">Start Date</h3>
+              <div className="bg-muted/30 p-4 rounded-lg space-y-2">
+                <h3 className="text-sm font-medium flex items-center gap-2">
+                  <Calendar className="h-4 w-4" />
+                  Start Date
+                </h3>
                 <p className="text-sm text-muted-foreground">
-                  {selectedTask?.startDate ? format(new Date(selectedTask.startDate), 'PPP p') : '-'}
+                  {selectedTask?.startDate ? format(new Date(selectedTask.startDate), 'PPP p') : 'Not set'}
                 </p>
               </div>
-              <div className="space-y-2">
-                <h3 className="text-sm font-medium">Due Date</h3>
+              <div className="bg-muted/30 p-4 rounded-lg space-y-2">
+                <h3 className="text-sm font-medium flex items-center gap-2">
+                  <Clock className="h-4 w-4" />
+                  Due Date
+                </h3>
                 <p className="text-sm text-muted-foreground">
-                  {selectedTask?.dueDate ? format(new Date(selectedTask.dueDate), 'PPP p') : '-'}
+                  {selectedTask?.dueDate ? format(new Date(selectedTask.dueDate), 'PPP p') : 'Not set'}
                 </p>
               </div>
             </div>
 
-            {/* Reminder */}
+            {/* Reminder Section */}
             {selectedTask?.reminder && (
-              <div className="space-y-2">
-                <h3 className="text-sm font-medium">Reminder</h3>
+              <div className="bg-muted/30 p-4 rounded-lg space-y-2">
+                <h3 className="text-sm font-medium flex items-center gap-2">
+                  <Bell className="h-4 w-4" />
+                  Reminder
+                </h3>
                 <p className="text-sm text-muted-foreground">
                   {format(new Date(selectedTask.reminder), 'PPP p')}
                 </p>
               </div>
             )}
 
-            {/* Notes */}
+            {/* Notes Section */}
             {selectedTask?.notes && (
-              <div className="space-y-2">
-                <h3 className="text-sm font-medium">Notes</h3>
-                <div className="text-sm text-muted-foreground whitespace-pre-wrap rounded-lg bg-muted p-4">
+              <div className="bg-muted/30 p-4 rounded-lg space-y-2">
+                <h3 className="text-sm font-medium flex items-center gap-2">
+                  <StickyNote className="h-4 w-4" />
+                  Notes
+                </h3>
+                <div className="text-sm text-muted-foreground whitespace-pre-wrap bg-background p-4 rounded-md">
                   {selectedTask.notes}
                 </div>
               </div>
             )}
 
-            {/* Metadata */}
-            <div className="space-y-2 pt-4 border-t">
-              <h3 className="text-sm font-medium">Last Updated</h3>
-              <p className="text-sm text-muted-foreground">
-                {selectedTask?.updatedAt && format(new Date(selectedTask.updatedAt), 'PPP p')}
-              </p>
+            {/* Metadata Section */}
+            <div className="border-t pt-4 space-y-4">
+              <div className="flex items-center justify-between text-sm text-muted-foreground">
+                <span>Last Updated</span>
+                <span>{selectedTask?.updatedAt && format(new Date(selectedTask.updatedAt), 'PPP p')}</span>
+              </div>
             </div>
           </div>
 
+          {/* Action Buttons */}
           <div className="absolute bottom-0 left-0 right-0 p-4 border-t bg-background">
-            <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setSelectedTask(null)}>
-                Close
+            <div className="flex justify-between items-center">
+              <Button variant="ghost" size="sm">
+                <Trash2 className="h-4 w-4 text-red-500" />
               </Button>
-              <Button>Edit Task</Button>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={() => setSelectedTask(null)}>
+                  Close
+                </Button>
+                <Button>
+                  <Pencil className="h-4 w-4 mr-2" />
+                  Edit Task
+                </Button>
+              </div>
             </div>
           </div>
         </SheetContent>
@@ -425,120 +503,199 @@ export const Tasks = () => {
 
       {/* Add Task Dialog */}
       <Dialog open={isAddTaskOpen} onOpenChange={setIsAddTaskOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Add New Task</DialogTitle>
+        <DialogContent className={cn(
+          "max-w-[95vw] md:max-w-[600px] max-h-[90vh] overflow-y-auto",
+          // Custom Scrollbar Styles
+          "scrollbar-thin scrollbar-track-transparent scrollbar-thumb-muted-foreground/20",
+          "hover:scrollbar-thumb-muted-foreground/40 active:scrollbar-thumb-muted-foreground/60",
+          "dark:scrollbar-thumb-muted-foreground/10 dark:hover:scrollbar-thumb-muted-foreground/20",
+          "dark:active:scrollbar-thumb-muted-foreground/30"
+        )}>
+          <DialogHeader className="space-y-4">
+            <DialogTitle className="text-xl">Add New Task</DialogTitle>
+            <p className="text-sm text-muted-foreground">Fill in the task details. Required fields are marked with *</p>
           </DialogHeader>
           
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="title">Title *</Label>
-              <Input
-                id="title"
-                value={newTask.title}
-                onChange={(e) => setNewTask(prev => ({ ...prev, title: e.target.value }))}
-                placeholder="Enter task title"
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
-                value={newTask.description || ''}
-                onChange={(e) => setNewTask(prev => ({ ...prev, description: e.target.value || null }))}
-                placeholder="Enter task description"
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Start Date</Label>
-                <Input
-                  type="datetime-local"
-                  value={newTask.startDate?.toISOString().slice(0, 16) || ''}
-                  onChange={(e) => setNewTask(prev => ({
-                    ...prev,
-                    startDate: e.target.value ? new Date(e.target.value) : null
-                  }))}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label>Due Date</Label>
-                <Input
-                  type="datetime-local"
-                  value={newTask.dueDate?.toISOString().slice(0, 16) || ''}
-                  onChange={(e) => setNewTask(prev => ({
-                    ...prev,
-                    dueDate: e.target.value ? new Date(e.target.value) : null
-                  }))}
-                />
-              </div>
-            </div>
-
+          {/* Main Form Content */}
+          <div className="space-y-6 py-4">
+            {/* Title & Description */}
             <div className="space-y-4">
-              {/* Task Details Section */}
-              <div className="space-y-4 border-t pt-4">
-                <h4 className="text-sm font-medium">Task Details</h4>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Priority *</Label>
-                    <Select
-                      value={newTask.priority}
-                      onValueChange={(value) => setNewTask(prev => ({ ...prev, priority: value as TaskPriority }))}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select priority" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value={TaskPriority.LOW}>Low</SelectItem>
-                        <SelectItem value={TaskPriority.MEDIUM}>Medium</SelectItem>
-                        <SelectItem value={TaskPriority.HIGH}>High</SelectItem>
-                        <SelectItem value={TaskPriority.URGENT}>Urgent</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label>Category</Label>
-                    <Select
-                      value={newTask.category || ''}
-                      onValueChange={(value) => setNewTask(prev => ({ ...prev, category: value as TaskCategory || null }))}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select category" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {Object.values(TaskCategory).map((category) => (
-                          <SelectItem key={category} value={category}>
-                            {category.charAt(0) + category.slice(1).toLowerCase()}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
+              <div>
+                <Label htmlFor="title" className="text-sm font-medium flex items-center gap-2">
+                  Title <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="title"
+                  value={newTask.title}
+                  onChange={(e) => setNewTask(prev => ({ ...prev, title: e.target.value }))}
+                  placeholder="Enter task title"
+                  className="mt-1.5"
+                />
               </div>
 
-              {/* Recurrence Section */}
-              <div className="space-y-4 border-t pt-4">
-                <div className="flex items-center justify-between">
-                  <h4 className="text-sm font-medium">Recurrence</h4>
-                  <Switch
-                    checked={!!newTask.recurrence}
-                    onCheckedChange={(checked) => 
-                      setNewTask(prev => ({
-                        ...prev,
-                        recurrence: checked ? RecurrencePattern.DAILY : null
-                      }))
-                    }
+              <div>
+                <Label htmlFor="description" className="text-sm font-medium">Description</Label>
+                <Textarea
+                  id="description"
+                  value={newTask.description || ''}
+                  onChange={(e) => setNewTask(prev => ({ ...prev, description: e.target.value || null }))}
+                  placeholder="Enter task description"
+                  className="mt-1.5 min-h-[80px]"
+                />
+              </div>
+            </div>
+
+            {/* Dates & Priority Section */}
+            <div className="space-y-4 rounded-lg border bg-muted/30 p-4">
+              <h4 className="text-sm font-medium flex items-center gap-2">
+                <Calendar className="h-4 w-4" />
+                Scheduling
+              </h4>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-sm">Start Date</Label>
+                  <Input
+                    type="datetime-local"
+                    value={newTask.startDate?.toISOString().slice(0, 16) || ''}
+                    onChange={(e) => setNewTask(prev => ({
+                      ...prev,
+                      startDate: e.target.value ? new Date(e.target.value) : null
+                    }))}
+                    className="mt-1.5"
                   />
                 </div>
 
-                {newTask.recurrence && (
+                <div>
+                  <Label className="text-sm">Due Date</Label>
+                  <Input
+                    type="datetime-local"
+                    value={newTask.dueDate?.toISOString().slice(0, 16) || ''}
+                    onChange={(e) => setNewTask(prev => ({
+                      ...prev,
+                      dueDate: e.target.value ? new Date(e.target.value) : null
+                    }))}
+                    className="mt-1.5"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Task Details Section */}
+            <div className="space-y-4 rounded-lg border bg-muted/30 p-4">
+              <h4 className="text-sm font-medium flex items-center gap-2">
+                <FileText className="h-4 w-4" />
+                Task Details
+              </h4>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-sm flex items-center gap-2">
+                    Priority <span className="text-destructive">*</span>
+                  </Label>
+                  <Select
+                    value={newTask.priority}
+                    onValueChange={(value) => setNewTask(prev => ({ ...prev, priority: value as TaskPriority }))}
+                  >
+                    <SelectTrigger className="mt-1.5">
+                      <SelectValue placeholder="Select priority" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.values(TaskPriority).map(priority => (
+                        <SelectItem key={priority} value={priority}>
+                          <div className="flex items-center gap-2">
+                            <div className={cn(
+                              "h-2 w-2 rounded-full",
+                              priorityColorMap[priority].badge
+                            )} />
+                            {priority.charAt(0) + priority.slice(1).toLowerCase()}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div>
+                  <Label className="text-sm">Category</Label>
+                  <Select
+                    value={newTask.category || ''}
+                    onValueChange={(value) => setNewTask(prev => ({ ...prev, category: value as TaskCategory || null }))}
+                  >
+                    <SelectTrigger className="mt-1.5">
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.values(TaskCategory).map((category) => (
+                        <SelectItem key={category} value={category}>
+                          <div className="flex items-center gap-2">
+                            {React.createElement(categoryColorMap[category].icon, { 
+                              className: cn("h-4 w-4", categoryColorMap[category].text)
+                            })}
+                            {category.charAt(0) + category.slice(1).toLowerCase()}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
+
+            {/* Additional Options */}
+            <div className="space-y-4">
+              {/* Reminder Toggle */}
+              <div className="flex items-center justify-between py-3 border-b">
+                <div className="space-y-0.5">
+                  <h4 className="text-sm font-medium">Reminder</h4>
+                  <p className="text-sm text-muted-foreground">Get notified when this task is due</p>
+                </div>
+                <Switch
+                  checked={!!newTask.reminder}
+                  onCheckedChange={(checked) => 
+                    setNewTask(prev => ({
+                      ...prev,
+                      reminder: checked ? new Date() : null
+                    }))
+                  }
+                />
+              </div>
+
+              {newTask.reminder && (
+                <div className="pl-0 md:pl-4">
+                  <Label className="text-sm">Reminder Time</Label>
+                  <Input
+                    type="datetime-local"
+                    value={newTask.reminder?.toISOString().slice(0, 16) || ''}
+                    onChange={(e) => setNewTask(prev => ({
+                      ...prev,
+                      reminder: e.target.value ? new Date(e.target.value) : null
+                    }))}
+                    className="mt-1.5"
+                  />
+                </div>
+              )}
+
+              {/* Recurrence Toggle */}
+              <div className="flex items-center justify-between py-3 border-b">
+                <div className="space-y-0.5">
+                  <h4 className="text-sm font-medium">Recurrence</h4>
+                  <p className="text-sm text-muted-foreground">Repeat this task on a schedule</p>
+                </div>
+                <Switch
+                  checked={!!newTask.recurrence}
+                  onCheckedChange={(checked) => 
+                    setNewTask(prev => ({
+                      ...prev,
+                      recurrence: checked ? RecurrencePattern.DAILY : null
+                    }))
+                  }
+                />
+              </div>
+
+              {newTask.recurrence && (
+                <div className="pl-0 md:pl-4">
+                  <Label className="text-sm">Frequency</Label>
                   <Select
                     value={newTask.recurrence}
                     onValueChange={(value) => setNewTask(prev => ({ 
@@ -546,23 +703,38 @@ export const Tasks = () => {
                       recurrence: value as RecurrencePattern
                     }))}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="mt-1.5">
                       <SelectValue placeholder="Select frequency" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value={RecurrencePattern.DAILY}>Daily</SelectItem>
-                      <SelectItem value={RecurrencePattern.WEEKLY}>Weekly</SelectItem>
-                      <SelectItem value={RecurrencePattern.MONTHLY}>Monthly</SelectItem>
-                      <SelectItem value={RecurrencePattern.YEARLY}>Yearly</SelectItem>
-                      <SelectItem value={RecurrencePattern.CUSTOM}>Custom...</SelectItem>
+                      {Object.values(RecurrencePattern).map(pattern => (
+                        <SelectItem key={pattern} value={pattern}>
+                          {pattern.charAt(0) + pattern.slice(1).toLowerCase()}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
-                )}
+                </div>
+              )}
+
+              {/* Notes Section */}
+              <div className="pt-2">
+                <Label htmlFor="notes" className="text-sm font-medium">Additional Notes</Label>
+                <Textarea
+                  id="notes"
+                  value={newTask.notes || ''}
+                  onChange={(e) => setNewTask(prev => ({ 
+                    ...prev, 
+                    notes: e.target.value || null 
+                  }))}
+                  placeholder="Add any additional notes or details..."
+                  className="mt-1.5 min-h-[100px]"
+                />
               </div>
             </div>
           </div>
 
-          <DialogFooter>
+          <DialogFooter className="mt-6">
             <Button
               variant="outline"
               onClick={() => setIsAddTaskOpen(false)}
@@ -609,12 +781,13 @@ const TaskCard = ({ task, onSelect }: { task: Task, onSelect: () => void }) => {
         {/* Header */}
         <div className="flex items-start justify-between mb-3">
           <div className="flex items-center gap-2">
-            <Badge variant={
-              task.priority === TaskPriority.HIGH ? 'destructive' :
-              task.priority === TaskPriority.MEDIUM ? 'secondary' :
-              'outline'
-            } className="text-xs font-medium shadow-sm">
-              {task.priority.toLowerCase()}
+            <Badge 
+              className={cn(
+                "text-xs font-medium shadow-sm",
+                priorityColorMap[task.priority].badge
+              )}
+            >
+              {task.priority.charAt(0) + task.priority.slice(1).toLowerCase()}
             </Badge>
             {task.dueDate && (
               <div className="text-xs text-muted-foreground bg-muted/50 px-2 py-1 rounded-md flex items-center gap-1">
