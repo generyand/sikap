@@ -15,8 +15,8 @@ const prisma = new PrismaClient()
 function createWindow(): void {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
-    width: 1024,
-    height: 768,
+    width: 900,
+    height: 600,
     minWidth: 800,
     minHeight: 600,
     show: false,
