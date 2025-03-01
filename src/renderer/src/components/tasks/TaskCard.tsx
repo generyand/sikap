@@ -7,7 +7,8 @@ import { Button } from '@/components/ui/button'
 import { 
   Clock, Calendar, MoreVertical,
   CheckCircle2, Pencil, Trash2, 
-  ArrowRightCircle, ArchiveIcon
+  ArrowRightCircle, ArchiveIcon,
+  StickyNote
 } from 'lucide-react'
 import {
   DropdownMenu,
@@ -16,6 +17,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 
 // Import the color maps
 import { categoryColorMap, priorityColorMap } from '@/lib/taskUtils'
@@ -74,6 +81,26 @@ export const TaskCard = React.memo(({
                 <Clock className="h-3 w-3 shrink-0" />
                 <span>{formatDistanceToNow(new Date(task.dueDate), { addSuffix: true })}</span>
               </div>
+            )}
+            
+            {/* Note indicator with tooltip */}
+            {task.notes && (
+              <TooltipProvider>
+                <Tooltip delayDuration={300}>
+                  <TooltipTrigger asChild>
+                    <div className="text-xs bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 px-2 py-1 rounded-md flex items-center gap-1.5 cursor-pointer hover:bg-amber-200 dark:hover:bg-amber-900/50 transition-colors border border-amber-200 dark:border-amber-800/50 shadow-sm">
+                      <StickyNote className="h-3.5 w-3.5" />
+                      <span className="font-medium">Notes</span>
+                      <span className="inline-block w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse ml-0.5"></span>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom" className="max-w-[300px] p-3 bg-amber-50 dark:bg-amber-950/90 border-amber-200 dark:border-amber-800/50 text-amber-900 dark:text-amber-100 shadow-lg">
+                    <p className="text-sm whitespace-pre-wrap line-clamp-6">
+                      {task.notes}
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             )}
           </div>
           
