@@ -131,15 +131,15 @@ export const Tasks = () => {
   }, [newTask, profileId, createTaskMutation])
 
   const resetNewTaskForm = useCallback(() => {
-    setNewTask({
-      title: '',
-      description: null,
-      startDate: null,
-      dueDate: null,
-      priority: TaskPriority.MEDIUM,
-      status: TaskStatus.TODO,
-      category: null,
-      recurrence: null,
+      setNewTask({
+        title: '',
+        description: null,
+        startDate: null,
+        dueDate: null,
+        priority: TaskPriority.MEDIUM,
+        status: TaskStatus.TODO,
+        category: null,
+        recurrence: null,
       notes: null,
       profileId: profileId || ''
     })
@@ -211,6 +211,25 @@ export const Tasks = () => {
   const handleNewTaskChange = useCallback((updates: Partial<NewTask>) => {
     setNewTask(prev => ({...prev, ...updates}))
   }, [])
+
+  const handleQuickStatusChange = useCallback((taskId: string, newStatus: TaskStatus) => {
+    updateTaskMutation.mutate({
+      id: taskId,
+      status: newStatus,
+      completedAt: newStatus === TaskStatus.COMPLETED ? new Date() : null
+    })
+  }, [updateTaskMutation])
+
+  const handleQuickDelete = useCallback((taskId: string) => {
+    setTaskToDelete(taskId)
+    setIsDeleteDialogOpen(true)
+  }, [])
+
+  const handleEditTaskFromCard = useCallback((task: Task) => {
+    setSelectedTask(task);
+    setEditTask({...task});
+    setIsEditing(true);
+  }, []);
 
   if (isLoading) return <div>Loading...</div>
 
@@ -296,6 +315,9 @@ export const Tasks = () => {
                       key={task.id}
                       task={task}
                       onSelect={handleSelectTask}
+                      onEdit={handleEditTaskFromCard}
+                      onStatusChange={(task, newStatus) => handleQuickStatusChange(task.id, newStatus)}
+                      onDelete={(taskId) => handleQuickDelete(taskId)}
                     />
                   ))}
                 </div>
@@ -311,6 +333,9 @@ export const Tasks = () => {
                         key={task.id}
                         task={task}
                         onSelect={handleSelectTask}
+                        onEdit={handleEditTaskFromCard}
+                        onStatusChange={(task, newStatus) => handleQuickStatusChange(task.id, newStatus)}
+                        onDelete={(taskId) => handleQuickDelete(taskId)}
                       />
                     ))}
                   </div>
@@ -327,6 +352,9 @@ export const Tasks = () => {
                         key={task.id}
                         task={task}
                         onSelect={handleSelectTask}
+                        onEdit={handleEditTaskFromCard}
+                        onStatusChange={(task, newStatus) => handleQuickStatusChange(task.id, newStatus)}
+                        onDelete={(taskId) => handleQuickDelete(taskId)}
                       />
                     ))}
                   </div>

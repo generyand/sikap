@@ -1,14 +1,21 @@
 import React from 'react'
 import { format, formatDistanceToNow } from 'date-fns'
-import { Task, TaskStatus, TaskPriority, TaskCategory } from '@prisma/client'
+import { Task, TaskStatus } from '@prisma/client'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { 
   Clock, Calendar, MoreVertical,
-  Briefcase, User, ShoppingCart, Heart, 
-  GraduationCap, Wallet, Home, FolderKanban
+  CheckCircle2, Pencil, Trash2, 
+  ArrowRightCircle, ArchiveIcon
 } from 'lucide-react'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 // Import the color maps
 import { categoryColorMap, priorityColorMap } from '@/lib/taskUtils'
@@ -16,9 +23,18 @@ import { categoryColorMap, priorityColorMap } from '@/lib/taskUtils'
 interface TaskCardProps {
   task: Task
   onSelect: (task: Task) => void
+  onEdit?: (task: Task) => void
+  onStatusChange?: (task: Task, status: TaskStatus) => void
+  onDelete?: (taskId: string) => void
 }
 
-export const TaskCard = React.memo(({ task, onSelect }: TaskCardProps) => {
+export const TaskCard = React.memo(({ 
+  task, 
+  onSelect, 
+  onEdit,
+  onStatusChange,
+  onDelete
+}: TaskCardProps) => {
   return (
     <div
       onClick={() => onSelect(task)}
@@ -60,17 +76,104 @@ export const TaskCard = React.memo(({ task, onSelect }: TaskCardProps) => {
               </div>
             )}
           </div>
-          <Button 
-            variant="ghost" 
-            size="icon"
-            className="opacity-0 group-hover:opacity-100 -mr-2 -mt-2 hover:bg-background/80"
-            onClick={(e) => {
-              e.stopPropagation()
-              // Handle menu
-            }}
-          >
-            <MoreVertical className="h-4 w-4" />
-          </Button>
+          
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button 
+                variant="ghost" 
+                size="icon"
+                className="opacity-0 group-hover:opacity-100 -mr-2 -mt-2 hover:bg-background/80"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              {/* Status change options */}
+              {task.status !== TaskStatus.COMPLETED && (
+                <DropdownMenuItem 
+                  className="text-green-600 dark:text-green-400"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onStatusChange?.(task, TaskStatus.COMPLETED);
+                  }}
+                >
+                  <CheckCircle2 className="h-4 w-4 mr-2" />
+                  Mark as Complete
+                </DropdownMenuItem>
+              )}
+              
+              {task.status !== TaskStatus.IN_PROGRESS && task.status !== TaskStatus.COMPLETED && (
+                <DropdownMenuItem 
+                  className="text-blue-600 dark:text-blue-400"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onStatusChange?.(task, TaskStatus.IN_PROGRESS);
+                  }}
+                >
+                  <ArrowRightCircle className="h-4 w-4 mr-2" />
+                  Mark as In Progress
+                </DropdownMenuItem>
+              )}
+              
+              {task.status === TaskStatus.COMPLETED && (
+                <DropdownMenuItem 
+                  className="text-yellow-600 dark:text-yellow-400"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onStatusChange?.(task, TaskStatus.TODO);
+                  }}
+                >
+                  <ArrowRightCircle className="h-4 w-4 mr-2" />
+                  Mark as Todo
+                </DropdownMenuItem>
+              )}
+              
+              <DropdownMenuSeparator />
+              
+              {/* Edit option */}
+              <DropdownMenuItem 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (onEdit) {
+                    onEdit(task);
+                  } else {
+                    onSelect(task);
+                  }
+                }}
+              >
+                <Pencil className="h-4 w-4 mr-2" />
+                Edit Task
+              </DropdownMenuItem>
+              
+              {/* Archive option */}
+              {task.status !== TaskStatus.ARCHIVED && (
+                <DropdownMenuItem 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onStatusChange?.(task, TaskStatus.ARCHIVED);
+                  }}
+                >
+                  <ArchiveIcon className="h-4 w-4 mr-2" />
+                  Archive Task
+                </DropdownMenuItem>
+              )}
+              
+              <DropdownMenuSeparator />
+              
+              {/* Delete option */}
+              <DropdownMenuItem 
+                className="text-destructive"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete?.(task.id);
+                }}
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Delete Task
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
         {/* Content */}
