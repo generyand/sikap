@@ -1,5 +1,5 @@
-import { Profile } from '@prisma/client'
 import { DatabaseService } from './database.service'
+import { ProfileAttributes } from '../database/types'
 
 export class ProfileService {
   private static instance: ProfileService
@@ -17,38 +17,44 @@ export class ProfileService {
   }
 
   // Basic CRUD operations
-  async getAllProfiles(): Promise<Profile[]> {
+  async getAllProfiles(): Promise<ProfileAttributes[]> {
     try {
-      return await this.db.profile.findMany({
-        orderBy: { createdAt: 'desc' }
+      const profiles = await this.db.profile.findAll({
+        order: [['createdAt', 'DESC']]
       })
+      return profiles.map(profile => profile.get({ plain: true }))
     } catch (error) {
       console.error('Failed to get profiles:', error)
       throw error
     }
   }
 
-  async createProfile(data: { name: string; avatar?: string; theme?: string }): Promise<Profile> {
+  async createProfile(data: { name: string; avatar?: string; theme?: string }): Promise<ProfileAttributes> {
     try {
-      return await this.db.profile.create({
-        data: {
-          name: data.name,
-          avatar: data.avatar,
-          theme: data.theme || 'light'
-        }
+      const profile = await this.db.profile.create({
+        name: data.name,
+        avatar: data.avatar || null,
+        theme: data.theme || 'light'
       })
+      return profile.get({ plain: true })
     } catch (error) {
       console.error('Failed to create profile:', error)
       throw error
     }
   }
 
-  async updateProfile(id: string, data: Partial<Profile>): Promise<Profile> {
+  async updateProfile(id: string, data: Partial<ProfileAttributes>): Promise<ProfileAttributes> {
     try {
-      return await this.db.profile.update({
-        where: { id },
-        data
+      await this.db.profile.update(data, {
+        where: { id }
       })
+      
+      const updatedProfile = await this.db.profile.findByPk(id)
+      if (!updatedProfile) {
+        throw new Error(`Profile with ID ${id} not found`)
+      }
+      
+      return updatedProfile.get({ plain: true })
     } catch (error) {
       console.error('Failed to update profile:', error)
       throw error
@@ -57,10 +63,11 @@ export class ProfileService {
 
   async deleteProfile(profileId: string): Promise<boolean> {
     try {
-      await this.db.profile.delete({
+      const deleted = await this.db.profile.destroy({
         where: { id: profileId }
       })
-      return true
+      
+      return deleted > 0
     } catch (error) {
       console.error('Failed to delete profile:', error)
       throw error
