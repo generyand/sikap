@@ -40,6 +40,14 @@ import { BoardView } from '@/components/tasks/BoardView'
 import { FocusMode } from '@/components/tasks/FocusMode'
 import { TaskListItem } from '@/components/tasks/TaskListItem'
 
+// Import tooltip components
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
+
 export const Tasks = () => {
   const { profileId } = useProfile()
   const queryClient = useQueryClient()
@@ -279,17 +287,42 @@ export const Tasks = () => {
               
               {/* Right side - View Toggle */}
               <div className="flex items-center gap-2">
-                <ToggleGroup type="single" value={viewMode} onValueChange={handleViewChange}>
-                  <ToggleGroupItem value="list" aria-label="List View">
-                    <List className="h-4 w-4" />
-                  </ToggleGroupItem>
-                  <ToggleGroupItem value="board" aria-label="Board View">
-                    <LayoutGrid className="h-4 w-4" />
-                  </ToggleGroupItem>
-                  <ToggleGroupItem value="focus" aria-label="Focus Mode">
-                    <Focus className="h-4 w-4" />
-                  </ToggleGroupItem>
-                </ToggleGroup>
+                <TooltipProvider>
+                  <ToggleGroup type="single" value={viewMode} onValueChange={handleViewChange}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <ToggleGroupItem value="list" aria-label="List View">
+                          <List className="h-4 w-4" />
+                        </ToggleGroupItem>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>List View</p>
+                      </TooltipContent>
+                    </Tooltip>
+                    
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <ToggleGroupItem value="board" aria-label="Board View">
+                          <LayoutGrid className="h-4 w-4" />
+                        </ToggleGroupItem>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Board View</p>
+                      </TooltipContent>
+                    </Tooltip>
+                    
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <ToggleGroupItem value="focus" aria-label="Focus Mode">
+                          <Focus className="h-4 w-4" />
+                        </ToggleGroupItem>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Focus Mode</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </ToggleGroup>
+                </TooltipProvider>
               </div>
             </div>
           </div>
