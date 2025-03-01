@@ -1,14 +1,9 @@
 import React from 'react'
 import { 
-  Calendar, 
   ListTodo, 
-  Search,
-  Plus,
   Calendar as CalendarIcon,
   Star,
   Clock3,
-  Tag,
-  MoreVertical,
   CalendarRange,
   LayoutDashboard,
   Filter,
@@ -80,25 +75,6 @@ const tasksByPriorityData = [
 ]
 
 // Mock data for development
-const MOCK_TASKS = [
-  {
-    id: '1',
-    title: 'Complete Project Proposal',
-    priority: 'high',
-    dueDate: '2024-03-20',
-    tags: ['work', 'urgent'],
-    status: 'in-progress'
-  },
-  {
-    id: '2',
-    title: 'Weekly Team Meeting',
-    priority: 'medium',
-    dueDate: '2024-03-19',
-    tags: ['meeting'],
-    status: 'upcoming'
-  },
-  // Add more mock tasks...
-]
 
 const TaskDashboard: React.FC = () => {
 
@@ -198,7 +174,7 @@ const TaskDashboard: React.FC = () => {
                       outerRadius={100}
                       label
                     >
-                      {tasksByStatusData.map((entry, index) => (
+                      {tasksByStatusData.map((_entry, index) => (
                         <Cell 
                           key={`cell-${index}`} 
                           fill={Object.values(CATEGORY_COLORS)[index % Object.values(CATEGORY_COLORS).length]} 
@@ -237,7 +213,7 @@ const TaskDashboard: React.FC = () => {
                     <YAxis />
                     <Tooltip />
                     <Bar dataKey="count" fill="#8884d8">
-                      {tasksByPriorityData.map((entry, index) => (
+                      {tasksByPriorityData.map((_entry, index) => (
                         <Cell key={`cell-${index}`} fill={Object.values(PRIORITY_COLORS)[index]} />
                       ))}
                     </Bar>
@@ -251,7 +227,7 @@ const TaskDashboard: React.FC = () => {
                 <ResponsiveContainer width="100%" height={300}>
                   <PieChart>
                     <Pie
-                      data={Object.entries(TaskCategory).map(([category, count]) => ({
+                      data={Object.entries(TaskCategory).map(([category, _count]) => ({
                         name: category,
                         value: Math.floor(Math.random() * 30) // Replace with actual data
                       }))}

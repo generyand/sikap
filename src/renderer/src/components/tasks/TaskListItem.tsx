@@ -1,14 +1,14 @@
 import React from 'react'
-import { format, formatDistanceToNow } from 'date-fns'
+import { format } from 'date-fns'
 import { Task, TaskStatus } from '@/types'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { 
-  Clock, Calendar, MoreVertical,
-  CheckCircle2, Pencil, Trash2, 
+import {
+  Calendar, MoreVertical,
+  CheckCircle2, Pencil, Trash2,
   ArrowRightCircle, ArchiveIcon,
-  StickyNote, CheckCircle
+  CheckCircle
 } from 'lucide-react'
 import {
   DropdownMenu,
@@ -27,9 +27,9 @@ interface TaskListItemProps {
   onDelete?: (taskId: string) => void
 }
 
-export const TaskListItem = React.memo(({ 
-  task, 
-  onSelect, 
+export const TaskListItem = React.memo(({
+  task,
+  onSelect,
   onEdit,
   onStatusChange,
   onDelete
@@ -50,7 +50,7 @@ export const TaskListItem = React.memo(({
             <CheckCircle className="h-4 w-4" />
           </div>
         ) : (
-          <div 
+          <div
             className={cn(
               "w-6 h-6 rounded-full border-2 hover:bg-muted transition-colors",
               task.status === TaskStatus.TODO && "border-yellow-500",
@@ -76,10 +76,10 @@ export const TaskListItem = React.memo(({
           )}>
             {task.title}
           </h3>
-          
+
           {/* Priority badge - only show for HIGH and URGENT */}
           {(task.priority === 'HIGH' || task.priority === 'URGENT') && (
-            <Badge 
+            <Badge
               className={cn(
                 "text-xs font-medium shadow-sm shrink-0",
                 priorityColorMap[task.priority].badge
@@ -89,7 +89,7 @@ export const TaskListItem = React.memo(({
             </Badge>
           )}
         </div>
-        
+
         {task.description && (
           <p className="text-sm text-muted-foreground mt-1 line-clamp-1">
             {task.description}
@@ -141,14 +141,14 @@ export const TaskListItem = React.memo(({
           {getStatusDisplayName(task.status)}
         </div>
       </div>
-      
+
       {/* Actions - ensure exact width matches header */}
       <div className="shrink-0 w-8 flex justify-center mr-1">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button 
-              variant="ghost" 
-              size="sm" 
+            <Button
+              variant="ghost"
+              size="sm"
               className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100"
               onClick={(e) => e.stopPropagation()}
             >
@@ -159,7 +159,7 @@ export const TaskListItem = React.memo(({
           <DropdownMenuContent align="end" className="w-[180px]">
             {/* Status actions */}
             {task.status !== TaskStatus.COMPLETED && (
-              <DropdownMenuItem 
+              <DropdownMenuItem
                 className="text-green-600 dark:text-green-400"
                 onClick={(e) => {
                   e.stopPropagation();
@@ -170,9 +170,9 @@ export const TaskListItem = React.memo(({
                 Mark as Complete
               </DropdownMenuItem>
             )}
-            
+
             {task.status !== TaskStatus.IN_PROGRESS && task.status !== TaskStatus.COMPLETED && (
-              <DropdownMenuItem 
+              <DropdownMenuItem
                 className="text-blue-600 dark:text-blue-400"
                 onClick={(e) => {
                   e.stopPropagation();
@@ -183,9 +183,9 @@ export const TaskListItem = React.memo(({
                 Mark as In Progress
               </DropdownMenuItem>
             )}
-            
+
             {task.status === TaskStatus.COMPLETED && (
-              <DropdownMenuItem 
+              <DropdownMenuItem
                 className="text-yellow-600 dark:text-yellow-400"
                 onClick={(e) => {
                   e.stopPropagation();
@@ -196,11 +196,11 @@ export const TaskListItem = React.memo(({
                 Mark as Todo
               </DropdownMenuItem>
             )}
-            
+
             <DropdownMenuSeparator />
-            
+
             {/* Edit option */}
-            <DropdownMenuItem 
+            <DropdownMenuItem
               onClick={(e) => {
                 e.stopPropagation();
                 if (onEdit) {
@@ -213,10 +213,10 @@ export const TaskListItem = React.memo(({
               <Pencil className="h-4 w-4 mr-2" />
               Edit Task
             </DropdownMenuItem>
-            
+
             {/* Archive option */}
             {task.status !== TaskStatus.ARCHIVED && (
-              <DropdownMenuItem 
+              <DropdownMenuItem
                 onClick={(e) => {
                   e.stopPropagation();
                   onStatusChange?.(task, TaskStatus.ARCHIVED);
@@ -226,11 +226,11 @@ export const TaskListItem = React.memo(({
                 Archive Task
               </DropdownMenuItem>
             )}
-            
+
             <DropdownMenuSeparator />
-            
+
             {/* Delete option */}
-            <DropdownMenuItem 
+            <DropdownMenuItem
               className="text-destructive"
               onClick={(e) => {
                 e.stopPropagation();

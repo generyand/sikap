@@ -14,20 +14,6 @@ interface CreateTaskDTO {
   notes?: string | null
 }
 
-interface UpdateTaskDTO {
-  id: string
-  title?: string
-  description?: string | null
-  startDate?: Date | null
-  dueDate?: Date | null
-  priority?: TaskPriority
-  status?: TaskStatus
-  category?: TaskCategory | null
-  recurrence?: RecurrencePattern | null
-  notes?: string | null
-  completedAt?: Date | null
-}
-
 export const fetchTasks = async (profileId: string | null): Promise<Task[]> => {
   if (!profileId) return []
   return window.electron.ipcRenderer.invoke('get-tasks', profileId)

@@ -17,8 +17,7 @@ import {
 import { cn } from '@/lib/utils'
 import { useState, useCallback } from 'react'
 
-import type { Task } from '@prisma/client'
-import { TaskPriority, TaskStatus, NewTask } from '../types/task'
+import { Task, TaskPriority, TaskStatus } from '@/types'
 import React from 'react'
 import { isSameDay } from 'date-fns'
 import { 
@@ -46,6 +45,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import { NewTask } from '@/types'
 
 export const Tasks = () => {
   const { profileId } = useProfile()

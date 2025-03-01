@@ -341,16 +341,16 @@ export const TaskDetail = React.memo(({
             <div className="space-y-2 pt-4 border-t text-xs text-muted-foreground">
               <div className="flex justify-between">
                 <span>Created</span>
-                <span>{format(new Date(task.createdAt), 'MMM d, yyyy h:mm a')}</span>
+                <span>{format(new Date(task.createdAt ?? Date.now()), 'MMM d, yyyy h:mm a')}</span>
               </div>
               <div className="flex justify-between">
                 <span>Last Updated</span>
-                <span>{format(new Date(task.updatedAt), 'MMM d, yyyy h:mm a')}</span>
+                <span>{format(new Date(task.updatedAt ?? Date.now()), 'MMM d, yyyy h:mm a')}</span>
               </div>
               {task.completedAt && (
                 <div className="flex justify-between">
                   <span>Completed</span>
-                  <span>{format(new Date(task.completedAt), 'MMM d, yyyy h:mm a')}</span>
+                  <span>{format(new Date(task.completedAt ?? Date.now()), 'MMM d, yyyy h:mm a')}</span>
                 </div>
               )}
             </div>

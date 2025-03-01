@@ -1,4 +1,7 @@
 // Re-exporting types and enums to replace Prisma imports
+import type { NewTask } from './task';
+
+export type { NewTask };
 
 // Task Status enum
 export enum TaskStatus {

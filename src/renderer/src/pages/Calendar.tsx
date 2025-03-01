@@ -5,8 +5,7 @@ import { useTheme } from '../providers/ThemeProvider'
 import { useQuery } from '@tanstack/react-query'
 import { useProfile } from '../providers/ProfileProvider'
 import { fetchTasks } from '../services/taskService'
-import type { Task } from '@prisma/client'
-import { TaskStatus } from '@/types'
+import { Task, TaskStatus } from '@/types'
 import 'react-big-calendar/lib/css/react-big-calendar.css'
 import './calendar.css'
 import { cn } from '../lib/utils'
@@ -18,7 +17,7 @@ type CalendarEvent = {
   start: Date
   end: Date
   description?: string
-  task?: Task // Original task data
+  task?: Task
   status: TaskStatus
 }
 
@@ -50,10 +49,10 @@ const Calendar = () => {
   const events: CalendarEvent[] = tasks.map(task => ({
     id: task.id,
     title: task.title,
-    start: task.startDate || task.dueDate || task.createdAt,
-    end: task.dueDate || task.startDate || task.createdAt,
+    start: task.startDate || task.dueDate || task.createdAt || new Date(),
+    end: task.dueDate || task.startDate || task.createdAt || new Date(),
     description: task.description || undefined,
-    task, // Keep reference to original task
+    task,
     status: task.status
   }))
 

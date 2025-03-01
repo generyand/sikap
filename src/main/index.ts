@@ -64,17 +64,6 @@ function createWindow(): void {
   }
 }
 
-function handleSetCurrentProfile(profileId: string) {
-  // Store the selected profile ID
-  store.set('currentProfileId', profileId)
-  return profileId
-}
-
-// Add this with your other handlers
-function handleGetCurrentProfile() {
-  return store.get('currentProfileId')
-}
-
 // Initialize database before creating window
 async function initialize() {
   try {

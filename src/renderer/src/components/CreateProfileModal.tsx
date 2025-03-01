@@ -15,7 +15,7 @@ interface CreateProfileModalProps {
   onSuccess: () => void
 }
 
-export function CreateProfileModal({ isOpen, onClose, onSuccess }: CreateProfileModalProps) {
+export function CreateProfileModal({ isOpen, onClose }: CreateProfileModalProps) {
   const [name, setName] = useState('')
   const [avatar, setAvatar] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
@@ -70,7 +70,8 @@ export function CreateProfileModal({ isOpen, onClose, onSuccess }: CreateProfile
     try {
       createMutation.mutate({ 
         name, 
-        avatar 
+        avatar,
+        theme: 'light'
       })
     } catch (error) {
       console.error('Failed to create profile:', error)
