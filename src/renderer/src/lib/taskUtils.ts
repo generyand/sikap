@@ -1,4 +1,4 @@
-import { TaskPriority, TaskCategory } from '@prisma/client'
+import { TaskPriority, TaskCategory } from '@/types'
 import { 
   Briefcase, User, ShoppingCart, Heart, 
   GraduationCap, Wallet, Home, FolderKanban

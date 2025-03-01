@@ -7,10 +7,7 @@ import icon from '../../resources/icon.png?asset'
 import { store, initStore } from './store'
 import { DatabaseService } from './services/database.service'
 import { ProfileHandler } from './ipc/handlers/profile.handler'
-import { PrismaClient } from '@prisma/client'
 import { TaskHandler } from './ipc/handlers/task.handler'
-
-const prisma = new PrismaClient()
 
 function createWindow(): void {
   // Create the browser window.
@@ -140,10 +137,9 @@ app.whenReady().then(async () => {
     })
 
     ipcMain.handle('get-profile', async (_, profileId: string) => {
-      const profile = await prisma.profile.findUnique({
-        where: { id: profileId }
-      })
-      return profile
+      const dbService = DatabaseService.getInstance();
+      const profile = await dbService.profile.findByPk(profileId);
+      return profile;
     })
 
     // Log system theme changes

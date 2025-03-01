@@ -1,4 +1,4 @@
-import { TaskPriority, TaskStatus, TaskCategory, RecurrencePattern, Task } from '@prisma/client'
+import { TaskPriority, TaskStatus, TaskCategory, RecurrencePattern, Task } from '@/types'
 
 interface CreateTaskDTO {
   title: string

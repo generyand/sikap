@@ -1,6 +1,6 @@
 import { createContext, useContext, ReactNode, useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Profile } from '@prisma/client'
+import { Profile } from '@/types'
 
 type ProfileContextType = {
   profileId: string | null

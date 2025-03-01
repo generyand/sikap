@@ -1,4 +1,4 @@
-import { Profile } from '@prisma/client'
+import { Profile } from '@/types'
 
 export const profileService = {
   getProfiles: () => {

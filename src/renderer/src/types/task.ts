@@ -1,4 +1,4 @@
-import { TaskStatus, TaskPriority, TaskCategory, RecurrencePattern } from '@prisma/client'
+import { TaskStatus, TaskPriority, TaskCategory, RecurrencePattern } from './index'
 
 export { TaskStatus, TaskPriority, TaskCategory, RecurrencePattern }
 

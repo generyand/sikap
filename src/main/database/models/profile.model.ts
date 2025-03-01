@@ -4,15 +4,7 @@ import { ProfileAttributes, ProfileCreationAttributes } from '../types';
 import { v4 as uuidv4 } from 'uuid';
 
 // Define the Profile model class
-class Profile extends Model<ProfileAttributes, ProfileCreationAttributes> implements ProfileAttributes {
-  public id!: string;
-  public name!: string;
-  public avatar!: string | null;
-  public theme!: string;
-
-  public readonly createdAt!: Date;
-  public readonly updatedAt!: Date;
-
+class Profile extends Model<ProfileAttributes, ProfileCreationAttributes> {
   // Define association with Task model
   public static associate(models: any) {
     Profile.hasMany(models.Task, {
@@ -50,6 +42,7 @@ Profile.init(
     modelName: 'Profile',
     tableName: 'profiles',
     timestamps: true,
+    underscored: true, // Use snake_case for column names
   }
 );
 

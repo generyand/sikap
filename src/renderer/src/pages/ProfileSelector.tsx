@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Profile } from '@prisma/client'
+import { Profile } from '@/types'
 import { UserCircle2, Check, Plus, Trash2, Sparkles, ArrowRight, Circle } from 'lucide-react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"

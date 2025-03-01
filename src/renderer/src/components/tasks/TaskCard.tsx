@@ -1,6 +1,6 @@
 import React from 'react'
 import { format, formatDistanceToNow } from 'date-fns'
-import { Task, TaskStatus } from '@prisma/client'
+import { Task, TaskStatus } from '@/types'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'

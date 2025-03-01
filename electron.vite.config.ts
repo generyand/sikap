@@ -12,8 +12,6 @@ export default defineConfig({
         external: [
           '@supabase/supabase-js',
           'better-sqlite3',
-          'prisma',
-          '@prisma/client',
           'bcrypt'
         ]
       }

@@ -30,7 +30,7 @@ import {
   ResponsiveContainer 
 } from 'recharts'
 import { Button } from "@/components/ui/button"
-import { TaskCategory } from '@prisma/client'
+import { TaskCategory } from '@/types'
 import {
   Select,
   SelectContent,

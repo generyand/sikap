@@ -1,5 +1,5 @@
 import React from 'react'
-import { TaskPriority, TaskCategory, RecurrencePattern } from '@prisma/client'
+import { TaskPriority, TaskCategory, RecurrencePattern } from '@/types'
 import { cn } from '@/lib/utils'
 import { 
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter 

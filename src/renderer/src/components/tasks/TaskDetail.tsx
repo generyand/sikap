@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { format } from 'date-fns'
-import { Task, TaskStatus, TaskPriority, TaskCategory } from '@prisma/client'
+import { Task, TaskStatus, TaskPriority, TaskCategory } from '@/types'
 import { cn } from '@/lib/utils'
 import { 
   SheetContent, SheetHeader, SheetTitle 

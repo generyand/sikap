@@ -1,5 +1,5 @@
 import React from 'react'
-import { Task, TaskStatus } from '@prisma/client'
+import { Task, TaskStatus } from '@/types'
 import { cn } from '@/lib/utils'
 import { TaskCard } from './TaskCard'
 

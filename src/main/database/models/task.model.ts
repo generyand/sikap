@@ -4,23 +4,7 @@ import { TaskAttributes, TaskCreationAttributes, TaskStatus, TaskPriority, TaskC
 import { v4 as uuidv4 } from 'uuid';
 
 // Define the Task model class
-class Task extends Model<TaskAttributes, TaskCreationAttributes> implements TaskAttributes {
-  public id!: string;
-  public title!: string;
-  public description!: string | null;
-  public startDate!: Date | null;
-  public dueDate!: Date | null;
-  public priority!: TaskPriority;
-  public status!: TaskStatus;
-  public profileId!: string;
-  public category!: TaskCategory | null;
-  public recurrence!: RecurrencePattern | null;
-  public notes!: string | null;
-  public completedAt!: Date | null;
-
-  public readonly createdAt!: Date;
-  public readonly updatedAt!: Date;
-
+class Task extends Model<TaskAttributes, TaskCreationAttributes> {
   // Define association with Profile model
   public static associate(models: any) {
     Task.belongsTo(models.Profile, {
@@ -94,6 +78,7 @@ Task.init(
     modelName: 'Task',
     tableName: 'tasks',
     timestamps: true,
+    underscored: true, // Use snake_case for column names
   }
 );
 
