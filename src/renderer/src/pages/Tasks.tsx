@@ -261,56 +261,59 @@ export const Tasks = () => {
 
   return (
     <div className="flex h-full">
-      {/* Main Content */}
-      <div className="flex-1 overflow-hidden">
+      {/* Fix the sidebar positioning by making it absolutely positioned or adding overflow handling */}
+      <div className="flex-1 overflow-hidden relative">
         {/* Header */}
-        <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 w-full">
           {/* Main Header */}
           <div className="px-6 py-4">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+              {/* Left side - Title and Add Button */}
               <div className="flex items-center gap-4">
-                <h1 className="text-2xl font-semibold tracking-tight">Tasks</h1>
-                <Badge variant="secondary" className="rounded-md px-2">
-                  {tasks?.length || 0} total
-                </Badge>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <ToggleGroup type="single" value={viewMode} onValueChange={handleViewChange} size="sm">
-                  <ToggleGroupItem value="list" aria-label="List View">
-                    <List className="h-4 w-4 mr-1" />
-                    <span className="hidden sm:inline">List</span>
-                  </ToggleGroupItem>
-                  <ToggleGroupItem value="board" aria-label="Board View">
-                    <LayoutGrid className="h-4 w-4 mr-1" />
-                    <span className="hidden sm:inline">Board</span>
-                  </ToggleGroupItem>
-                  <ToggleGroupItem value="focus" aria-label="Focus Mode">
-                    <Focus className="h-4 w-4 mr-1" />
-                    <span className="hidden sm:inline">Focus</span>
-                  </ToggleGroupItem>
-                </ToggleGroup>
-                <Button onClick={() => setIsAddTaskOpen(true)} size="sm">
-                  <Plus className="mr-2 h-4 w-4" />
+                <h1 className="text-xl font-semibold">Tasks</h1>
+                <Button onClick={() => setIsAddTaskOpen(true)} size="sm" className="gap-1">
+                  <Plus className="h-4 w-4" />
                   Add Task
                 </Button>
               </div>
+              
+              {/* Right side - View Toggle */}
+              <div className="flex items-center gap-2">
+                <ToggleGroup type="single" value={viewMode} onValueChange={handleViewChange}>
+                  <ToggleGroupItem value="list" aria-label="List View">
+                    <List className="h-4 w-4" />
+                  </ToggleGroupItem>
+                  <ToggleGroupItem value="board" aria-label="Board View">
+                    <LayoutGrid className="h-4 w-4" />
+                  </ToggleGroupItem>
+                  <ToggleGroupItem value="focus" aria-label="Focus Mode">
+                    <Focus className="h-4 w-4" />
+                  </ToggleGroupItem>
+                </ToggleGroup>
+              </div>
             </div>
+          </div>
+        </header>
 
-            {/* Search and Filters Bar - Only show in List and Board views */}
-            {viewMode !== 'focus' && (
-              <div className="mt-4 flex flex-col gap-4 md:flex-row md:items-center">
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input 
-                    placeholder="Search tasks..." 
-                    className="pl-9 w-full md:max-w-sm"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
-                </div>
-
-                <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0">
+        {/* Filter Section */}
+        {viewMode !== 'focus' && (
+          <div className="px-6 py-3 border-t">
+            <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
+              {/* Search box */}
+              <div className="relative w-full max-w-sm">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  type="search"
+                  placeholder="Search tasks..."
+                  className="pl-8 w-full"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+              
+              {/* Status filters - Add a fixed width container with overflow handling */}
+              <div className="w-full sm:w-auto overflow-x-auto pb-2 sm:pb-0">
+                <div className="flex items-center gap-2 min-w-max"> {/* min-w-max prevents wrapping */}
                   <Button
                     variant={statusFilter === 'ALL' ? "default" : "outline"}
                     size="sm"
@@ -339,9 +342,9 @@ export const Tasks = () => {
                   ))}
                 </div>
               </div>
-            )}
+            </div>
           </div>
-        </header>
+        )}
 
         {/* Content Area */}
         <div className="h-[calc(100vh-8rem)] overflow-y-auto px-6 pt-2 pb-6">
