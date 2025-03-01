@@ -23,8 +23,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
-import { useSortable } from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
 
 // Import the color maps
 import { categoryColorMap, priorityColorMap } from '@/lib/taskUtils'
@@ -35,7 +33,6 @@ interface TaskCardProps {
   onEdit?: (task: Task) => void
   onStatusChange?: (task: Task, status: TaskStatus) => void
   onDelete?: (taskId: string) => void
-  isDraggable?: boolean
 }
 
 export const TaskCard = React.memo(({ 
@@ -43,53 +40,18 @@ export const TaskCard = React.memo(({
   onSelect, 
   onEdit,
   onStatusChange,
-  onDelete,
-  isDraggable = false
+  onDelete
 }: TaskCardProps) => {
-  // Add sortable functionality if draggable
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging
-  } = isDraggable ? useSortable({ id: task.id }) : {
-    attributes: {},
-    listeners: {},
-    setNodeRef: null,
-    transform: null,
-    transition: null,
-    isDragging: false
-  };
-
-  // Apply styles for dragging
-  const style = isDraggable ? {
-    transform: CSS.Transform.toString(transform),
-    transition: transition || undefined,
-    opacity: isDragging ? 0.5 : 1,
-    zIndex: isDragging ? 1 : 0
-  } : {};
-
   return (
     <div
-      ref={setNodeRef as any}
-      {...attributes}
-      {...listeners}
-      onClick={(e) => {
-        if (!isDragging) {
-          onSelect(task);
-        }
-      }}
+      onClick={() => onSelect(task)}
       className={cn(
         "group bg-card/50 dark:bg-card/25 rounded-lg border hover:shadow-md transition-all",
         "hover:border-border/80 hover:bg-card cursor-pointer relative overflow-hidden",
         "flex flex-col min-h-[180px] max-h-[280px]",
         "shadow-sm hover:scale-[1.02]",
-        task.status === TaskStatus.COMPLETED && "opacity-60",
-        isDraggable && "cursor-grab active:cursor-grabbing"
+        task.status === TaskStatus.COMPLETED && "opacity-60"
       )}
-      style={style}
     >
       {/* Left color strip */}
       <div className={cn(
@@ -136,9 +98,12 @@ export const TaskCard = React.memo(({
                           <span className="inline-block w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse ml-0.5"></span>
                         </div>
                       </TooltipTrigger>
-                      <TooltipContent side="bottom" className="max-w-[300px] p-3 bg-amber-50 dark:bg-amber-950/90 border-amber-200 dark:border-amber-800/50 text-amber-900 dark:text-amber-100 shadow-lg">
-                        <p className="text-sm whitespace-pre-wrap line-clamp-6">
-                          {task.notes}
+                      <TooltipContent>
+                        <p className="max-w-xs break-words">
+                          {task.notes.length > 100 
+                            ? task.notes.substring(0, 100) + '...' 
+                            : task.notes
+                          }
                         </p>
                       </TooltipContent>
                     </Tooltip>
@@ -148,21 +113,24 @@ export const TaskCard = React.memo(({
             </div>
           </div>
           
-          {/* Absolutely positioned menu button */}
+          {/* Actions dropdown */}
           <div className="absolute top-0 right-0">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button 
                   variant="ghost" 
-                  size="icon"
-                  className="opacity-0 group-hover:opacity-100 -mr-2 -mt-2 hover:bg-background/80"
-                  onClick={(e) => e.stopPropagation()}
+                  size="sm" 
+                  className="h-8 w-8 p-0"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                  }}
                 >
                   <MoreVertical className="h-4 w-4" />
+                  <span className="sr-only">More</span>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
-                {/* Status change options */}
+              <DropdownMenuContent align="end" className="w-[200px]">
+                {/* Conditional status options */}
                 {task.status !== TaskStatus.COMPLETED && (
                   <DropdownMenuItem 
                     className="text-green-600 dark:text-green-400"

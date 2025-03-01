@@ -34,11 +34,11 @@ import {
 } from "@/components/ui/alert-dialog"
 
 // Import our extracted components
-import { TaskCard } from '@/components/tasks/TaskCard'
 import { TaskDetail } from '@/components/tasks/TaskDetail'
 import { CreateTaskDialog } from '@/components/tasks/CreateTaskDialog'
 import { BoardView } from '@/components/tasks/BoardView'
 import { FocusMode } from '@/components/tasks/FocusMode'
+import { TaskListItem } from '@/components/tasks/TaskListItem'
 
 export const Tasks = () => {
   const { profileId } = useProfile()
@@ -226,15 +226,18 @@ export const Tasks = () => {
 
   const handleQuickStatusChange = useCallback((taskId: string, status: TaskStatus) => {
     console.log('handleQuickStatusChange called with:', taskId, status);
+    console.log('Status type:', typeof status);
+    console.log('Is valid TaskStatus?', Object.values(TaskStatus).includes(status));
     
-    // Log the exact values being passed to the mutation
-    const updateData = {
-      id: taskId,
-      status
-    };
-    console.log('Updating with data:', updateData);
-    
-    updateTaskMutation.mutate(updateData);
+    // Make sure we're working with a valid TaskStatus value
+    if (Object.values(TaskStatus).includes(status)) {
+      updateTaskMutation.mutate({
+        id: taskId,
+        status
+      });
+    } else {
+      console.error('Invalid TaskStatus value:', status);
+    }
   }, [updateTaskMutation]);
 
   const handleQuickDelete = useCallback((taskId: string) => {
@@ -341,69 +344,52 @@ export const Tasks = () => {
         </header>
 
         {/* Content Area */}
-        <div className="h-[calc(100vh-8rem)] overflow-y-auto px-6 py-4">
+        <div className="h-[calc(100vh-8rem)] overflow-y-auto px-6 pt-2 pb-6">
           {/* Conditional View Rendering */}
           {viewMode === 'list' && (
             <div className="space-y-6">
-              {/* Your existing list view code */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {/* Today Section */}
-                <div className="col-span-full">
-                  <h2 className="mb-3 text-sm font-medium text-muted-foreground">Today</h2>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {groupedTasks.today.map(task => (
-                      <TaskCard 
-                        key={task.id}
-                        task={task}
-                        onSelect={handleSelectTask}
-                        onEdit={handleEditTaskFromCard}
-                        onStatusChange={(task, newStatus) => handleQuickStatusChange(task.id, newStatus)}
-                        onDelete={(taskId) => handleQuickDelete(taskId)}
-                      />
-                    ))}
-                  </div>
-                </div>
-
-                {/* Tomorrow Section */}
-                {groupedTasks.tomorrow.length > 0 && (
-                  <div className="col-span-full">
-                    <h2 className="mb-3 text-sm font-medium text-muted-foreground">Tomorrow</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {groupedTasks.tomorrow.map(task => (
-                        <TaskCard 
-                          key={task.id}
-                          task={task}
-                          onSelect={handleSelectTask}
-                          onEdit={handleEditTaskFromCard}
-                          onStatusChange={(task, newStatus) => handleQuickStatusChange(task.id, newStatus)}
-                          onDelete={(taskId) => handleQuickDelete(taskId)}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Upcoming Section */}
-                {groupedTasks.upcoming.length > 0 && (
-                  <div className="col-span-full">
-                    <h2 className="mb-3 text-sm font-medium text-muted-foreground">Upcoming</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {groupedTasks.upcoming.map(task => (
-                        <TaskCard 
-                          key={task.id}
-                          task={task}
-                          onSelect={handleSelectTask}
-                          onEdit={handleEditTaskFromCard}
-                          onStatusChange={(task, newStatus) => handleQuickStatusChange(task.id, newStatus)}
-                          onDelete={(taskId) => handleQuickDelete(taskId)}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                )}
+              {/* List header */}
+              <div className="hidden sm:flex items-center border-b pb-2 px-4 gap-3 text-xs uppercase font-medium text-muted-foreground sticky top-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-10 pt-2">
+                <div className="w-6 ml-0.5"></div> {/* Checkbox column - added ml-0.5 for alignment */}
+                <div className="flex-1 pl-3">Task</div> {/* Added pl-3 to match task content padding */}
+                <div className="hidden sm:block w-[120px] text-center">Category</div> {/* Changed width and added text-center */}
+                <div className="hidden md:block w-[140px] text-center">Due Date</div> {/* Changed width and added text-center */}
+                <div className="hidden lg:block w-[100px] text-center">Status</div> {/* Changed width and added text-center */}
+                <div className="w-8 mr-1"></div> {/* Actions column - added mr-1 for alignment */}
               </div>
 
-              {/* No Tasks */}
+              {Object.entries(groupedTasks).map(([group, groupTasks]) => (
+                <div key={group} className="space-y-3">
+                  <h3 className="text-sm font-medium px-4 py-2 sticky top-[4.5rem] z-20 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-muted/40 mb-2">
+                    {group === 'today' ? 'Today' : 
+                     group === 'tomorrow' ? 'Tomorrow' : 
+                     'Upcoming'}
+                    <span className="text-xs text-muted-foreground ml-2">
+                      ({groupTasks.length})
+                    </span>
+                  </h3>
+                  
+                  {groupTasks.length > 0 ? (
+                    <div className="bg-card rounded-lg border shadow-sm overflow-hidden mt-2">
+                      {groupTasks.map(task => (
+                        <TaskListItem
+                          key={task.id}
+                          task={task}
+                          onSelect={handleSelectTask}
+                          onEdit={handleEditTaskFromCard}
+                          onStatusChange={(task, newStatus) => handleQuickStatusChange(task.id, newStatus)}
+                          onDelete={handleQuickDelete}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="bg-card rounded-lg border shadow-sm p-4 text-center text-muted-foreground">
+                      No tasks in this section
+                    </div>
+                  )}
+                </div>
+              ))}
+              
               {!isLoading && tasks?.length === 0 && (
                 <div className="text-center text-muted-foreground py-8">
                   No tasks yet. Click "Add Task" to create one.
@@ -427,13 +413,17 @@ export const Tasks = () => {
 
           {viewMode === 'focus' && (
             <FocusMode 
-              tasks={tasks || []}
+              tasks={tasks?.filter(task => 
+                task.title.toLowerCase().includes(searchTerm.toLowerCase()) &&
+                (statusFilter === 'ALL' || task.status === statusFilter)
+              ) || []}
               onSelectTask={handleSelectTask}
               onEditTask={handleEditTaskFromCard}
               onStatusChange={handleQuickStatusChange}
               onDeleteTask={handleQuickDelete}
               focusDate={focusDate}
               onDateChange={setFocusDate}
+              onAddTask={() => setIsAddTaskOpen(true)}
             />
           )}
         </div>
