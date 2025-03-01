@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useProfile } from '../providers/ProfileProvider'
-import { fetchTasks, createTask } from '../services/taskService'
+import { fetchTasks, createTask, updateTask, deleteTask } from '../services/taskService'
 import { 
   Plus, Search, MoreVertical, Calendar, Clock,
   Briefcase, // Work
@@ -37,6 +37,16 @@ import { TaskPriority, TaskStatus, TaskCategory, RecurrencePattern, NewTask } fr
 import React from 'react'
 import { format, isSameDay, formatDistanceToNow } from 'date-fns'
 import { Switch } from "@/components/ui/switch"
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 
 const categoryColorMap: Record<TaskCategory, { 
   bg: string, 
@@ -144,6 +154,10 @@ export const Tasks = () => {
   const [selectedTask, setSelectedTask] = useState<Task | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState<TaskStatus | 'ALL'>('ALL')
+  const [isEditing, setIsEditing] = useState(false)
+  const [editTask, setEditTask] = useState<Partial<Task> | null>(null)
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+  const [taskToDelete, setTaskToDelete] = useState<string | null>(null)
 
   const { data: tasks, isLoading } = useQuery({
     queryKey: ['tasks', profileId],
@@ -198,6 +212,25 @@ export const Tasks = () => {
     }
   })
 
+  const updateTaskMutation = useMutation({
+    mutationFn: updateTask,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tasks', profileId] })
+      setSelectedTask(null)
+      setEditTask(null)
+      setIsEditing(false)
+    }
+  })
+
+  const deleteTaskMutation = useMutation({
+    mutationFn: deleteTask,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tasks', profileId] })
+      setSelectedTask(null)
+      setTaskToDelete(null)
+    }
+  })
+
   const handleAddTask = () => {
     if (!newTask.title.trim()) return
 
@@ -205,6 +238,54 @@ export const Tasks = () => {
       ...newTask,
       profileId: profileId as string
     })
+  }
+
+  const handleEditTask = () => {
+    if (!selectedTask) return
+    setEditTask({...selectedTask})
+    setIsEditing(true)
+  }
+
+  const handleSaveTask = () => {
+    if (!editTask || !editTask.id) return;
+    
+    console.log('Saving task with data:', editTask);
+    
+    updateTaskMutation.mutate({
+      id: editTask.id,
+      title: editTask.title,
+      description: editTask.description,
+      startDate: editTask.startDate,
+      dueDate: editTask.dueDate,
+      priority: editTask.priority,
+      status: editTask.status,
+      category: editTask.category,
+      recurrence: editTask.recurrence,
+      notes: editTask.notes
+    });
+  }
+
+  const handleStatusChange = (status: TaskStatus) => {
+    if (isEditing && editTask) {
+      setEditTask(prev => ({...prev, status}))
+    } else if (selectedTask) {
+      updateTaskMutation.mutate({
+        id: selectedTask.id,
+        status
+      })
+    }
+  }
+
+  const handleDeleteConfirm = () => {
+    if (taskToDelete) {
+      deleteTaskMutation.mutate(taskToDelete)
+      setIsDeleteDialogOpen(false)
+    }
+  }
+
+  const handleDeleteTask = (taskId: string) => {
+    setTaskToDelete(taskId)
+    setIsDeleteDialogOpen(true)
   }
 
   if (isLoading) return <div>Loading...</div>
@@ -339,150 +420,331 @@ export const Tasks = () => {
         </div>
       </div>
 
-      <Sheet open={!!selectedTask} onOpenChange={() => setSelectedTask(null)}>
-        <SheetContent className="sm:max-w-xl">
+      <Sheet open={!!selectedTask} onOpenChange={(open) => {
+        if (!open) {
+          setSelectedTask(null)
+          setEditTask(null)
+          setIsEditing(false)
+        }
+      }}>
+        <SheetContent className="sm:max-w-md md:max-w-lg">
           <SheetHeader>
-            {/* Title & Close Section */}
-            <div className="flex items-start justify-between mb-4">
-              <SheetTitle className="text-xl font-semibold">{selectedTask?.title}</SheetTitle>
-            </div>
-
-            {/* Metadata & Status Section */}
-            <div className="flex flex-col gap-4">
-              {/* Status & Date */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Calendar className="h-4 w-4" />
-                  Created {selectedTask?.createdAt && format(new Date(selectedTask.createdAt), 'PPP')}
-                </div>
-                <Badge 
-                  className={cn(
-                    "px-3 py-1",
-                    selectedTask?.status === TaskStatus.TODO && "bg-yellow-500/10 text-yellow-600",
-                    selectedTask?.status === TaskStatus.IN_PROGRESS && "bg-blue-500/10 text-blue-600",
-                    selectedTask?.status === TaskStatus.COMPLETED && "bg-green-500/10 text-green-600",
-                    selectedTask?.status === TaskStatus.ARCHIVED && "bg-gray-500/10 text-gray-600"
-                  )}
-                >
-                  {selectedTask?.status.toLowerCase()}
-                </Badge>
-              </div>
-
-              {/* Tags Section */}
-              <div className="flex flex-wrap gap-2">
-                {selectedTask?.category && (
-                  <div className={cn(
-                    "px-3 py-1.5 rounded-md border shadow-sm flex items-center gap-2",
-                    categoryColorMap[selectedTask.category].bg,
-                    categoryColorMap[selectedTask.category].text,
-                    categoryColorMap[selectedTask.category].border
-                  )}>
-                    {React.createElement(categoryColorMap[selectedTask.category].icon, { className: "h-4 w-4" })}
-                    <span className="font-medium">{selectedTask.category.charAt(0) + selectedTask.category.slice(1).toLowerCase()}</span>
-                  </div>
-                )}
-                <Badge 
-                  className={cn(
-                    "px-3 py-1.5",
-                    priorityColorMap[selectedTask?.priority ?? TaskPriority.LOW].badge
-                  )}
-                >
-                  {(selectedTask?.priority ?? 'Low').charAt(0).toUpperCase() + 
-                   (selectedTask?.priority ?? 'Low').slice(1).toLowerCase()}
-                </Badge>
-                {selectedTask?.recurrence && (
-                  <Badge variant="outline" className="px-3 py-1.5">
-                    <Clock className="mr-2 h-4 w-4" />
-                    Repeats {selectedTask.recurrence.toLowerCase()}
-                  </Badge>
+            <SheetTitle className="flex items-center justify-between">
+              {isEditing ? 'Edit Task' : 'Task Details'}
+              <div className="flex items-center gap-2">
+                {!isEditing ? (
+                  <>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={handleEditTask}
+                    >
+                      <Pencil className="h-4 w-4 mr-2" />
+                      Edit
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => {
+                        setIsEditing(false)
+                        setEditTask(null)
+                      }}
+                    >
+                      Cancel
+                    </Button>
+                    <Button 
+                      size="sm"
+                      onClick={handleSaveTask}
+                    >
+                      Save
+                    </Button>
+                  </>
                 )}
               </div>
-
-              {/* Completion Status */}
-              {selectedTask?.completedAt && (
-                <div className="text-sm text-muted-foreground flex items-center gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-green-500" />
-                  Completed {format(new Date(selectedTask.completedAt), 'PPP')}
-                </div>
-              )}
-            </div>
+            </SheetTitle>
           </SheetHeader>
 
-          {/* Enhanced Content Section */}
-          <div className="mt-6 space-y-6 max-h-[calc(100vh-300px)] overflow-y-auto pr-4">
-            {/* Description Card */}
-            <div className="space-y-2 bg-muted/30 p-4 rounded-lg">
-              <h3 className="text-sm font-medium flex items-center gap-2">
-                <FileText className="h-4 w-4" />
-                Description
-              </h3>
-              <p className="text-sm text-muted-foreground">
-                {selectedTask?.description || 'No description provided'}
-              </p>
-            </div>
-
-            {/* Dates Section */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="bg-muted/30 p-4 rounded-lg space-y-2">
-                <h3 className="text-sm font-medium flex items-center gap-2">
-                  <Calendar className="h-4 w-4" />
-                  Start Date
-                </h3>
-                <p className="text-sm text-muted-foreground">
-                  {selectedTask?.startDate ? format(new Date(selectedTask.startDate), 'PPP p') : 'Not set'}
-                </p>
+          {selectedTask && (
+            <div className="mt-6 space-y-6">
+              {/* Title & Description */}
+              <div className="space-y-4">
+                {isEditing ? (
+                  <>
+                    <div>
+                      <Label htmlFor="edit-title" className="text-sm font-medium">Title</Label>
+                      <Input
+                        id="edit-title"
+                        value={editTask?.title || ''}
+                        onChange={(e) => setEditTask(prev => ({ ...prev, title: e.target.value }))}
+                        className="mt-1.5"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="edit-description" className="text-sm font-medium">Description</Label>
+                      <Textarea
+                        id="edit-description"
+                        value={editTask?.description || ''}
+                        onChange={(e) => setEditTask(prev => ({ ...prev, description: e.target.value || null }))}
+                        className="mt-1.5 min-h-[100px]"
+                      />
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <h3 className="text-xl font-medium">{selectedTask.title}</h3>
+                    {selectedTask.description && (
+                      <p className="text-muted-foreground">{selectedTask.description}</p>
+                    )}
+                  </>
+                )}
               </div>
-              <div className="bg-muted/30 p-4 rounded-lg space-y-2">
-                <h3 className="text-sm font-medium flex items-center gap-2">
-                  <Clock className="h-4 w-4" />
-                  Due Date
-                </h3>
-                <p className="text-sm text-muted-foreground">
-                  {selectedTask?.dueDate ? format(new Date(selectedTask.dueDate), 'PPP p') : 'Not set'}
-                </p>
-              </div>
-            </div>
 
-
-            {/* Notes Section */}
-            {selectedTask?.notes && (
-              <div className="bg-muted/30 p-4 rounded-lg space-y-2">
-                <h3 className="text-sm font-medium flex items-center gap-2">
-                  <StickyNote className="h-4 w-4" />
-                  Notes
-                </h3>
-                <div className="text-sm text-muted-foreground whitespace-pre-wrap bg-background p-4 rounded-md">
-                  {selectedTask.notes}
+              {/* Status */}
+              <div className="space-y-2">
+                <h4 className="text-sm font-medium">Status</h4>
+                <div className="flex flex-wrap gap-2">
+                  {Object.values(TaskStatus).map(status => (
+                    <Badge 
+                      key={status}
+                      variant={
+                        (isEditing ? editTask?.status : selectedTask.status) === status 
+                          ? "default" 
+                          : "outline"
+                      }
+                      className="cursor-pointer"
+                      onClick={() => handleStatusChange(status)}
+                    >
+                      <div className={cn(
+                        "h-2 w-2 rounded-full mr-1.5",
+                        status === TaskStatus.TODO && "bg-yellow-500",
+                        status === TaskStatus.IN_PROGRESS && "bg-blue-500",
+                        status === TaskStatus.COMPLETED && "bg-green-500",
+                        status === TaskStatus.ARCHIVED && "bg-gray-500"
+                      )} />
+                      {status.charAt(0) + status.slice(1).toLowerCase().replace('_', ' ')}
+                    </Badge>
+                  ))}
                 </div>
               </div>
-            )}
 
-            {/* Metadata Section */}
-            <div className="border-t pt-4 space-y-4">
-              <div className="flex items-center justify-between text-sm text-muted-foreground">
-                <span>Last Updated</span>
-                <span>{selectedTask?.updatedAt && format(new Date(selectedTask.updatedAt), 'PPP p')}</span>
+              {/* Dates */}
+              <div className="space-y-4 pt-4 border-t">
+                <h4 className="text-sm font-medium">Dates</h4>
+                
+                {isEditing ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label className="text-sm">Start Date</Label>
+                      <Input
+                        type="datetime-local"
+                        value={editTask?.startDate?.toISOString().slice(0, 16) || ''}
+                        onChange={(e) => setEditTask(prev => ({
+                          ...prev,
+                          startDate: e.target.value ? new Date(e.target.value) : null
+                        }))}
+                        className="mt-1.5"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-sm">Due Date</Label>
+                      <Input
+                        type="datetime-local"
+                        value={editTask?.dueDate?.toISOString().slice(0, 16) || ''}
+                        onChange={(e) => setEditTask(prev => ({
+                          ...prev,
+                          dueDate: e.target.value ? new Date(e.target.value) : null
+                        }))}
+                        className="mt-1.5"
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <p className="text-xs text-muted-foreground">Start Date</p>
+                      <p>{selectedTask.startDate 
+                        ? format(new Date(selectedTask.startDate), 'MMM d, yyyy h:mm a') 
+                        : 'Not set'}
+                      </p>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-xs text-muted-foreground">Due Date</p>
+                      <p>{selectedTask.dueDate 
+                        ? format(new Date(selectedTask.dueDate), 'MMM d, yyyy h:mm a') 
+                        : 'Not set'}
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Priority & Category */}
+              <div className="space-y-4 pt-4 border-t">
+                <h4 className="text-sm font-medium">Details</h4>
+                
+                {isEditing ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label className="text-sm">Priority</Label>
+                      <Select
+                        value={editTask?.priority || ''}
+                        onValueChange={(value) => setEditTask(prev => ({ 
+                          ...prev, 
+                          priority: value as TaskPriority 
+                        }))}
+                      >
+                        <SelectTrigger className="mt-1.5">
+                          <SelectValue placeholder="Select priority" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {Object.values(TaskPriority).map(priority => (
+                            <SelectItem key={priority} value={priority}>
+                              <div className="flex items-center gap-2">
+                                <div className={cn(
+                                  "h-2 w-2 rounded-full",
+                                  priorityColorMap[priority].badge
+                                )} />
+                                {priority.charAt(0) + priority.slice(1).toLowerCase()}
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <div>
+                      <Label className="text-sm">Category</Label>
+                      <Select
+                        value={editTask?.category || ''}
+                        onValueChange={(value) => setEditTask(prev => ({ 
+                          ...prev, 
+                          category: value as TaskCategory || null 
+                        }))}
+                      >
+                        <SelectTrigger className="mt-1.5">
+                          <SelectValue placeholder="Select category" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {Object.values(TaskCategory).map((category) => (
+                            <SelectItem key={category} value={category}>
+                              <div className="flex items-center gap-2">
+                                {React.createElement(categoryColorMap[category].icon, { 
+                                  className: cn("h-4 w-4", categoryColorMap[category].text)
+                                })}
+                                {category.charAt(0) + category.slice(1).toLowerCase()}
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <p className="text-xs text-muted-foreground">Priority</p>
+                      <Badge 
+                        className={cn(
+                          "text-xs font-medium",
+                          priorityColorMap[selectedTask.priority].badge
+                        )}
+                      >
+                        {selectedTask.priority.charAt(0) + selectedTask.priority.slice(1).toLowerCase()}
+                      </Badge>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-xs text-muted-foreground">Category</p>
+                      {selectedTask.category ? (
+                        <div className={cn(
+                          "inline-flex items-center gap-1.5 px-2 py-1 rounded-md border text-xs",
+                          categoryColorMap[selectedTask.category].bg,
+                          categoryColorMap[selectedTask.category].text,
+                          categoryColorMap[selectedTask.category].border
+                        )}>
+                          {React.createElement(categoryColorMap[selectedTask.category].icon, { className: "h-3.5 w-3.5" })}
+                          <span>
+                            {selectedTask.category.charAt(0) + selectedTask.category.slice(1).toLowerCase()}
+                          </span>
+                        </div>
+                      ) : (
+                        <p>Not set</p>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Notes */}
+              <div className="space-y-2 pt-4 border-t">
+                <h4 className="text-sm font-medium">Notes</h4>
+                {isEditing ? (
+                  <Textarea
+                    value={editTask?.notes || ''}
+                    onChange={(e) => setEditTask(prev => ({ 
+                      ...prev, 
+                      notes: e.target.value || null 
+                    }))}
+                    placeholder="Add any additional notes..."
+                    className="min-h-[100px]"
+                  />
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    {selectedTask.notes || 'No notes added'}
+                  </p>
+                )}
+              </div>
+
+              {/* Metadata */}
+              <div className="space-y-2 pt-4 border-t text-xs text-muted-foreground">
+                <div className="flex justify-between">
+                  <span>Created</span>
+                  <span>{format(new Date(selectedTask.createdAt), 'MMM d, yyyy h:mm a')}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Last Updated</span>
+                  <span>{format(new Date(selectedTask.updatedAt), 'MMM d, yyyy h:mm a')}</span>
+                </div>
+                {selectedTask.completedAt && (
+                  <div className="flex justify-between">
+                    <span>Completed</span>
+                    <span>{format(new Date(selectedTask.completedAt), 'MMM d, yyyy h:mm a')}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Actions */}
+              <div className="flex justify-between pt-6 border-t">
+                <Button 
+                  variant="destructive" 
+                  size="sm"
+                  className="gap-2"
+                  onClick={() => selectedTask && handleDeleteTask(selectedTask.id)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                  Delete Task
+                </Button>
+                
+                {!isEditing && (
+                  <Button 
+                    variant={selectedTask.status === TaskStatus.COMPLETED ? "outline" : "default"}
+                    size="sm"
+                    className="gap-2"
+                    onClick={() => handleStatusChange(
+                      selectedTask.status === TaskStatus.COMPLETED 
+                        ? TaskStatus.TODO 
+                        : TaskStatus.COMPLETED
+                    )}
+                  >
+                    <CheckCircle2 className="h-4 w-4" />
+                    {selectedTask.status === TaskStatus.COMPLETED ? 'Mark Incomplete' : 'Mark Complete'}
+                  </Button>
+                )}
               </div>
             </div>
-          </div>
-
-          {/* Action Buttons */}
-          <div className="absolute bottom-0 left-0 right-0 p-4 border-t bg-background">
-            <div className="flex justify-between items-center">
-              <Button variant="ghost" size="sm">
-                <Trash2 className="h-4 w-4 text-red-500" />
-              </Button>
-              <div className="flex gap-2">
-                <Button variant="outline" onClick={() => setSelectedTask(null)}>
-                  Close
-                </Button>
-                <Button>
-                  <Pencil className="h-4 w-4 mr-2" />
-                  Edit Task
-                </Button>
-              </div>
-            </div>
-          </div>
+          )}
         </SheetContent>
       </Sheet>
 
@@ -703,6 +965,28 @@ export const Tasks = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the task
+              and remove it from our servers.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDeleteConfirm}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

@@ -15,6 +15,21 @@ interface CreateTaskData {
   notes?: string | null
 }
 
+interface UpdateTaskData {
+  id: string
+  title?: string
+  description?: string | null
+  startDate?: Date | null
+  dueDate?: Date | null
+  priority?: TaskPriority
+  status?: TaskStatus
+  category?: TaskCategory | null
+  recurrence?: RecurrencePattern | null
+  notes?: string | null
+  completedAt?: Date | null
+  profileId?: string
+}
+
 export class TaskService {
   private static instance: TaskService
 
@@ -60,5 +75,61 @@ export class TaskService {
         updatedAt: new Date()
       }
     })
+  }
+
+  async updateTask(taskData: UpdateTaskData): Promise<Task> {
+    try {
+      const { id, profileId, ...updateData } = taskData;
+      
+      if (!id) {
+        throw new Error('Task ID is required for update');
+      }
+      
+      // Handle completedAt based on status
+      let completedAt = updateData.completedAt;
+      if (updateData.status === TaskStatus.COMPLETED && !completedAt) {
+        completedAt = new Date();
+      } else if (updateData.status && updateData.status !== TaskStatus.COMPLETED) {
+        completedAt = null;
+      }
+      
+      // Perform the update with explicit field listing
+      return await prisma.task.update({
+        where: {
+          id: id
+        },
+        data: {
+          title: updateData.title,
+          description: updateData.description,
+          startDate: updateData.startDate,
+          dueDate: updateData.dueDate,
+          priority: updateData.priority,
+          status: updateData.status,
+          category: updateData.category,
+          recurrence: updateData.recurrence,
+          notes: updateData.notes,
+          completedAt: completedAt,
+          updatedAt: new Date()
+        }
+      });
+    } catch (error) {
+      console.error('Error updating task:', error);
+      throw error;
+    }
+  }
+
+  async deleteTask(taskId: string): Promise<void> {
+    try {
+      if (!taskId) {
+        throw new Error('Task ID is required for deletion');
+      }
+      
+      await prisma.task.delete({
+        where: { id: taskId }
+      });
+    } catch (error) {
+      console.error('Error deleting task:', error);
+      throw error;
+    }
   }
 } 

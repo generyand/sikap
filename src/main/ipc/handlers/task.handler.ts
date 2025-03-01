@@ -33,6 +33,16 @@ export class TaskHandler implements ITaskHandler {
       return await this.taskService.createTask(taskData)
     })
 
+    // Update task
+    ipcMain.handle('update-task', async (_, taskData) => {
+      return await this.taskService.updateTask(taskData)
+    })
+
+    // Delete task
+    ipcMain.handle('delete-task', async (_, taskId: string) => {
+      return await this.taskService.deleteTask(taskId)
+    })
+
     this.handlersRegistered = true
   }
 } 
