@@ -2,15 +2,19 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useProfile } from '../providers/ProfileProvider'
 import { fetchTasks, createTask, updateTask, deleteTask } from '../services/taskService'
 import { 
-  Plus, Search,
+  Plus, Search, List, LayoutGrid,
+  Focus
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import {
   Sheet,
-
 } from '@/components/ui/sheet'
+import { 
+  ToggleGroup,
+  ToggleGroupItem 
+} from '@/components/ui/toggle-group'
 import { cn } from '@/lib/utils'
 import { useState, useCallback } from 'react'
 
@@ -33,6 +37,8 @@ import {
 import { TaskCard } from '@/components/tasks/TaskCard'
 import { TaskDetail } from '@/components/tasks/TaskDetail'
 import { CreateTaskDialog } from '@/components/tasks/CreateTaskDialog'
+import { BoardView } from '@/components/tasks/BoardView'
+import { FocusMode } from '@/components/tasks/FocusMode'
 
 export const Tasks = () => {
   const { profileId } = useProfile()
@@ -57,6 +63,8 @@ export const Tasks = () => {
   const [editTask, setEditTask] = useState<Partial<Task> | null>(null)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [taskToDelete, setTaskToDelete] = useState<string | null>(null)
+  const [viewMode, setViewMode] = useState<'list' | 'board' | 'focus'>('list')
+  const [focusDate, setFocusDate] = useState<Date>(new Date())
 
   const { data: tasks, isLoading } = useQuery({
     queryKey: ['tasks', profileId],
@@ -104,11 +112,15 @@ export const Tasks = () => {
 
   const updateTaskMutation = useMutation({
     mutationFn: updateTask,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tasks', profileId] })
-      setSelectedTask(null)
-      setEditTask(null)
-      setIsEditing(false)
+    onSuccess: (data) => {
+      console.log('Task updated successfully:', data);
+      queryClient.invalidateQueries({ queryKey: ['tasks', profileId] });
+      setSelectedTask(null);
+      setEditTask(null);
+      setIsEditing(false);
+    },
+    onError: (error) => {
+      console.error('Error updating task:', error);
     }
   })
 
@@ -212,13 +224,18 @@ export const Tasks = () => {
     setNewTask(prev => ({...prev, ...updates}))
   }, [])
 
-  const handleQuickStatusChange = useCallback((taskId: string, newStatus: TaskStatus) => {
-    updateTaskMutation.mutate({
+  const handleQuickStatusChange = useCallback((taskId: string, status: TaskStatus) => {
+    console.log('handleQuickStatusChange called with:', taskId, status);
+    
+    // Log the exact values being passed to the mutation
+    const updateData = {
       id: taskId,
-      status: newStatus,
-      completedAt: newStatus === TaskStatus.COMPLETED ? new Date() : null
-    })
-  }, [updateTaskMutation])
+      status
+    };
+    console.log('Updating with data:', updateData);
+    
+    updateTaskMutation.mutate(updateData);
+  }, [updateTaskMutation]);
 
   const handleQuickDelete = useCallback((taskId: string) => {
     setTaskToDelete(taskId)
@@ -230,6 +247,12 @@ export const Tasks = () => {
     setEditTask({...task});
     setIsEditing(true);
   }, []);
+
+  const handleViewChange = (value: string) => {
+    if (value) {
+      setViewMode(value as 'list' | 'board' | 'focus')
+    }
+  }
 
   if (isLoading) return <div>Loading...</div>
 
@@ -250,6 +273,20 @@ export const Tasks = () => {
               </div>
 
               <div className="flex items-center gap-2">
+                <ToggleGroup type="single" value={viewMode} onValueChange={handleViewChange} size="sm">
+                  <ToggleGroupItem value="list" aria-label="List View">
+                    <List className="h-4 w-4 mr-1" />
+                    <span className="hidden sm:inline">List</span>
+                  </ToggleGroupItem>
+                  <ToggleGroupItem value="board" aria-label="Board View">
+                    <LayoutGrid className="h-4 w-4 mr-1" />
+                    <span className="hidden sm:inline">Board</span>
+                  </ToggleGroupItem>
+                  <ToggleGroupItem value="focus" aria-label="Focus Mode">
+                    <Focus className="h-4 w-4 mr-1" />
+                    <span className="hidden sm:inline">Focus</span>
+                  </ToggleGroupItem>
+                </ToggleGroup>
                 <Button onClick={() => setIsAddTaskOpen(true)} size="sm">
                   <Plus className="mr-2 h-4 w-4" />
                   Add Task
@@ -257,78 +294,64 @@ export const Tasks = () => {
               </div>
             </div>
 
-            {/* Search and Filters Bar */}
-            <div className="mt-4 flex flex-col gap-4 md:flex-row md:items-center">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input 
-                  placeholder="Search tasks..." 
-                  className="pl-9 w-full md:max-w-sm"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </div>
+            {/* Search and Filters Bar - Only show in List and Board views */}
+            {viewMode !== 'focus' && (
+              <div className="mt-4 flex flex-col gap-4 md:flex-row md:items-center">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input 
+                    placeholder="Search tasks..." 
+                    className="pl-9 w-full md:max-w-sm"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                </div>
 
-              <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0">
-                <Button
-                  variant={statusFilter === 'ALL' ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setStatusFilter('ALL')}
-                  className="shrink-0"
-                >
-                  All
-                </Button>
-                {Object.values(TaskStatus).map(status => (
+                <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0">
                   <Button
-                    key={status}
-                    variant={statusFilter === status ? "default" : "outline"}
+                    variant={statusFilter === 'ALL' ? "default" : "outline"}
                     size="sm"
-                    onClick={() => setStatusFilter(status)}
-                    className="gap-2 shrink-0"
+                    onClick={() => setStatusFilter('ALL')}
+                    className="shrink-0"
                   >
-                    <div className={cn(
-                      "h-2 w-2 rounded-full",
-                      status === TaskStatus.TODO && "bg-yellow-500",
-                      status === TaskStatus.IN_PROGRESS && "bg-blue-500",
-                      status === TaskStatus.COMPLETED && "bg-green-500",
-                      status === TaskStatus.ARCHIVED && "bg-gray-500"
-                    )} />
-                    {status.charAt(0) + status.slice(1).toLowerCase().replace('_', ' ')}
+                    All
                   </Button>
-                ))}
-              </div>
-            </div>
-          </div>
-        </header>
-
-        {/* Tasks List */}
-        <div className="h-[calc(100vh-8rem)] overflow-y-auto px-6 py-4">
-          <div className="space-y-6">
-            {/* Grid Layout */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {/* Today Section */}
-              <div className="col-span-full">
-                <h2 className="mb-3 text-sm font-medium text-muted-foreground">Today</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {groupedTasks.today.map(task => (
-                    <TaskCard 
-                      key={task.id}
-                      task={task}
-                      onSelect={handleSelectTask}
-                      onEdit={handleEditTaskFromCard}
-                      onStatusChange={(task, newStatus) => handleQuickStatusChange(task.id, newStatus)}
-                      onDelete={(taskId) => handleQuickDelete(taskId)}
-                    />
+                  {Object.values(TaskStatus).map(status => (
+                    <Button
+                      key={status}
+                      variant={statusFilter === status ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setStatusFilter(status)}
+                      className="gap-2 shrink-0"
+                    >
+                      <div className={cn(
+                        "h-2 w-2 rounded-full",
+                        status === TaskStatus.TODO && "bg-yellow-500",
+                        status === TaskStatus.IN_PROGRESS && "bg-blue-500",
+                        status === TaskStatus.COMPLETED && "bg-green-500",
+                        status === TaskStatus.ARCHIVED && "bg-gray-500"
+                      )} />
+                      {status.charAt(0) + status.slice(1).toLowerCase().replace('_', ' ')}
+                    </Button>
                   ))}
                 </div>
               </div>
+            )}
+          </div>
+        </header>
 
-              {/* Tomorrow Section */}
-              {groupedTasks.tomorrow.length > 0 && (
+        {/* Content Area */}
+        <div className="h-[calc(100vh-8rem)] overflow-y-auto px-6 py-4">
+          {/* Conditional View Rendering */}
+          {viewMode === 'list' && (
+            <div className="space-y-6">
+              {/* Your existing list view code */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {/* Today Section */}
                 <div className="col-span-full">
-                  <h2 className="mb-3 text-sm font-medium text-muted-foreground">Tomorrow</h2>
+                  <h2 className="mb-3 text-sm font-medium text-muted-foreground">Today</h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {groupedTasks.tomorrow.map(task => (
+                    {groupedTasks.today.map(task => (
                       <TaskCard 
                         key={task.id}
                         task={task}
@@ -340,35 +363,79 @@ export const Tasks = () => {
                     ))}
                   </div>
                 </div>
-              )}
 
-              {/* Upcoming Section */}
-              {groupedTasks.upcoming.length > 0 && (
-                <div className="col-span-full">
-                  <h2 className="mb-3 text-sm font-medium text-muted-foreground">Upcoming</h2>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {groupedTasks.upcoming.map(task => (
-                      <TaskCard 
-                        key={task.id}
-                        task={task}
-                        onSelect={handleSelectTask}
-                        onEdit={handleEditTaskFromCard}
-                        onStatusChange={(task, newStatus) => handleQuickStatusChange(task.id, newStatus)}
-                        onDelete={(taskId) => handleQuickDelete(taskId)}
-                      />
-                    ))}
+                {/* Tomorrow Section */}
+                {groupedTasks.tomorrow.length > 0 && (
+                  <div className="col-span-full">
+                    <h2 className="mb-3 text-sm font-medium text-muted-foreground">Tomorrow</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {groupedTasks.tomorrow.map(task => (
+                        <TaskCard 
+                          key={task.id}
+                          task={task}
+                          onSelect={handleSelectTask}
+                          onEdit={handleEditTaskFromCard}
+                          onStatusChange={(task, newStatus) => handleQuickStatusChange(task.id, newStatus)}
+                          onDelete={(taskId) => handleQuickDelete(taskId)}
+                        />
+                      ))}
+                    </div>
                   </div>
+                )}
+
+                {/* Upcoming Section */}
+                {groupedTasks.upcoming.length > 0 && (
+                  <div className="col-span-full">
+                    <h2 className="mb-3 text-sm font-medium text-muted-foreground">Upcoming</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {groupedTasks.upcoming.map(task => (
+                        <TaskCard 
+                          key={task.id}
+                          task={task}
+                          onSelect={handleSelectTask}
+                          onEdit={handleEditTaskFromCard}
+                          onStatusChange={(task, newStatus) => handleQuickStatusChange(task.id, newStatus)}
+                          onDelete={(taskId) => handleQuickDelete(taskId)}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* No Tasks */}
+              {!isLoading && tasks?.length === 0 && (
+                <div className="text-center text-muted-foreground py-8">
+                  No tasks yet. Click "Add Task" to create one.
                 </div>
               )}
             </div>
+          )}
 
-            {/* No Tasks */}
-            {!isLoading && tasks?.length === 0 && (
-              <div className="text-center text-muted-foreground py-8">
-                No tasks yet. Click "Add Task" to create one.
-              </div>
-            )}
-          </div>
+          {viewMode === 'board' && (
+            <BoardView 
+              tasks={tasks?.filter(task => 
+                task.title.toLowerCase().includes(searchTerm.toLowerCase()) &&
+                (statusFilter === 'ALL' || task.status === statusFilter)
+              ) || []}
+              onSelectTask={handleSelectTask}
+              onEditTask={handleEditTaskFromCard}
+              onStatusChange={handleQuickStatusChange}
+              onDeleteTask={handleQuickDelete}
+            />
+          )}
+
+          {viewMode === 'focus' && (
+            <FocusMode 
+              tasks={tasks || []}
+              onSelectTask={handleSelectTask}
+              onEditTask={handleEditTaskFromCard}
+              onStatusChange={handleQuickStatusChange}
+              onDeleteTask={handleQuickDelete}
+              focusDate={focusDate}
+              onDateChange={setFocusDate}
+            />
+          )}
         </div>
       </div>
 

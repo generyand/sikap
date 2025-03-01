@@ -23,6 +23,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 // Import the color maps
 import { categoryColorMap, priorityColorMap } from '@/lib/taskUtils'
@@ -33,6 +35,7 @@ interface TaskCardProps {
   onEdit?: (task: Task) => void
   onStatusChange?: (task: Task, status: TaskStatus) => void
   onDelete?: (taskId: string) => void
+  isDraggable?: boolean
 }
 
 export const TaskCard = React.memo(({ 
@@ -40,18 +43,53 @@ export const TaskCard = React.memo(({
   onSelect, 
   onEdit,
   onStatusChange,
-  onDelete
+  onDelete,
+  isDraggable = false
 }: TaskCardProps) => {
+  // Add sortable functionality if draggable
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging
+  } = isDraggable ? useSortable({ id: task.id }) : {
+    attributes: {},
+    listeners: {},
+    setNodeRef: null,
+    transform: null,
+    transition: null,
+    isDragging: false
+  };
+
+  // Apply styles for dragging
+  const style = isDraggable ? {
+    transform: CSS.Transform.toString(transform),
+    transition: transition || undefined,
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 1 : 0
+  } : {};
+
   return (
     <div
-      onClick={() => onSelect(task)}
+      ref={setNodeRef as any}
+      {...attributes}
+      {...listeners}
+      onClick={(e) => {
+        if (!isDragging) {
+          onSelect(task);
+        }
+      }}
       className={cn(
         "group bg-card/50 dark:bg-card/25 rounded-lg border hover:shadow-md transition-all",
         "hover:border-border/80 hover:bg-card cursor-pointer relative overflow-hidden",
         "flex flex-col min-h-[180px] max-h-[280px]",
         "shadow-sm hover:scale-[1.02]",
-        task.status === TaskStatus.COMPLETED && "opacity-60"
+        task.status === TaskStatus.COMPLETED && "opacity-60",
+        isDraggable && "cursor-grab active:cursor-grabbing"
       )}
+      style={style}
     >
       {/* Left color strip */}
       <div className={cn(
