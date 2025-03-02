@@ -66,10 +66,6 @@
     --ring: 224.3 76.3% 48%;
   }
 
-  /* * {
-    @apply transition-colors duration-100;
-  } */
-
   * {
     @apply border-border outline-ring/50;
   }

@@ -7,6 +7,7 @@ import {
   UserCircle2,
   LogOut,
   Settings,
+  Loader2,
 } from 'lucide-react'
 import { useProfile } from '@/providers/ProfileProvider'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -56,7 +57,7 @@ const navItems = [
 
 export const Sidebar = () => {
   const location = useLocation()
-  const { currentProfile, signOut } = useProfile()
+  const { currentProfile, isLoading, signOut } = useProfile()
   const [showSignOutDialog, setShowSignOutDialog] = useState(false)
 
   const handleSignOut = async () => {
@@ -82,12 +83,21 @@ export const Sidebar = () => {
             </TooltipContent>
           </Tooltip>
           <div className="flex-1 min-w-0">
-            <p className="text-xs md:text-sm font-medium truncate">
-              {currentProfile?.name || 'Loading...'}
-            </p>
-            <p className="text-xs text-muted-foreground hidden sm:block">
-              Workspace
-            </p>
+            {isLoading ? (
+              <div className="flex items-center gap-2 text-xs md:text-sm text-muted-foreground">
+                <Loader2 className="h-3 w-3 animate-spin" />
+                <span>Loading profile...</span>
+              </div>
+            ) : (
+              <>
+                <p className="text-xs md:text-sm font-medium truncate">
+                  {currentProfile?.name || 'No profile selected'}
+                </p>
+                <p className="text-xs text-muted-foreground hidden sm:block">
+                  Workspace
+                </p>
+              </>
+            )}
           </div>
         </div>
         

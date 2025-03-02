@@ -8,6 +8,7 @@ import { store, initStore } from './store'
 import { DatabaseService } from './services/database.service'
 import { ProfileHandler } from './ipc/handlers/profile.handler'
 import { TaskHandler } from './ipc/handlers/task.handler'
+import { initializeDatabase } from './services/database.service'
 
 function createWindow(): void {
   // Create the browser window.
@@ -69,6 +70,10 @@ async function initialize() {
   try {
     const db = DatabaseService.getInstance()
     await db.checkConnection()
+    
+    // Add this line to call the initialization function
+    await initializeDatabase()
+    
     console.log('✅ Database initialized successfully')
     return true
   } catch (error) {
@@ -116,19 +121,52 @@ app.whenReady().then(async () => {
       return store.get(key)
     })
 
-    ipcMain.handle('set-current-profile', (_, profileId: string) => {
-      store.set('currentProfile', profileId)
-      return true
-    })
+    ipcMain.handle('set-current-profile', async (_, profileId) => {
+      try {
+        console.log('Setting current profile to:', profileId);
+        await store.set('currentProfileId', profileId);
+        return true;
+      } catch (error) {
+        console.error('Failed to set current profile:', error);
+        throw error;
+      }
+    });
 
-    ipcMain.handle('get-current-profile', () => {
-      return store.get('currentProfile')
-    })
+    ipcMain.handle('get-current-profile', async () => {
+      try {
+        const profileId = await store.get('currentProfileId');
+        console.log('Current profile ID from store:', profileId);
+        return profileId;
+      } catch (error) {
+        console.error('Failed to get current profile:', error);
+        throw error;
+      }
+    });
 
     ipcMain.handle('get-profile', async (_, profileId: string) => {
-      const dbService = DatabaseService.getInstance();
-      const profile = await dbService.profile.findByPk(profileId);
-      return profile;
+      if (!profileId) {
+        console.error('No profile ID provided to get-profile');
+        return null;
+      }
+      
+      try {
+        console.log('Main process: Getting profile with ID:', profileId);
+        
+        const dbService = DatabaseService.getInstance();
+        const profile = await dbService.profile.findByPk(profileId);
+        
+        if (!profile) {
+          console.warn('Profile not found in database for ID:', profileId);
+          return null;
+        }
+        
+        const profileData = profile.toJSON();
+        console.log('Profile data retrieved:', profileData);
+        return profileData;
+      } catch (error) {
+        console.error('Error fetching profile:', error);
+        throw error;
+      }
     })
 
     // Log system theme changes

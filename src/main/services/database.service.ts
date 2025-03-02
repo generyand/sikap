@@ -44,23 +44,18 @@ export class DatabaseService {
     }
   }
 
-  async checkConnection(): Promise<void> {
-    const maxRetries = 5;
-    let currentTry = 0;
-
-    while (currentTry < maxRetries) {
-      try {
-        await sequelize.authenticate();
-        console.log('✅ Database connection successful');
-        return;
-      } catch (error) {
-        currentTry++;
-        console.error(`❌ Database connection attempt ${currentTry} failed:`, error);
-        if (currentTry === maxRetries) {
-          throw new Error('Database connection failed after maximum retries');
-        }
-        await new Promise(resolve => setTimeout(resolve, 2000));
-      }
+  async checkConnection(): Promise<boolean> {
+    try {
+      await sequelize.authenticate();
+      
+      // Debug the database path
+      const dbPath = sequelize.options.storage;
+      console.log('📁 Database file location:', dbPath);
+      
+      return true;
+    } catch (error) {
+      console.error('Unable to connect to the database:', error);
+      return false;
     }
   }
 
@@ -75,5 +70,51 @@ export class DatabaseService {
 
   get task() {
     return models.Task;
+  }
+
+  async initModels() {
+    // This method is now empty as the initialization logic is moved to the connect method
+  }
+}
+
+// Export the test function so it can be imported elsewhere
+export async function testDatabaseWithSampleProfile() {
+  try {
+    const dbService = DatabaseService.getInstance();
+    
+    // Check if any profiles exist
+    const profileCount = await dbService.profile.count();
+    console.log(`Database has ${profileCount} profiles`);
+    
+    // If no profiles exist, create a test profile
+    if (profileCount === 0) {
+      const testProfile = await dbService.profile.create({
+        name: 'Test User',
+        avatar: null,
+        theme: 'light'
+      });
+      console.log('Created test profile:', testProfile.id);
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Test profile creation failed:', error);
+    return false;
+  }
+}
+
+export async function initializeDatabase() {
+  try {
+    const db = DatabaseService.getInstance();
+    
+    // Just check connection and log info, don't try to create test profile
+    // as the connect method already handles this
+    await db.checkConnection();
+    
+    console.log("Database initialized successfully");
+    return true;
+  } catch (error) {
+    console.error("Database initialization error:", error);
+    return false;
   }
 } 

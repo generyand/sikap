@@ -1,6 +1,7 @@
 import { ipcMain } from 'electron'
 import { ProfileService } from '../../services/profile.service'
 import { IProfileHandler } from '../types'
+import { DatabaseService } from '../../services/database.service'
 
 export class ProfileHandler implements IProfileHandler {
   private static instance: ProfileHandler
@@ -64,5 +65,27 @@ export class ProfileHandler implements IProfileHandler {
     })
 
     this.handlersRegistered = true
+  }
+
+  async getProfile(profileId: string) {
+    try {
+      console.log('ProfileHandler: Getting profile with ID:', profileId);
+      
+      // Make sure you're using the correct model and method
+      const dbService = DatabaseService.getInstance();
+      const profile = await dbService.profile.findByPk(profileId);
+      
+      // Critical debugging
+      if (!profile) {
+        console.warn('Profile not found in database:', profileId);
+        return null;
+      }
+      
+      console.log('Profile found:', profile.toJSON());
+      return profile;
+    } catch (error) {
+      console.error('Error in ProfileHandler.getProfile:', error);
+      throw error;
+    }
   }
 } 
