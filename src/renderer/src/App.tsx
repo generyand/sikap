@@ -13,9 +13,9 @@ import Settings from './pages/Settings'
 
 const MainLayout = () => {
   return (
-    <div className="flex h-full">
+    <div className="flex h-full overflow-hidden">
       <Sidebar />
-      <main className="flex-1 min-h-0">
+      <main className="flex-1 overflow-hidden">
         <Routes>
           <Route path="/dashboard" element={<TaskDashboard />} />
           <Route path="/tasks" element={<Tasks />} />
@@ -34,12 +34,12 @@ const App: React.FC = () => {
       <BrowserRouter>
         <ProfileProvider>
           <ThemeProvider defaultTheme="system">
-            <div className="flex flex-col h-screen">
+            <div className="flex flex-col h-screen overflow-hidden">
               {/* <div className="titlebar h-10 shrink-0 flex justify-between items-center px-4 bg-background border-b sticky top-0 z-10">
                 <div className="text-sm font-medium">Sikap</div>
                 <WindowControls />
               </div> */}
-              <div className="flex-1 min-h-0">
+              <div className="flex-1 overflow-hidden">
                 <AppContent />
               </div>
             </div>

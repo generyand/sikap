@@ -104,8 +104,8 @@ const Settings = () => {
         </div>
       </header>
       
-      {/* Scrollable Content Area */}
-      <div className="flex-1 overflow-auto p-6">
+      {/* Scrollable Content Area - Added custom-scrollbar class */}
+      <div className="flex-1 overflow-auto p-6 custom-scrollbar">
         <div className="container mx-auto max-w-3xl">
           {/* Appearance Section */}
           <SettingsSection title="Appearance" icon={<Eye className="w-5 h-5" />}>

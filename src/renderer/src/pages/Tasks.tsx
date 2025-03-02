@@ -379,7 +379,7 @@ export const Tasks = () => {
         )}
 
         {/* Content Area */}
-        <div className="h-[calc(100vh-8rem)] overflow-y-auto px-6 pt-2 pb-6">
+        <div className="h-[calc(100vh-8rem)] overflow-y-auto px-6 pt-2 pb-6 custom-scrollbar">
           {/* Conditional View Rendering */}
           {viewMode === 'list' && (
             <div className="space-y-6">
