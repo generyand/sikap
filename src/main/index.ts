@@ -5,10 +5,9 @@ import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 // Import the server app (but don't start it yet)
 import { store, initStore } from './store'
-import { DatabaseService } from './services/database.service'
+import { DatabaseService, initializeDatabase } from './services/database.service'
 import { ProfileHandler } from './ipc/handlers/profile.handler'
 import { TaskHandler } from './ipc/handlers/task.handler'
-import { initializeDatabase } from './services/database.service'
 
 function createWindow(): void {
   // Create the browser window.

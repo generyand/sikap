@@ -20,6 +20,10 @@ export class DatabaseService {
       await sequelize.authenticate();
       console.log('Database connection has been established successfully.');
       
+      // Check if specific tables exist and create them if needed
+      // This adds the direct SQL approach from databaseService.ts
+      await this.ensureTablesExist();
+      
       // Sync all models with the database
       // Force: false means it won't drop tables if they exist
       await sequelize.sync({ force: false });
@@ -32,14 +36,44 @@ export class DatabaseService {
       // Create a default profile if none exists
       if (profileCount === 0) {
         console.log('Creating default profile...');
-        await models.Profile.create({
+        const profile = await models.Profile.create({
           name: 'Default User',
           theme: 'light'
         });
-        console.log('Default profile created successfully');
+        console.log('Default profile created successfully:', profile.get('id'));
       }
     } catch (error) {
       console.error('Failed to connect to database:', error);
+      throw error;
+    }
+  }
+  
+  // Added from databaseService.ts - direct SQL table creation
+  private async ensureTablesExist() {
+    try {
+      // Check if profiles table exists
+      const tableExists = await sequelize.query(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='profiles';"
+      );
+      
+      if (!tableExists[0].length) {
+        // Create profiles table using direct SQL
+        await sequelize.query(`
+          CREATE TABLE profiles (
+            id TEXT PRIMARY KEY,
+            name TEXT NOT NULL,
+            avatar TEXT,
+            theme TEXT,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+          );
+        `);
+        console.log("Created profiles table via SQL");
+      }
+      
+      // Add logic for other tables if needed
+    } catch (error) {
+      console.error("Table existence check failed:", error);
       throw error;
     }
   }
@@ -48,9 +82,11 @@ export class DatabaseService {
     try {
       await sequelize.authenticate();
       
-      // Debug the database path
-      const dbPath = sequelize.options.storage;
-      console.log('📁 Database file location:', dbPath);
+      // Debug the database path - use proper typing
+      const dbPath = (sequelize as any).options?.storage;
+      if (dbPath) {
+        console.log('📁 Database file location:', dbPath);
+      }
       
       return true;
     } catch (error) {
@@ -93,7 +129,8 @@ export async function testDatabaseWithSampleProfile() {
         avatar: null,
         theme: 'light'
       });
-      console.log('Created test profile:', testProfile.id);
+      // Use get method for type safety
+      console.log('Created test profile:', testProfile.get('id'));
     }
     
     return true;
@@ -106,11 +143,7 @@ export async function testDatabaseWithSampleProfile() {
 export async function initializeDatabase() {
   try {
     const db = DatabaseService.getInstance();
-    
-    // Just check connection and log info, don't try to create test profile
-    // as the connect method already handles this
-    await db.checkConnection();
-    
+    await db.connect(); // Call connect instead of just checking connection
     console.log("Database initialized successfully");
     return true;
   } catch (error) {

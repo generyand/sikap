@@ -16,7 +16,6 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
   const [profileId, setProfileId] = useState<string | null>(null)
   const [currentProfile, setCurrentProfile] = useState<Profile | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<Error | null>(null)
   const navigate = useNavigate()
   
   useEffect(() => {
@@ -71,7 +70,6 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
         setProfileId(storedProfileId)
       } catch (error) {
         console.error('Failed to get stored profile:', error)
-        setError(error as Error)
         navigate('/profiles')
         setIsLoading(false)
       }
