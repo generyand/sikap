@@ -24,7 +24,24 @@ function createWindow(): void {
       nodeIntegration: true,
       contextIsolation: true,
       preload: join(__dirname, '../preload/index.js'),
-      sandbox: false
+      sandbox: false,
+      webSecurity: true,
+      allowRunningInsecureContent: false,
+      navigateOnDragDrop: true
+    }
+  })
+
+  // Add protocol handler for both dev and prod
+  mainWindow.webContents.on('will-navigate', (event, url) => {
+    if (!url.startsWith('file:')) {
+      event.preventDefault()
+      const hashUrl = url.split('#')[1]
+      if (hashUrl) {
+        mainWindow.webContents.executeJavaScript(`
+          window.location.hash = '${hashUrl}';
+          window.dispatchEvent(new HashChangeEvent('hashchange'));
+        `)
+      }
     }
   })
 
@@ -50,8 +67,9 @@ function createWindow(): void {
     mainWindow.setTitle("Sikap")
   })
 
-  mainWindow.webContents.setWindowOpenHandler((details) => {
-    shell.openExternal(details.url)
+  // Handle external links
+  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+    shell.openExternal(url)
     return { action: 'deny' }
   })
 
@@ -67,17 +85,21 @@ function createWindow(): void {
 // Initialize database before creating window
 async function initialize() {
   try {
-    const db = DatabaseService.getInstance()
-    await db.checkConnection()
+    console.log('Initializing database...');
+    const db = DatabaseService.getInstance();
+    
+    // Add explicit connection attempt
+    await db.connect();
+    await db.checkConnection();
     
     // Add this line to call the initialization function
-    await initializeDatabase()
+    await initializeDatabase();
     
-    console.log('✅ Database initialized successfully')
-    return true
+    console.log('✅ Database initialized successfully');
+    return true;
   } catch (error) {
-    console.error('❌ Database initialization failed:', error)
-    return false
+    console.error('❌ Database initialization failed:', error);
+    return false;
   }
 }
 
@@ -86,12 +108,15 @@ async function initialize() {
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(async () => {
   try {
-    await initStore()
+    console.log('App starting...');
+    await initStore();
     
     // Check database connection first
-    const dbInitialized = await initialize()
+    const dbInitialized = await initialize();
     if (!dbInitialized) {
-      throw new Error('Failed to initialize database')
+      console.error('Failed to initialize database');
+      app.quit();
+      return;
     }
 
     // Initialize all IPC handlers

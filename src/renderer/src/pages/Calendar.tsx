@@ -197,7 +197,7 @@ const Calendar = () => {
       <header className="h-16 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shrink-0">
         <div className="flex items-center justify-between h-full px-6">
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold">Calendar</h1>
+            <h1 className="text-xl font-semibold flex items-center gap-2">Calendar</h1>
             
             {/* View switcher - Add this section */}
             <div className="hidden md:flex items-center border rounded-md ml-4 overflow-hidden">

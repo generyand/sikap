@@ -56,21 +56,20 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
     const checkStoredProfile = async () => {
       try {
         setIsLoading(true)
-        console.log('Checking for stored profile...')
         const storedProfileId = await window.electron.ipcRenderer.invoke('get-current-profile')
-        console.log('Stored profile ID:', storedProfileId)
         
         if (!storedProfileId) {
-          console.log('No stored profile found')
-          navigate('/profiles')
+          console.log('No stored profile, redirecting to profiles')
+          navigate('/profiles', { replace: true })
           setIsLoading(false)
           return
         }
         
         setProfileId(storedProfileId)
       } catch (error) {
-        console.error('Failed to get stored profile:', error)
-        navigate('/profiles')
+        console.error('Profile check failed:', error)
+        navigate('/profiles', { replace: true })
+      } finally {
         setIsLoading(false)
       }
     }

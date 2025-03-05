@@ -1,4 +1,6 @@
 import { sequelize, models } from '../database/models';
+import path from 'path';
+import fs from 'fs';
 
 export class DatabaseService {
   private static instance: DatabaseService;
@@ -16,16 +18,22 @@ export class DatabaseService {
 
   async connect() {
     try {
+      // Log the database path
+      const dbPath = (sequelize as any).options?.storage;
+      console.log('Attempting to connect to database at:', dbPath);
+
       // Authenticate and sync the database
       await sequelize.authenticate();
-      console.log('Database connection has been established successfully.');
+      console.log('Database connection established successfully.');
       
-      // Check if specific tables exist and create them if needed
-      // This adds the direct SQL approach from databaseService.ts
-      await this.ensureTablesExist();
+      // Ensure the database directory exists
+      const dbDir = path.dirname(dbPath);
+      if (!fs.existsSync(dbDir)) {
+        fs.mkdirSync(dbDir, { recursive: true });
+        console.log('Created database directory:', dbDir);
+      }
       
       // Sync all models with the database
-      // Force: false means it won't drop tables if they exist
       await sequelize.sync({ force: false });
       console.log('Database synchronized successfully');
       
@@ -42,6 +50,8 @@ export class DatabaseService {
         });
         console.log('Default profile created successfully:', profile.get('id'));
       }
+      
+      return true;
     } catch (error) {
       console.error('Failed to connect to database:', error);
       throw error;

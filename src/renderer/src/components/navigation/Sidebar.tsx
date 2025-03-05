@@ -14,13 +14,17 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
-import { useState } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+
+const MIN_SIDEBAR_WIDTH = 200
+const MAX_SIDEBAR_WIDTH = 480
+const DEFAULT_SIDEBAR_WIDTH = 200
 
 const navItems = [
   {
@@ -59,6 +63,35 @@ export const Sidebar = () => {
   const location = useLocation()
   const { currentProfile, isLoading, signOut } = useProfile()
   const [showSignOutDialog, setShowSignOutDialog] = useState(false)
+  const [sidebarWidth, setSidebarWidth] = useState(DEFAULT_SIDEBAR_WIDTH)
+  const [isResizing, setIsResizing] = useState(false)
+
+  const startResizing = useCallback((mouseDownEvent: React.MouseEvent) => {
+    mouseDownEvent.preventDefault()
+    setIsResizing(true)
+  }, [])
+
+  const stopResizing = useCallback(() => {
+    setIsResizing(false)
+  }, [])
+
+  const resize = useCallback((mouseMoveEvent: MouseEvent) => {
+    if (isResizing) {
+      const newWidth = mouseMoveEvent.clientX
+      if (newWidth >= MIN_SIDEBAR_WIDTH && newWidth <= MAX_SIDEBAR_WIDTH) {
+        setSidebarWidth(newWidth)
+      }
+    }
+  }, [isResizing])
+
+  useEffect(() => {
+    window.addEventListener('mousemove', resize)
+    window.addEventListener('mouseup', stopResizing)
+    return () => {
+      window.removeEventListener('mousemove', resize)
+      window.removeEventListener('mouseup', stopResizing)
+    }
+  }, [resize, stopResizing])
 
   const handleSignOut = async () => {
     await signOut()
@@ -66,7 +99,18 @@ export const Sidebar = () => {
   }
 
   return (
-    <aside className="flex-none flex flex-col min-h-0 w-[220px] sm:w-[240px] md:w-[260px] lg:w-[280px] border-r bg-card/50 shrink-0">
+    <aside 
+      className="flex-none flex flex-col min-h-0 border-r bg-card/50 shrink-0 relative"
+      style={{ width: sidebarWidth }}
+    >
+      <div
+        className={cn(
+          "absolute right-0 top-0 bottom-0 w-1 cursor-ew-resize transition-colors",
+          isResizing ? "bg-primary" : "hover:bg-accent/50"
+        )}
+        onMouseDown={startResizing}
+      />
+      
       <TooltipProvider>
         <div className="shrink-0 flex items-center gap-3 border-b p-3 md:p-4">
           <Tooltip>

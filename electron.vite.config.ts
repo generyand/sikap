@@ -31,6 +31,14 @@ export default defineConfig({
     css: {
       postcss: './postcss.config.js'
     },
-    plugins: [react()]
+    plugins: [react()],
+    base: './',
+    build: {
+      rollupOptions: {
+        output: {
+          format: 'cjs'
+        }
+      }
+    }
   }
 })

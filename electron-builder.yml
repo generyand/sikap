@@ -2,17 +2,29 @@ appId: com.electron.app
 productName: sikap
 directories:
   buildResources: build
+  output: "dist"
 files:
+  - "out/**/*"
+  - "!**/node_modules/**/*"
   - '!**/.vscode/*'
   - '!src/*'
   - '!electron.vite.config.{js,ts,mjs,cjs}'
   - '!{.eslintignore,.eslintrc.cjs,.prettierignore,.prettierrc.yaml,dev-app-update.yml,CHANGELOG.md,README.md}'
   - '!{.env,.env.*,.npmrc,pnpm-lock.yaml}'
   - '!{tsconfig.json,tsconfig.node.json,tsconfig.web.json}'
+  - "!**/node_modules/**/better-sqlite3/**/*"
 asarUnpack:
   - resources/**
 win:
   executableName: sikap
+  target: 
+    - target: "nsis"
+      arch: ["x64"]
+  asar: true
+  extraFiles:
+    - "resources/**/*"
+    - from: "node_modules/better-sqlite3/build/Release"
+      to: "resources/better-sqlite3"
 nsis:
   artifactName: ${name}-${version}-setup.${ext}
   shortcutName: ${productName}
@@ -41,3 +53,8 @@ npmRebuild: false
 publish:
   provider: generic
   url: https://example.com/auto-updates
+extraResources:
+  - from: "node_modules/better-sqlite3/build/Release"
+    to: "better-sqlite3"
+    filter:
+      - "**/*"
