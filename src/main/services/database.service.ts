@@ -59,34 +59,34 @@ export class DatabaseService {
   }
   
   // Added from databaseService.ts - direct SQL table creation
-  private async ensureTablesExist() {
-    try {
-      // Check if profiles table exists
-      const tableExists = await sequelize.query(
-        "SELECT name FROM sqlite_master WHERE type='table' AND name='profiles';"
-      );
+  // private async ensureTablesExist() {
+  //   try {
+  //     // Check if profiles table exists
+  //     const tableExists = await sequelize.query(
+  //       "SELECT name FROM sqlite_master WHERE type='table' AND name='profiles';"
+  //     );
       
-      if (!tableExists[0].length) {
-        // Create profiles table using direct SQL
-        await sequelize.query(`
-          CREATE TABLE profiles (
-            id TEXT PRIMARY KEY,
-            name TEXT NOT NULL,
-            avatar TEXT,
-            theme TEXT,
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-          );
-        `);
-        console.log("Created profiles table via SQL");
-      }
+  //     if (!tableExists[0].length) {
+  //       // Create profiles table using direct SQL
+  //       await sequelize.query(`
+  //         CREATE TABLE profiles (
+  //           id TEXT PRIMARY KEY,
+  //           name TEXT NOT NULL,
+  //           avatar TEXT,
+  //           theme TEXT,
+  //           created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  //           updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  //         );
+  //       `);
+  //       console.log("Created profiles table via SQL");
+  //     }
       
-      // Add logic for other tables if needed
-    } catch (error) {
-      console.error("Table existence check failed:", error);
-      throw error;
-    }
-  }
+  //     // Add logic for other tables if needed
+  //   } catch (error) {
+  //     console.error("Table existence check failed:", error);
+  //     throw error;
+  //   }
+  // }
 
   async checkConnection(): Promise<boolean> {
     try {
