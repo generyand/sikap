@@ -1,13 +1,8 @@
 ---
-description:
-globs:
+description: 
+globs: 
+alwaysApply: false
 ---
-
-# Your rule content
-
-- You can @ files here
-- You can use markdown but dont have to
-
 # Commit Message Rules
 
 When creating commit messages, follow these guidelines:

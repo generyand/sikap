@@ -12,10 +12,10 @@ import { TaskHandler } from './ipc/handlers/task.handler'
 function createWindow(): void {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
-    width: 900,
-    height: 600,
-    minWidth: 800,
-    minHeight: 600,
+    width: 1020,
+    height: 760,
+    minWidth: 1020,
+    minHeight: 760,
     show: false,
     autoHideMenuBar: true,
     frame: true,
