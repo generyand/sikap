@@ -70,6 +70,10 @@ function defineModels() {
       type: DataTypes.STRING,
       allowNull: false,
       defaultValue: 'light',
+    },
+    password: {
+      type: DataTypes.STRING,
+      allowNull: true,
     }
   }, {
     tableName: 'profiles',
@@ -183,9 +187,10 @@ function defineModels() {
 async function createSampleData(models) {
   const { Profile, Task } = models;
   
-  // Create a default profile
+  // Create a default profile with password
   const profile = await Profile.create({
     name: 'Default User',
+    password: 'DefaultPass123', // This is just for development
     theme: 'light'
   });
   

@@ -34,9 +34,17 @@ export class ProfileHandler implements IProfileHandler {
       }
     })
 
-    // Create profile
-    ipcMain.handle('create-profile', async (_, profileData) => {
+    // Create profile with password
+    ipcMain.handle('create-profile', async (_, profileData: { 
+      name: string; 
+      password: string;
+      avatar?: string; 
+      theme?: string 
+    }) => {
       try {
+        if (!profileData.password || profileData.password.length < 8) {
+          throw new Error('Password must be at least 8 characters long')
+        }
         return await this.profileService.createProfile(profileData)
       } catch (error) {
         console.error('IPC create-profile error:', error)
@@ -47,9 +55,23 @@ export class ProfileHandler implements IProfileHandler {
     // Update profile
     ipcMain.handle('update-profile', async (_, id, profileData) => {
       try {
+        // If updating password, validate it
+        if (profileData.password && profileData.password.length < 8) {
+          throw new Error('Password must be at least 8 characters long')
+        }
         return await this.profileService.updateProfile(id, profileData)
       } catch (error) {
         console.error('IPC update-profile error:', error)
+        throw error
+      }
+    })
+
+    // Verify password
+    ipcMain.handle('verify-profile-password', async (_, profileId: string, password: string) => {
+      try {
+        return await this.profileService.verifyPassword(profileId, password)
+      } catch (error) {
+        console.error('IPC verify-password error:', error)
         throw error
       }
     })

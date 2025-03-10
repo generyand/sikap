@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { UserCircle2, Upload, X } from "lucide-react"
+import { UserCircle2, Upload, X, Eye, EyeOff } from "lucide-react"
 import { cn } from '@/lib/utils'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { profileService } from '@/services/profileService'
@@ -17,10 +17,22 @@ interface CreateProfileModalProps {
 
 export function CreateProfileModal({ isOpen, onClose }: CreateProfileModalProps) {
   const [name, setName] = useState('')
+  const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [passwordError, setPasswordError] = useState('')
   const [avatar, setAvatar] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [dragActive, setDragActive] = useState(false)
   const queryClient = useQueryClient()
+
+  const validatePassword = (pass: string): string => {
+    if (pass.length < 8) return 'Password must be at least 8 characters long'
+    if (!/[A-Z]/.test(pass)) return 'Password must contain at least one uppercase letter'
+    if (!/[a-z]/.test(pass)) return 'Password must contain at least one lowercase letter'
+    if (!/[0-9]/.test(pass)) return 'Password must contain at least one number'
+    return ''
+  }
 
   const createMutation = useMutation({
     mutationFn: profileService.createProfile,
@@ -64,12 +76,24 @@ export function CreateProfileModal({ isOpen, onClose }: CreateProfileModalProps)
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!name.trim()) return
+    if (!name.trim() || !password) return
+
+    const passwordValidationError = validatePassword(password)
+    if (passwordValidationError) {
+      setPasswordError(passwordValidationError)
+      return
+    }
+
+    if (password !== confirmPassword) {
+      setPasswordError('Passwords do not match')
+      return
+    }
 
     setIsLoading(true)
     try {
       createMutation.mutate({ 
         name, 
+        password,
         avatar,
         theme: 'light'
       })
@@ -82,9 +106,14 @@ export function CreateProfileModal({ isOpen, onClose }: CreateProfileModalProps)
 
   const handleClose = () => {
     setName('')
+    setPassword('')
+    setConfirmPassword('')
+    setPasswordError('')
     setAvatar(null)
     onClose()
   }
+
+  const toggleShowPassword = () => setShowPassword(!showPassword)
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
@@ -160,6 +189,58 @@ export function CreateProfileModal({ isOpen, onClose }: CreateProfileModalProps)
             />
           </div>
 
+          {/* Password Input */}
+          <div className="space-y-2">
+            <Label htmlFor="password">Password</Label>
+            <div className="relative">
+              <Input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                placeholder="Enter password"
+                value={password}
+                onChange={(e) => {
+                  setPassword(e.target.value)
+                  setPasswordError('')
+                }}
+                className="w-full pr-10"
+                disabled={isLoading}
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                onClick={toggleShowPassword}
+              >
+                {showPassword ? (
+                  <EyeOff className="h-4 w-4 text-muted-foreground" />
+                ) : (
+                  <Eye className="h-4 w-4 text-muted-foreground" />
+                )}
+              </Button>
+            </div>
+          </div>
+
+          {/* Confirm Password Input */}
+          <div className="space-y-2">
+            <Label htmlFor="confirmPassword">Confirm Password</Label>
+            <Input
+              id="confirmPassword"
+              type={showPassword ? "text" : "password"}
+              placeholder="Confirm password"
+              value={confirmPassword}
+              onChange={(e) => {
+                setConfirmPassword(e.target.value)
+                setPasswordError('')
+              }}
+              className="w-full"
+              disabled={isLoading}
+            />
+            {passwordError && (
+              <p className="text-sm text-destructive mt-1">{passwordError}</p>
+            )}
+          </div>
+
           <DialogFooter className="gap-2 sm:gap-0">
             <Button
               type="button"
@@ -171,7 +252,7 @@ export function CreateProfileModal({ isOpen, onClose }: CreateProfileModalProps)
             </Button>
             <Button
               type="submit"
-              disabled={isLoading || !name.trim()}
+              disabled={isLoading || !name.trim() || !password || !confirmPassword}
               className="gap-2"
             >
               {isLoading ? 'Creating...' : 'Create Profile'}

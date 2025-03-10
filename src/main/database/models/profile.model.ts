@@ -27,6 +27,13 @@ Profile.init(
       type: DataTypes.STRING,
       allowNull: false,
     },
+    password: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      validate: {
+        len: [8, 100] // minimum 8 characters, maximum 100
+      }
+    },
     avatar: {
       type: DataTypes.STRING,
       allowNull: true,

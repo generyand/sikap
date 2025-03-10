@@ -1,0 +1,35 @@
+---
+description:
+globs:
+---
+
+# Your rule content
+
+- You can @ files here
+- You can use markdown but dont have to
+
+# Commit Message Rules
+
+When creating commit messages, follow these guidelines:
+
+## Format
+- First line: Short summary (50 chars or less)
+- Followed by a blank line
+- Detailed description (if needed)
+
+## Summary Line (First Line)
+- Start with a capital letter
+- Use imperative mood ("Add" not "Added" or "Adds")
+- No period at the end
+- Keep it under 50 characters
+- Be specific and meaningful
+
+## Description (Optional)
+- Use bullet points for multiple changes
+- Explain "why" not just "what"
+- Wrap text at 72 characters
+- Reference issues/tickets where applicable
+
+## Examples
+
+Good commit messages:

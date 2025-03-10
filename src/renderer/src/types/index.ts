@@ -44,6 +44,7 @@ export enum RecurrencePattern {
 export interface Profile {
   id: string;
   name: string;
+  password: string;
   avatar?: string | null;
   theme: string;
   createdAt?: Date;

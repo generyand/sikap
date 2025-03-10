@@ -38,6 +38,7 @@ export interface ProfileAttributes {
   name: string;
   avatar?: string | null;
   theme: string;
+  password: string;
   createdAt?: Date;
   updatedAt?: Date;
 }

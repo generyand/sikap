@@ -33,9 +33,9 @@ export class DatabaseService {
         console.log('Created database directory:', dbDir);
       }
       
-      // Sync all models with the database
-      await sequelize.sync({ force: false });
-      console.log('Database synchronized successfully');
+      // Force sync all models with the database since we added a new required field
+      await sequelize.sync({ force: true });
+      console.log('Database synchronized successfully - Tables recreated with new schema');
       
       return true;
     } catch (error) {
