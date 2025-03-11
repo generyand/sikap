@@ -10,6 +10,7 @@ import  TaskDashboard  from './pages/TaskDashboard'
 import { Tasks } from './pages/Tasks'
 import  Calendar from './pages/Calendar'
 import Settings from './pages/Settings'
+import Notifications from './pages/Notifications'
 
 const AppContent = () => {
   return (
@@ -27,6 +28,7 @@ const AppContent = () => {
         <Route path="/tasks" element={<Tasks />} />
         <Route path="/calendar" element={<Calendar />} />
         <Route path="/settings" element={<Settings />} />
+        <Route path="/notifications" element={<Notifications />} />
       </Route>
 
       {/* Fallback route */}

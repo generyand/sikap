@@ -68,76 +68,49 @@ export const BoardView: React.FC<BoardViewProps> = ({
     }
   };
 
-  // Test function for manual status changes
-  const testStatusChange = React.useCallback(() => {
-    if (tasks.length > 0) {
-      const testTask = tasks[0];
-      const currentStatus = testTask.status;
-      const newStatus = currentStatus === TaskStatus.TODO ? 
-        TaskStatus.IN_PROGRESS : 
-        currentStatus === TaskStatus.IN_PROGRESS ? 
-          TaskStatus.COMPLETED : 
-          TaskStatus.TODO;
-      
-      onStatusChange(testTask.id, newStatus);
-    }
-  }, [tasks, onStatusChange]);
-
   return (
-    <>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 h-[calc(100vh-12rem)] pb-4">
-        {Object.entries(tasksByStatus).map(([status, statusTasks]) => {
-          return (
-            <div key={status} className="flex flex-col h-full">
-              <div className="mb-3 sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 pb-2">
-                <h2 className="text-sm font-medium flex items-center gap-2">
-                  <div className={cn("h-2 w-2 rounded-full", getStatusColor(status as TaskStatus))} />
-                  {getStatusDisplayName(status as TaskStatus)}
-                  <span className="text-xs text-muted-foreground ml-1">
-                    ({statusTasks.length})
-                  </span>
-                </h2>
-              </div>
-              
-              <div 
-                className="bg-muted/30 rounded-lg p-2 flex-1 overflow-y-auto custom-scrollbar space-y-3"
-              >
-                {statusTasks.map(task => (
-                  <div key={task.id}>
-                    <TaskCard 
-                      task={task}
-                      onSelect={onSelectTask}
-                      onEdit={onEditTask}
-                      onStatusChange={(task, newStatus) => onStatusChange(task.id, newStatus)}
-                      onDelete={onDeleteTask}
-                    />
-                  </div>
-                ))}
-                
-                {statusTasks.length === 0 && (
-                  <div className="flex items-center justify-center h-24 border border-dashed rounded-lg border-muted-foreground/20 text-muted-foreground text-sm">
-                    No tasks
-                  </div>
-                )}
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 h-[calc(100vh-12rem)] pb-4">
+      {Object.entries(tasksByStatus).map(([status, statusTasks]) => {
+        return (
+          <div key={status} className="flex flex-col h-full">
+            <div className="mb-3 sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 pb-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className={cn("h-3 w-3 rounded-full", getStatusColor(status as TaskStatus))} />
+                  <h2 className="text-base font-semibold tracking-tight">
+                    {getStatusDisplayName(status as TaskStatus)}
+                  </h2>
+                </div>
+                <span className="text-sm font-medium text-muted-foreground px-2 py-0.5 bg-muted rounded-md">
+                  {statusTasks.length}
+                </span>
               </div>
             </div>
-          );
-        })}
-      </div>
-
-      <div className="p-4">
-        <h3>Status Change Test</h3>
-        {tasks.length > 0 && (
-          <div className="flex gap-2 mt-2">
-            <button 
-              className="px-3 py-1 bg-blue-500 text-white rounded"
-              onClick={testStatusChange}
+            
+            <div 
+              className="bg-muted/30 rounded-lg p-2 flex-1 overflow-y-auto custom-scrollbar space-y-3"
             >
-              Test Status Change
-            </button>
+              {statusTasks.map(task => (
+                <div key={task.id}>
+                  <TaskCard 
+                    task={task}
+                    onSelect={onSelectTask}
+                    onEdit={onEditTask}
+                    onStatusChange={(task, newStatus) => onStatusChange(task.id, newStatus)}
+                    onDelete={onDeleteTask}
+                  />
+                </div>
+              ))}
+              
+              {statusTasks.length === 0 && (
+                <div className="flex items-center justify-center h-24 border border-dashed rounded-lg border-muted-foreground/20 text-muted-foreground text-sm">
+                  No tasks
+                </div>
+              )}
+            </div>
           </div>
-        )}
-      </div>
-    </>
+        );
+      })}
+    </div>
   );
 }; 

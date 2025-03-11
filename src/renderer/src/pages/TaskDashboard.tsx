@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from 'react'
+import React, { useMemo, useState } from 'react'
 import { 
   ListTodo, 
   Calendar as CalendarIcon,
@@ -127,36 +127,6 @@ const CustomLegend = ({ payload }: any) => {
           <span className="text-sm text-muted-foreground">{entry.value}</span>
         </div>
       ))}
-    </div>
-  )
-}
-
-const LiveDateTime = () => {
-  const [date, setDate] = useState(new Date())
-
-  useEffect(() => {
-    const timer = setInterval(() => setDate(new Date()), 1000)
-    return () => clearInterval(timer)
-  }, [])
-
-  return (
-    <div className="flex flex-col">
-      <span className="text-sm font-medium text-foreground">
-        {date.toLocaleTimeString('en-US', { 
-          hour: '2-digit', 
-          minute: '2-digit',
-          second: '2-digit',
-          hour12: true 
-        })}
-      </span>
-      <span className="text-xs text-muted-foreground">
-        {date.toLocaleDateString('en-US', { 
-          weekday: 'long',
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric'
-        })}
-      </span>
     </div>
   )
 }

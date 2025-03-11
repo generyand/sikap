@@ -146,100 +146,105 @@ const Notifications = () => {
   )
 
   return (
-    <div className="container mx-auto p-6 max-w-4xl">
+    <div className="flex flex-col min-h-screen">
       <Header 
         title="Notifications"
         icon={<Bell className="h-5 w-5 text-primary" />}
-        showDateTime={true}
+        showDateTime={false}
         actions={headerActions}
         description={unreadCount > 0 
           ? `You have ${unreadCount} unread notification${unreadCount !== 1 ? 's' : ''}` 
           : 'You\'re all caught up!'}
       />
 
-      {/* Notifications list */}
-      <div className="bg-white rounded-lg shadow mt-6">
-        {filteredNotifications.length > 0 ? (
-          <ul className="divide-y divide-gray-100">
-            {filteredNotifications.map(notification => (
-              <li 
-                key={notification.id} 
-                className={`p-4 hover:bg-gray-50 transition-colors ${!notification.read ? 'bg-blue-50' : ''}`}
-              >
-                <div className="flex items-start gap-4">
-                  {/* Icon */}
-                  <div className="flex-shrink-0">
-                    {getTypeIcon(notification.type)}
-                  </div>
-                  
-                  {/* Content */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex justify-between">
-                      <h3 className={`text-sm font-medium ${!notification.read ? 'font-semibold' : ''}`}>
-                        {notification.title}
-                      </h3>
-                      <span className="text-xs text-gray-500">
-                        {formatTimestamp(notification.timestamp)}
-                      </span>
+      {/* Content wrapper with max-width and centered */}
+      <div className="flex-1 p-6">
+        <div className="max-w-4xl mx-auto">
+          {/* Notifications list */}
+          <div className="bg-card rounded-lg border shadow-sm">
+            {filteredNotifications.length > 0 ? (
+              <ul className="divide-y divide-border">
+                {filteredNotifications.map(notification => (
+                  <li 
+                    key={notification.id} 
+                    className={`p-4 hover:bg-accent/50 transition-colors ${!notification.read ? 'bg-primary/5' : ''}`}
+                  >
+                    <div className="flex items-start gap-4">
+                      {/* Icon */}
+                      <div className="flex-shrink-0">
+                        {getTypeIcon(notification.type)}
+                      </div>
+                      
+                      {/* Content */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex justify-between">
+                          <h3 className={`text-sm font-medium ${!notification.read ? 'font-semibold' : ''}`}>
+                            {notification.title}
+                          </h3>
+                          <span className="text-xs text-muted-foreground">
+                            {formatTimestamp(notification.timestamp)}
+                          </span>
+                        </div>
+                        <p className="mt-1 text-sm text-muted-foreground line-clamp-2">
+                          {notification.message}
+                        </p>
+                        
+                        {notification.actionUrl && (
+                          <a 
+                            href={notification.actionUrl} 
+                            className="mt-2 text-sm text-primary hover:text-primary/80 inline-block"
+                          >
+                            View details
+                          </a>
+                        )}
+                      </div>
+                      
+                      {/* Actions */}
+                      <div className="flex-shrink-0 flex space-x-2">
+                        {!notification.read && (
+                          <button 
+                            onClick={() => markAsRead(notification.id)}
+                            className="text-muted-foreground hover:text-primary p-1"
+                            title="Mark as read"
+                          >
+                            <Check className="w-5 h-5" />
+                          </button>
+                        )}
+                        <button 
+                          onClick={() => deleteNotification(notification.id)}
+                          className="text-muted-foreground hover:text-destructive p-1"
+                          title="Delete notification"
+                        >
+                          <Trash className="w-5 h-5" />
+                        </button>
+                      </div>
                     </div>
-                    <p className="mt-1 text-sm text-gray-600 line-clamp-2">
-                      {notification.message}
-                    </p>
-                    
-                    {notification.actionUrl && (
-                      <a 
-                        href={notification.actionUrl} 
-                        className="mt-2 text-sm text-blue-600 hover:text-blue-800 inline-block"
-                      >
-                        View details
-                      </a>
-                    )}
-                  </div>
-                  
-                  {/* Actions */}
-                  <div className="flex-shrink-0 flex space-x-2">
-                    {!notification.read && (
-                      <button 
-                        onClick={() => markAsRead(notification.id)}
-                        className="text-gray-400 hover:text-blue-600 p-1"
-                        title="Mark as read"
-                      >
-                        <Check className="w-5 h-5" />
-                      </button>
-                    )}
-                    <button 
-                      onClick={() => deleteNotification(notification.id)}
-                      className="text-gray-400 hover:text-red-600 p-1"
-                      title="Delete notification"
-                    >
-                      <Trash className="w-5 h-5" />
-                    </button>
-                  </div>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
+                <div className="bg-muted p-4 rounded-full inline-block mb-4">
+                  <Bell className="w-8 h-8 text-muted-foreground" />
                 </div>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
-            <div className="bg-gray-100 p-4 rounded-full inline-block mb-4">
-              <Bell className="w-8 h-8 text-gray-400" />
-            </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-1">No notifications</h3>
-            <p className="text-gray-500 max-w-md">
-              {filter !== 'all' 
-                ? `You don't have any ${filter} notifications at the moment.` 
-                : "You're all caught up! No notifications to display."}
-            </p>
-            {filter !== 'all' && (
-              <button 
-                onClick={() => setFilter('all')}
-                className="mt-4 text-sm text-blue-600 hover:text-blue-800"
-              >
-                View all notifications
-              </button>
+                <h3 className="text-lg font-medium mb-1">No notifications</h3>
+                <p className="text-muted-foreground max-w-md">
+                  {filter !== 'all' 
+                    ? `You don't have any ${filter} notifications at the moment.` 
+                    : "You're all caught up! No notifications to display."}
+                </p>
+                {filter !== 'all' && (
+                  <button 
+                    onClick={() => setFilter('all')}
+                    className="mt-4 text-sm text-primary hover:text-primary/80"
+                  >
+                    View all notifications
+                  </button>
+                )}
+              </div>
             )}
           </div>
-        )}
+        </div>
       </div>
     </div>
   );
