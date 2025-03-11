@@ -1,6 +1,5 @@
-import React, { ReactNode } from 'react'
+import { ReactNode } from 'react'
 import { Clock3 } from 'lucide-react'
-import { cn } from '@/lib/utils'
 import { useEffect, useState } from 'react'
 
 interface HeaderProps {

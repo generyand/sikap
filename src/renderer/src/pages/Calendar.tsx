@@ -10,10 +10,9 @@ import 'react-big-calendar/lib/css/react-big-calendar.css'
 import './calendar.css'
 import { cn } from '../lib/utils'
 import { useState, useEffect } from 'react'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Header } from '@/components/layout/Header'
-import { Calendar as CalendarIcon } from 'lucide-react'
 
 // Types
 type CalendarEvent = {
@@ -195,34 +194,35 @@ const Calendar = () => {
 
   const headerActions = (
     <div className="flex items-center gap-2">
-      <Button 
-        variant="ghost" 
-        size="sm" 
-        onClick={handlePrevious}
-        className="hidden sm:flex"
-      >
-        <ChevronLeft className="w-4 h-4 mr-1" />
-        Previous
-      </Button>
-      <Button 
-        variant="outline" 
-        size="sm" 
-        onClick={handleToday}
-      >
-        Today
-      </Button>
-      
-      <Button 
-        variant="ghost" 
-        size="sm" 
-        onClick={handleNext}
-        className="hidden sm:flex"
-      >
-        Next
-        <ChevronRight className="w-4 h-4 ml-1" />
-      </Button>
+      <div className="flex items-center gap-2 mr-4">
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          onClick={handlePrevious}
+          className="hidden sm:flex"
+        >
+          <ChevronLeft className="w-4 h-4 mr-1" />
+          Previous
+        </Button>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={handleToday}
+        >
+          Today
+        </Button>
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          onClick={handleNext}
+          className="hidden sm:flex"
+        >
+          Next
+          <ChevronRight className="w-4 h-4 ml-1" />
+        </Button>
+      </div>
 
-      <div className="hidden md:flex items-center border rounded-md ml-4 overflow-hidden">
+      <div className="hidden md:flex items-center border rounded-md overflow-hidden">
         {(availableViews as View[]).map((view, index) => (
           <Button
             key={view}
@@ -265,11 +265,11 @@ const Calendar = () => {
   return (
     <div className="flex flex-col h-full overflow-hidden">
       <Header 
-        title="Calendar"
+        title={getFormattedDateRange()}
         icon={<CalendarIcon className="h-5 w-5 text-primary" />}
         showDateTime={true}
         actions={headerActions}
-        description={getFormattedDateRange()}
+        description="Calendar"
       />
       
       {/* Main content - Scrollable */}

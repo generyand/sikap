@@ -346,7 +346,7 @@ const TaskDashboard: React.FC = () => {
         </Select>
       </div>
 
-      <div className="h-6 w-px bg-border/20" />
+      <div className="h-6 w-px bg-border" />
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
