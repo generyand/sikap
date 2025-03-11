@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Profile } from '@/types'
-import { UserCircle2, Check, Plus, Trash2, Sparkles, ArrowRight, Circle } from 'lucide-react'
+import { UserCircle2, Check, Plus, Trash2, Sparkles, ArrowRight, Circle, Lock } from 'lucide-react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
@@ -11,6 +11,8 @@ import { motion } from 'framer-motion'
 import { useProfile } from '../providers/ProfileProvider'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { profileService } from '@/services/profileService'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 
 export const ProfileSelector = () => {
   const queryClient = useQueryClient()
@@ -18,6 +20,9 @@ export const ProfileSelector = () => {
   const { setProfileId } = useProfile()
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [profileToDelete, setProfileToDelete] = useState<Profile | null>(null)
+  const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null)
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState<string | null>(null)
   
   // Query for profiles
   const { data: profiles = [], isLoading } = useQuery({
@@ -36,15 +41,27 @@ export const ProfileSelector = () => {
 
   // Set current profile mutation
   const setProfileMutation = useMutation({
-    mutationFn: profileService.setCurrentProfile,
-    onSuccess: (_, profileId) => {
-      setProfileId(profileId)
+    mutationFn: ({ id, password }: { id: string, password: string }) => 
+      profileService.setCurrentProfile(id, password),
+    onSuccess: (_, { id }) => {
+      setProfileId(id)
       navigate('/dashboard')
+    },
+    onError: (error) => {
+      setError('Invalid password. Please try again.')
+      setPassword('')
     }
   })
 
-  const handleProfileSelect = (profileId: string) => {
-    setProfileMutation.mutate(profileId)
+  const handleProfileSelect = (profile: Profile) => {
+    setSelectedProfile(profile)
+    setPassword('')
+    setError(null)
+  }
+
+  const handlePasswordSubmit = () => {
+    if (!selectedProfile) return
+    setProfileMutation.mutate({ id: selectedProfile.id, password })
   }
 
   const handleCreateProfile = () => {
@@ -190,7 +207,7 @@ export const ProfileSelector = () => {
                   ) : profiles.map(profile => (
                     <div 
                       key={profile.id}
-                      onClick={() => handleProfileSelect(profile.id)}
+                      onClick={() => handleProfileSelect(profile)}
                       className={cn(
                         "group relative transition-all duration-300",
                         "w-[140px] h-[140px] sm:w-[160px] sm:h-[160px] md:w-[180px] md:h-[180px]", // Responsive sizing
@@ -320,6 +337,50 @@ export const ProfileSelector = () => {
                     className="gap-2">
               <Trash2 className="w-4 h-4" />
               Delete Profile
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!selectedProfile} onOpenChange={() => setSelectedProfile(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Lock className="w-4 h-4" />
+              Sign In to Profile
+            </DialogTitle>
+            <DialogDescription className="text-muted-foreground/80">
+              Enter your password to access {selectedProfile?.name}'s profile
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
+              <Input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handlePasswordSubmit()}
+                placeholder="Enter your password"
+                className={cn(
+                  error && "border-destructive focus-visible:ring-destructive"
+                )}
+              />
+              {error && (
+                <p className="text-xs text-destructive">{error}</p>
+              )}
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => setSelectedProfile(null)}>
+              Cancel
+            </Button>
+            <Button onClick={handlePasswordSubmit} className="gap-2">
+              <Lock className="w-4 h-4" />
+              Sign In
             </Button>
           </DialogFooter>
         </DialogContent>
