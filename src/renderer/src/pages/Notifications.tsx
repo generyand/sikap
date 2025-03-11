@@ -26,7 +26,7 @@ const Notifications = () => {
     }
   };
   
-  const getTypeIcon = (type: string) => {
+  const getTypeIcon = (_type: string) => {
     return <div className="bg-primary/10 text-primary p-2 rounded-full"><Bell className="w-5 h-5" /></div>;
   };
 

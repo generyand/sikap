@@ -1,6 +1,6 @@
 import { DatabaseService } from './database.service';
 import { NotificationType } from '../database/models/notification.model';
-import { TaskAttributes, TaskStatus, NotificationAttributes } from '/home/kiedajhinn/Projects/sikap/src/shared/types';
+  import { TaskAttributes, TaskStatus, NotificationAttributes } from '../../shared/types';
 import { differenceInHours, isAfter } from 'date-fns';
 import { Op } from 'sequelize';
 
