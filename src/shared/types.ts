@@ -26,15 +26,33 @@ export enum TaskCategory {
 export interface TaskAttributes {
   id: string;
   title: string;
-  description?: string;
+  description?: string | null;
   status: TaskStatus;
   priority: TaskPriority;
-  category: TaskCategory;
+  category?: TaskCategory | null;
   dueDate?: Date | string | null;
   completedAt?: Date | string | null;
+  createdAt?: Date | string;
+  updatedAt?: Date | string;
+  profileId: string;
+  recurrence?: string | null;
+  profile?: {
+    id: string;
+    name: string;
+  };
+}
+
+export interface NotificationAttributes {
+  id: string;
+  type: string;
+  title: string;
+  message: string;
+  read: boolean;
+  taskId?: string;
+  profileId: string;
   createdAt: Date | string;
   updatedAt: Date | string;
-  profileId: string;
+  task?: TaskAttributes;
   profile?: {
     id: string;
     name: string;

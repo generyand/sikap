@@ -1,6 +1,6 @@
 import { DatabaseService } from './database.service';
 import { NotificationType } from '../database/models/notification.model';
-import { TaskAttributes, TaskStatus } from '../database/types';
+import { TaskAttributes, TaskStatus, NotificationAttributes } from '/home/kiedajhinn/Projects/sikap/src/shared/types';
 import { differenceInHours, isAfter } from 'date-fns';
 import { Op } from 'sequelize';
 
@@ -145,7 +145,7 @@ export class NotificationService {
   }
 
   // Get all unread notifications
-  async getUnreadNotifications() {
+  async getUnreadNotifications(): Promise<NotificationAttributes[]> {
     try {
       const notifications = await this.db.notification.findAll({
         where: { read: false },

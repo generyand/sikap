@@ -4,9 +4,9 @@ import {
   TaskAttributes, 
   TaskStatus, 
   TaskPriority, 
-  TaskCategory, 
-  RecurrencePattern 
-} from '../database/types';
+  TaskCategory 
+} from '../../shared/types';
+import { RecurrencePattern } from '../database/types';
 import { Op } from 'sequelize';
 
 interface CreateTaskData {
