@@ -1,4 +1,5 @@
 import { TaskPriority, TaskStatus, TaskCategory, RecurrencePattern, Task } from '@/types'
+import { taskAPI } from '../../../preload/api/task.api'
 
 interface CreateTaskDTO {
   title: string
@@ -16,17 +17,20 @@ interface CreateTaskDTO {
 
 export const fetchTasks = async (profileId: string | null): Promise<Task[]> => {
   if (!profileId) return []
-  return window.electron.ipcRenderer.invoke('get-tasks', profileId)
+  return taskAPI.getTasks(profileId)
 }
 
 export const createTask = async (taskData: CreateTaskDTO): Promise<Task> => {
-  return window.electron.ipcRenderer.invoke('create-task', taskData)
+  return taskAPI.createTask({
+    ...taskData,
+    status: taskData.status ?? TaskStatus.TODO
+  })
 }
 
 export const updateTask = async (taskData: Partial<Task> & { id: string }) => {
   console.log('updateTask service called with:', taskData);
   try {
-    const result = await window.electron.ipcRenderer.invoke('update-task', taskData);
+    const result = await taskAPI.updateTask(taskData);
     console.log('updateTask service result:', result);
     return result;
   } catch (error) {
@@ -36,5 +40,5 @@ export const updateTask = async (taskData: Partial<Task> & { id: string }) => {
 };
 
 export const deleteTask = async (taskId: string): Promise<void> => {
-  return window.electron.ipcRenderer.invoke('delete-task', taskId);
+  return taskAPI.deleteTask(taskId);
 }; 
