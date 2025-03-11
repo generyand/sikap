@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react'
+import React, { useMemo, useState } from 'react'
 import { 
   ListTodo, 
   Calendar as CalendarIcon,
@@ -6,18 +6,19 @@ import {
   Clock3,
   CalendarRange,
   LayoutDashboard,
-  Filter,
   Download,
   AlertCircle,
-  Loader2,
   TrendingUp,
   TrendingDown,
   CheckCircle2,
-  AlertTriangle
+  AlertTriangle,
+  FileText,
+  Table,
+  FileSpreadsheet,
+  Check,
+  BarChart as Chart
 } from 'lucide-react'
 import { 
-  LineChart, 
-  Line, 
   XAxis, 
   YAxis, 
   CartesianGrid, 
@@ -37,7 +38,7 @@ import { TaskCategory, TaskStatus, TaskPriority } from '@/types'
 import { useProfile } from '@/providers/ProfileProvider'
 import { useQuery } from '@tanstack/react-query'
 import { mockTasks } from '@/mocks/taskData'
-import { format, subDays, startOfDay, endOfDay, isToday, isThisWeek, isThisMonth } from 'date-fns'
+import { format, subDays, startOfDay, endOfDay, isToday, isThisWeek } from 'date-fns'
 import {
   Select,
   SelectContent,
@@ -50,6 +51,20 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { motion, AnimatePresence } from 'framer-motion'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuPortal,
+  DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { toast, Toaster } from 'sonner'
 
 // Enhanced color palette with semantic meaning
 const PRIORITY_COLORS = {
@@ -77,9 +92,49 @@ const CATEGORY_COLORS = {
   [TaskCategory.OTHER]: '#6B7280'      // Gray - Other
 }
 
+// Custom tooltip component for better styling
+const CustomTooltip = ({ active, payload, label }: any) => {
+  if (!active || !payload?.length) return null
+
+  return (
+    <div className="bg-white/95 backdrop-blur-sm p-4 rounded-lg shadow-lg border border-border">
+      <p className="text-sm font-medium text-muted-foreground mb-2">{label}</p>
+      {payload.map((entry: any, index: number) => (
+        <div key={index} className="flex items-center gap-2">
+          <div 
+            className="w-3 h-3 rounded-full" 
+            style={{ backgroundColor: entry.color }}
+          />
+          <span className="text-sm font-medium">
+            {entry.name}: {entry.value}
+          </span>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+// Custom legend component
+const CustomLegend = ({ payload }: any) => {
+  return (
+    <div className="flex flex-wrap gap-4 justify-center mt-4">
+      {payload.map((entry: any, index: number) => (
+        <div key={index} className="flex items-center gap-2">
+          <div 
+            className="w-3 h-3 rounded-full" 
+            style={{ backgroundColor: entry.color }}
+          />
+          <span className="text-sm text-muted-foreground">{entry.value}</span>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 const TaskDashboard: React.FC = () => {
   const { profileId } = useProfile()
-  const [timeframe, setTimeframe] = React.useState('7days')
+  const [timeframe, setTimeframe] = useState('7days')
+  const [exportLoading, setExportLoading] = useState<string | null>(null)
 
   // Use mock data instead of API call
   const { data: tasks = [], isLoading, error } = useQuery({
@@ -188,6 +243,57 @@ const TaskDashboard: React.FC = () => {
     }
   }, [tasks, timeframe])
 
+  const handleExport = async (format: string, type: string) => {
+    setExportLoading(`${type}-${format}`)
+    try {
+      // Simulate export delay
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      
+      let exportData
+      if (type === 'all') {
+        exportData = {
+          stats: dashboardData?.stats,
+          charts: dashboardData?.charts,
+          timeframe,
+          exportedAt: new Date().toISOString()
+        }
+      } else if (type === 'stats') {
+        exportData = {
+          stats: dashboardData?.stats,
+          timeframe,
+          exportedAt: new Date().toISOString()
+        }
+      } else {
+        exportData = {
+          [type]: dashboardData?.charts[type],
+          timeframe,
+          exportedAt: new Date().toISOString()
+        }
+      }
+
+      // In a real app, you would use proper export libraries here
+      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `task-dashboard-${type}-${format}-${timeframe}.${format.toLowerCase()}`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+
+      toast.success(`Successfully exported ${type} data as ${format}`, {
+        description: "Your file has been downloaded successfully."
+      })
+    } catch (error) {
+      toast.error('Export failed', {
+        description: "There was an error exporting your data. Please try again."
+      })
+    } finally {
+      setExportLoading(null)
+    }
+  }
+
   if (error) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -204,6 +310,7 @@ const TaskDashboard: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <Toaster position="top-right" expand={true} richColors />
       <div className="flex h-screen">
         <main className="flex-1 flex flex-col min-w-0">
           <header className="h-16 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-10">
@@ -231,15 +338,108 @@ const TaskDashboard: React.FC = () => {
                   </Select>
                 </div>
 
-                <Button variant="outline" size="sm" className="flex items-center gap-2">
-                  <Filter className="h-4 w-4" />
-                  Filters
-                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm" className="flex items-center gap-2">
+                      <Download className="h-4 w-4" />
+                      Export
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-56">
+                    <DropdownMenuLabel>Export Dashboard Data</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    
+                    <DropdownMenuGroup>
+                      <DropdownMenuSub>
+                        <DropdownMenuSubTrigger>
+                          <FileText className="mr-2 h-4 w-4" />
+                          <span>Complete Dashboard</span>
+                        </DropdownMenuSubTrigger>
+                        <DropdownMenuPortal>
+                          <DropdownMenuSubContent>
+                            <DropdownMenuItem onClick={() => handleExport('CSV', 'all')} disabled={exportLoading === 'all-CSV'}>
+                              <FileSpreadsheet className="mr-2 h-4 w-4" />
+                              <span>As CSV</span>
+                              {exportLoading === 'all-CSV' && (
+                                <Download className="ml-auto h-4 w-4 animate-spin" />
+                              )}
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleExport('JSON', 'all')} disabled={exportLoading === 'all-JSON'}>
+                              <FileText className="mr-2 h-4 w-4" />
+                              <span>As JSON</span>
+                              {exportLoading === 'all-JSON' && (
+                                <Download className="ml-auto h-4 w-4 animate-spin" />
+                              )}
+                            </DropdownMenuItem>
+                          </DropdownMenuSubContent>
+                        </DropdownMenuPortal>
+                      </DropdownMenuSub>
 
-                <Button variant="outline" size="sm" className="flex items-center gap-2">
-                  <Download className="h-4 w-4" />
-                  Export
-                </Button>
+                      <DropdownMenuSub>
+                        <DropdownMenuSubTrigger>
+                          <Table className="mr-2 h-4 w-4" />
+                          <span>Statistics Only</span>
+                        </DropdownMenuSubTrigger>
+                        <DropdownMenuPortal>
+                          <DropdownMenuSubContent>
+                            <DropdownMenuItem onClick={() => handleExport('CSV', 'stats')} disabled={exportLoading === 'stats-CSV'}>
+                              <FileSpreadsheet className="mr-2 h-4 w-4" />
+                              <span>As CSV</span>
+                              {exportLoading === 'stats-CSV' && (
+                                <Download className="ml-auto h-4 w-4 animate-spin" />
+                              )}
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleExport('JSON', 'stats')} disabled={exportLoading === 'stats-JSON'}>
+                              <FileText className="mr-2 h-4 w-4" />
+                              <span>As JSON</span>
+                              {exportLoading === 'stats-JSON' && (
+                                <Download className="ml-auto h-4 w-4 animate-spin" />
+                              )}
+                            </DropdownMenuItem>
+                          </DropdownMenuSubContent>
+                        </DropdownMenuPortal>
+                      </DropdownMenuSub>
+                    </DropdownMenuGroup>
+
+                    <DropdownMenuSeparator />
+                    <DropdownMenuLabel>Export Individual Charts</DropdownMenuLabel>
+
+                    <DropdownMenuGroup>
+                      {['statusData', 'priorityData', 'categoryData', 'completionTrend'].map((chartType) => (
+                        <DropdownMenuSub key={chartType}>
+                          <DropdownMenuSubTrigger>
+                            <Chart className="mr-2 h-4 w-4" />
+                            <span>{chartType.replace(/([A-Z])/g, ' $1').trim()}</span>
+                          </DropdownMenuSubTrigger>
+                          <DropdownMenuPortal>
+                            <DropdownMenuSubContent>
+                              <DropdownMenuItem 
+                                onClick={() => handleExport('CSV', chartType)}
+                                disabled={exportLoading === `${chartType}-CSV`}
+                              >
+                                <FileSpreadsheet className="mr-2 h-4 w-4" />
+                                <span>As CSV</span>
+                                {exportLoading === `${chartType}-CSV` && (
+                                  <Download className="ml-auto h-4 w-4 animate-spin" />
+                                )}
+                              </DropdownMenuItem>
+                              <DropdownMenuItem 
+                                onClick={() => handleExport('JSON', chartType)}
+                                disabled={exportLoading === `${chartType}-JSON`}
+                              >
+                                <FileText className="mr-2 h-4 w-4" />
+                                <span>As JSON</span>
+                                {exportLoading === `${chartType}-JSON` && (
+                                  <Download className="ml-auto h-4 w-4 animate-spin" />
+                                )}
+                              </DropdownMenuItem>
+                            </DropdownMenuSubContent>
+                          </DropdownMenuPortal>
+                        </DropdownMenuSub>
+                      ))}
+                    </DropdownMenuGroup>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             </div>
           </header>
@@ -324,23 +524,21 @@ const TaskDashboard: React.FC = () => {
                         cy="50%"
                         outerRadius={100}
                         label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                        animationBegin={0}
+                        animationDuration={1000}
+                        animationEasing="ease-out"
                       >
                         {dashboardData?.charts.statusData.map((entry, index) => (
                           <Cell 
                             key={`cell-${index}`} 
-                            fill={STATUS_COLORS[entry.name as TaskStatus]} 
+                            fill={STATUS_COLORS[entry.name as TaskStatus]}
+                            stroke="white"
+                            strokeWidth={2}
                           />
                         ))}
                       </Pie>
-                      <Tooltip 
-                        formatter={(value: number) => [`${value} tasks`, '']}
-                        contentStyle={{ 
-                          backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                          border: '1px solid #e5e7eb',
-                          borderRadius: '0.5rem',
-                          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-                        }}
-                      />
+                      <Tooltip content={<CustomTooltip />} />
+                      <Legend content={<CustomLegend />} />
                     </PieChart>
                   </ResponsiveContainer>
                 </motion.div>
@@ -365,10 +563,8 @@ const TaskDashboard: React.FC = () => {
                           <stop offset="95%" stopColor="#10B981" stopOpacity={0}/>
                         </linearGradient>
                         <linearGradient id="created" x1="0" y1="0" x2="0" y2="1">
-                          <linearGradient id="created" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#6366F1" stopOpacity={0.8}/>
-                            <stop offset="95%" stopColor="#6366F1" stopOpacity={0}/>
-                          </linearGradient>
+                          <stop offset="5%" stopColor="#6366F1" stopOpacity={0.8}/>
+                          <stop offset="95%" stopColor="#6366F1" stopOpacity={0}/>
                         </linearGradient>
                       </defs>
                       <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
@@ -376,19 +572,17 @@ const TaskDashboard: React.FC = () => {
                         dataKey="date" 
                         stroke="#6B7280"
                         tick={{ fill: '#6B7280' }}
+                        tickLine={{ stroke: '#e5e7eb' }}
+                        axisLine={{ stroke: '#e5e7eb' }}
                       />
                       <YAxis 
                         stroke="#6B7280"
                         tick={{ fill: '#6B7280' }}
+                        tickLine={{ stroke: '#e5e7eb' }}
+                        axisLine={{ stroke: '#e5e7eb' }}
                       />
-                      <Tooltip 
-                        contentStyle={{ 
-                          backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                          border: '1px solid #e5e7eb',
-                          borderRadius: '0.5rem',
-                          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-                        }}
-                      />
+                      <Tooltip content={<CustomTooltip />} />
+                      <Legend content={<CustomLegend />} />
                       <Area 
                         type="monotone" 
                         dataKey="completed" 
@@ -396,6 +590,9 @@ const TaskDashboard: React.FC = () => {
                         fillOpacity={1} 
                         fill="url(#completed)"
                         name="Completed"
+                        animationBegin={0}
+                        animationDuration={1000}
+                        animationEasing="ease-out"
                       />
                       <Area 
                         type="monotone" 
@@ -404,6 +601,9 @@ const TaskDashboard: React.FC = () => {
                         fillOpacity={1} 
                         fill="url(#created)"
                         name="Created"
+                        animationBegin={0}
+                        animationDuration={1000}
+                        animationEasing="ease-out"
                       />
                     </AreaChart>
                   </ResponsiveContainer>
@@ -428,24 +628,31 @@ const TaskDashboard: React.FC = () => {
                         dataKey="priority" 
                         stroke="#6B7280"
                         tick={{ fill: '#6B7280' }}
+                        tickLine={{ stroke: '#e5e7eb' }}
+                        axisLine={{ stroke: '#e5e7eb' }}
                       />
                       <YAxis 
                         stroke="#6B7280"
                         tick={{ fill: '#6B7280' }}
+                        tickLine={{ stroke: '#e5e7eb' }}
+                        axisLine={{ stroke: '#e5e7eb' }}
                       />
-                      <Tooltip 
-                        contentStyle={{ 
-                          backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                          border: '1px solid #e5e7eb',
-                          borderRadius: '0.5rem',
-                          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-                        }}
-                      />
-                      <Bar dataKey="count" fill="#8884d8">
+                      <Tooltip content={<CustomTooltip />} />
+                      <Legend content={<CustomLegend />} />
+                      <Bar 
+                        dataKey="count" 
+                        fill="#8884d8"
+                        radius={[4, 4, 0, 0]}
+                        animationBegin={0}
+                        animationDuration={1000}
+                        animationEasing="ease-out"
+                      >
                         {dashboardData?.charts.priorityData.map((entry, index) => (
                           <Cell 
                             key={`cell-${index}`} 
-                            fill={PRIORITY_COLORS[entry.priority as TaskPriority]} 
+                            fill={PRIORITY_COLORS[entry.priority as TaskPriority]}
+                            stroke="white"
+                            strokeWidth={1}
                           />
                         ))}
                       </Bar>
@@ -475,23 +682,21 @@ const TaskDashboard: React.FC = () => {
                         cy="50%"
                         outerRadius={100}
                         label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                        animationBegin={0}
+                        animationDuration={1000}
+                        animationEasing="ease-out"
                       >
                         {dashboardData?.charts.categoryData.map((entry, index) => (
                           <Cell 
                             key={`cell-${index}`} 
-                            fill={CATEGORY_COLORS[entry.name as TaskCategory]} 
+                            fill={CATEGORY_COLORS[entry.name as TaskCategory]}
+                            stroke="white"
+                            strokeWidth={2}
                           />
                         ))}
                       </Pie>
-                      <Tooltip 
-                        formatter={(value: number) => [`${value} tasks`, '']}
-                        contentStyle={{ 
-                          backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                          border: '1px solid #e5e7eb',
-                          borderRadius: '0.5rem',
-                          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-                        }}
-                      />
+                      <Tooltip content={<CustomTooltip />} />
+                      <Legend content={<CustomLegend />} />
                     </PieChart>
                   </ResponsiveContainer>
                 </motion.div>
@@ -520,18 +725,23 @@ const StatCard = ({
   trendColor: string
 }) => (
   <motion.div 
-    whileHover={{ scale: 1.02 }}
-    className="rounded-xl border bg-card p-6 shadow-sm hover:shadow-md transition-all duration-200"
+    whileHover={{ scale: 1.02, y: -2 }}
+    className="rounded-xl border bg-card p-6 shadow-sm hover:shadow-lg transition-all duration-200 relative overflow-hidden group"
   >
-    <div className="flex items-center justify-between mb-4">
-      <span className="text-muted-foreground text-sm font-medium">{title}</span>
-      <Icon className="h-5 w-5 text-muted-foreground" />
-    </div>
-    <div className="space-y-2">
-      <h3 className="text-3xl font-bold tracking-tight">{value}</h3>
-      <div className="flex items-center gap-2 text-sm">
-        <TrendIcon className={`h-4 w-4 ${trendColor}`} />
-        <span className="text-muted-foreground">{trend}</span>
+    <div className="absolute inset-0 bg-gradient-to-br from-transparent to-background/5 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+    <div className="relative">
+      <div className="flex items-center justify-between mb-4">
+        <span className="text-muted-foreground text-sm font-medium">{title}</span>
+        <Icon className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors duration-200" />
+      </div>
+      <div className="space-y-2">
+        <h3 className="text-3xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/80">
+          {value}
+        </h3>
+        <div className="flex items-center gap-2 text-sm">
+          <TrendIcon className={`h-4 w-4 ${trendColor} group-hover:scale-110 transition-transform duration-200`} />
+          <span className="text-muted-foreground">{trend}</span>
+        </div>
       </div>
     </div>
   </motion.div>
