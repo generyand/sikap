@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Bell, Check, Trash, Filter } from 'lucide-react';
 import { format, isToday, isYesterday } from 'date-fns';
+import { Header } from '@/components/layout/Header'
 
 // Sample notification data structure
 interface Notification {
@@ -99,65 +100,65 @@ const Notifications = () => {
     }
   };
 
-  return (
-    <div className="container mx-auto p-6 max-w-4xl">
-      {/* Header section */}
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-2xl font-bold">Notifications</h1>
-          <p className="text-gray-600">
-            {unreadCount > 0 
-              ? `You have ${unreadCount} unread notification${unreadCount !== 1 ? 's' : ''}` 
-              : 'You\'re all caught up!'}
-          </p>
-        </div>
-        
-        <div className="flex space-x-3">
-          <button 
-            onClick={markAllAsRead}
-            disabled={unreadCount === 0}
-            className={`px-4 py-2 rounded-md text-sm ${
-              unreadCount === 0 
-                ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
-                : 'bg-blue-50 text-blue-600 hover:bg-blue-100'
-            }`}
-          >
-            Mark all as read
-          </button>
-          
-          <div className="relative">
-            <button className="px-4 py-2 rounded-md text-sm flex items-center gap-2 bg-gray-100 hover:bg-gray-200">
-              <Filter className="w-4 h-4" />
-              {filter === 'all' ? 'All' : filter === 'unread' ? 'Unread' : 'Read'}
+  const headerActions = (
+    <div className="flex space-x-3">
+      <button 
+        onClick={markAllAsRead}
+        disabled={unreadCount === 0}
+        className={`px-4 py-2 rounded-md text-sm ${
+          unreadCount === 0 
+            ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+            : 'bg-blue-50 text-blue-600 hover:bg-blue-100'
+        }`}
+      >
+        Mark all as read
+      </button>
+      
+      <div className="relative">
+        <button className="px-4 py-2 rounded-md text-sm flex items-center gap-2 bg-gray-100 hover:bg-gray-200">
+          <Filter className="w-4 h-4" />
+          {filter === 'all' ? 'All' : filter === 'unread' ? 'Unread' : 'Read'}
+        </button>
+        <div className="absolute right-0 mt-1 bg-white rounded-md shadow-lg z-10 border border-gray-200 hidden group-hover:block">
+          <div className="py-1">
+            <button 
+              onClick={() => setFilter('all')} 
+              className={`block px-4 py-2 text-sm text-left w-full hover:bg-gray-100 ${filter === 'all' ? 'bg-gray-50' : ''}`}
+            >
+              All
             </button>
-            <div className="absolute right-0 mt-1 bg-white rounded-md shadow-lg z-10 border border-gray-200 hidden group-hover:block">
-              <div className="py-1">
-                <button 
-                  onClick={() => setFilter('all')} 
-                  className={`block px-4 py-2 text-sm text-left w-full hover:bg-gray-100 ${filter === 'all' ? 'bg-gray-50' : ''}`}
-                >
-                  All
-                </button>
-                <button 
-                  onClick={() => setFilter('unread')} 
-                  className={`block px-4 py-2 text-sm text-left w-full hover:bg-gray-100 ${filter === 'unread' ? 'bg-gray-50' : ''}`}
-                >
-                  Unread
-                </button>
-                <button 
-                  onClick={() => setFilter('read')} 
-                  className={`block px-4 py-2 text-sm text-left w-full hover:bg-gray-100 ${filter === 'read' ? 'bg-gray-50' : ''}`}
-                >
-                  Read
-                </button>
-              </div>
-            </div>
+            <button 
+              onClick={() => setFilter('unread')} 
+              className={`block px-4 py-2 text-sm text-left w-full hover:bg-gray-100 ${filter === 'unread' ? 'bg-gray-50' : ''}`}
+            >
+              Unread
+            </button>
+            <button 
+              onClick={() => setFilter('read')} 
+              className={`block px-4 py-2 text-sm text-left w-full hover:bg-gray-100 ${filter === 'read' ? 'bg-gray-50' : ''}`}
+            >
+              Read
+            </button>
           </div>
         </div>
       </div>
-      
+    </div>
+  )
+
+  return (
+    <div className="container mx-auto p-6 max-w-4xl">
+      <Header 
+        title="Notifications"
+        icon={<Bell className="h-5 w-5 text-primary" />}
+        showDateTime={true}
+        actions={headerActions}
+        description={unreadCount > 0 
+          ? `You have ${unreadCount} unread notification${unreadCount !== 1 ? 's' : ''}` 
+          : 'You\'re all caught up!'}
+      />
+
       {/* Notifications list */}
-      <div className="bg-white rounded-lg shadow">
+      <div className="bg-white rounded-lg shadow mt-6">
         {filteredNotifications.length > 0 ? (
           <ul className="divide-y divide-gray-100">
             {filteredNotifications.map(notification => (

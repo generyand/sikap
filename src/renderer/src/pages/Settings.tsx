@@ -7,7 +7,9 @@ import {
   Save, 
   CheckSquare, 
   Eye, 
+  Settings as SettingsIcon,
 } from 'lucide-react';
+import { Header } from '@/components/layout/Header'
 
 type ThemeType = 'light' | 'dark' | 'system';
 type WeekStartDay = 'monday' | 'sunday';
@@ -96,15 +98,14 @@ const Settings = () => {
 
   return (
     <div className="flex-1 flex flex-col min-w-0 h-screen">
-      {/* Header */}
-      <header className="h-16 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shrink-0">
-        <div className="flex items-center h-full px-6">
-          <h1 className="text-2xl font-bold">Settings</h1>
-          <p className="text-gray-600 ml-4">Customize your Sikap experience</p>
-        </div>
-      </header>
+      <Header 
+        title="Settings"
+        icon={<SettingsIcon className="h-5 w-5 text-primary" />}
+        showDateTime={true}
+        description="Customize your Sikap experience"
+      />
       
-      {/* Scrollable Content Area - Added custom-scrollbar class */}
+      {/* Scrollable Content Area */}
       <div className="flex-1 overflow-auto p-6 custom-scrollbar">
         <div className="container mx-auto max-w-3xl">
           {/* Appearance Section */}

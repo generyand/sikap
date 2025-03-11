@@ -12,6 +12,8 @@ import { cn } from '../lib/utils'
 import { useState, useEffect } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Header } from '@/components/layout/Header'
+import { Calendar as CalendarIcon } from 'lucide-react'
 
 // Types
 type CalendarEvent = {
@@ -191,94 +193,84 @@ const Calendar = () => {
     }
   }
 
+  const headerActions = (
+    <div className="flex items-center gap-2">
+      <Button 
+        variant="ghost" 
+        size="sm" 
+        onClick={handlePrevious}
+        className="hidden sm:flex"
+      >
+        <ChevronLeft className="w-4 h-4 mr-1" />
+        Previous
+      </Button>
+      <Button 
+        variant="outline" 
+        size="sm" 
+        onClick={handleToday}
+      >
+        Today
+      </Button>
+      
+      <Button 
+        variant="ghost" 
+        size="sm" 
+        onClick={handleNext}
+        className="hidden sm:flex"
+      >
+        Next
+        <ChevronRight className="w-4 h-4 ml-1" />
+      </Button>
+
+      <div className="hidden md:flex items-center border rounded-md ml-4 overflow-hidden">
+        {(availableViews as View[]).map((view, index) => (
+          <Button
+            key={view}
+            variant="ghost"
+            size="sm"
+            className={cn(
+              "h-8 px-3",
+              currentView === view 
+                ? "bg-primary text-primary-foreground" 
+                : "text-muted-foreground hover:text-foreground border-0",
+              index === 0 ? "rounded-r-none rounded-l-md" : "",
+              index === availableViews.length - 1 ? "rounded-l-none rounded-r-md" : "",
+              index > 0 && index < availableViews.length - 1 ? "rounded-none" : ""
+            )}
+            onClick={() => setCurrentView(view)}
+          >
+            {view === 'month' ? 'Month' : 
+             view === 'week' ? 'Week' : 
+             view === 'day' ? 'Day' : 'List'}
+          </Button>
+        ))}
+      </div>
+      
+      <select 
+        className="md:hidden ml-2 text-sm rounded border bg-background py-1"
+        value={currentView}
+        onChange={(e) => setCurrentView(e.target.value as View)}
+      >
+        {(availableViews as View[]).map((view) => (
+          <option key={view} value={view}>
+            {view === 'month' ? 'Month' : 
+             view === 'week' ? 'Week' : 
+             view === 'day' ? 'Day' : 'List'}
+          </option>
+        ))}
+      </select>
+    </div>
+  )
+
   return (
     <div className="flex flex-col h-full overflow-hidden">
-      {/* Header */}
-      <header className="h-16 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shrink-0">
-        <div className="flex items-center justify-between h-full px-6">
-          <div className="flex items-center gap-2">
-            <h1 className="text-xl font-semibold flex items-center gap-2">Calendar</h1>
-            
-            {/* View switcher - Add this section */}
-            <div className="hidden md:flex items-center border rounded-md ml-4 overflow-hidden">
-              {(availableViews as View[]).map((view, index) => (
-                <Button
-                  key={view}
-                  variant="ghost"
-                  size="sm"
-                  className={cn(
-                    "h-8 px-3",
-                    // Active state styling
-                    currentView === view 
-                      ? "bg-primary text-primary-foreground" 
-                      : "text-muted-foreground hover:text-foreground border-0",
-                    // First button - only round left corners
-                    index === 0 ? "rounded-r-none rounded-l-md" : "",
-                    // Last button - only round right corners
-                    index === availableViews.length - 1 ? "rounded-l-none rounded-r-md" : "",
-                    // Middle buttons - no rounded corners
-                    index > 0 && index < availableViews.length - 1 ? "rounded-none" : ""
-                  )}
-                  onClick={() => setCurrentView(view)}
-                >
-                  {view === 'month' ? 'Month' : 
-                   view === 'week' ? 'Week' : 
-                   view === 'day' ? 'Day' : 'List'}
-                </Button>
-              ))}
-            </div>
-            
-            {/* Dropdown for smaller screens */}
-            <select 
-              className="md:hidden ml-2 text-sm rounded border bg-background py-1"
-              value={currentView}
-              onChange={(e) => setCurrentView(e.target.value as View)}
-            >
-              {(availableViews as View[]).map((view) => (
-                <option key={view} value={view}>
-                  {view === 'month' ? 'Month' : 
-                   view === 'week' ? 'Week' : 
-                   view === 'day' ? 'Day' : 'List'}
-                </option>
-              ))}
-            </select>
-          </div>
-          
-          {/* Add this section - Current date display */}
-          <div className="hidden sm:block text-center font-medium">
-            <span className="text-lg">{getFormattedDateRange()}</span>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={handlePrevious}
-              className="hidden sm:flex"
-            >
-              <ChevronLeft className="w-4 h-4 mr-1" />
-              Previous
-            </Button>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={handleToday}
-            >
-              Today
-            </Button>
-            
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={handleNext}
-              className="hidden sm:flex"
-            >
-              Next
-              <ChevronRight className="w-4 h-4 ml-1" />
-            </Button>
-          </div>
-        </div>
-      </header>
+      <Header 
+        title="Calendar"
+        icon={<CalendarIcon className="h-5 w-5 text-primary" />}
+        showDateTime={true}
+        actions={headerActions}
+        description={getFormattedDateRange()}
+      />
       
       {/* Main content - Scrollable */}
       <div className="flex-1 p-4 overflow-auto custom-scrollbar">

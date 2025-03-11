@@ -3,7 +3,7 @@ import { useProfile } from '../providers/ProfileProvider'
 import { fetchTasks, createTask, updateTask, deleteTask } from '../services/taskService'
 import { 
   Plus, Search, List, LayoutGrid,
-  Focus
+  Focus, CheckSquare
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -46,6 +46,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { NewTask } from '@/types'
+import { Header } from '@/components/layout/Header'
 
 export const Tasks = () => {
   const { profileId } = useProfile()
@@ -264,68 +265,63 @@ export const Tasks = () => {
     }
   }
 
+  const headerActions = (
+    <div className="flex items-center gap-4">
+      <Button onClick={() => setIsAddTaskOpen(true)} size="sm" className="gap-1">
+        <Plus className="h-4 w-4" />
+        Add Task
+      </Button>
+      
+      <TooltipProvider>
+        <ToggleGroup type="single" value={viewMode} onValueChange={handleViewChange}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <ToggleGroupItem value="list" aria-label="List View">
+                <List className="h-4 w-4" />
+              </ToggleGroupItem>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>List View</p>
+            </TooltipContent>
+          </Tooltip>
+          
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <ToggleGroupItem value="board" aria-label="Board View">
+                <LayoutGrid className="h-4 w-4" />
+              </ToggleGroupItem>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Board View</p>
+            </TooltipContent>
+          </Tooltip>
+          
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <ToggleGroupItem value="focus" aria-label="Focus Mode">
+                <Focus className="h-4 w-4" />
+              </ToggleGroupItem>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Focus Mode</p>
+            </TooltipContent>
+          </Tooltip>
+        </ToggleGroup>
+      </TooltipProvider>
+    </div>
+  )
+
   if (isLoading) return <div>Loading...</div>
 
   return (
     <div className="flex h-full">
-      {/* Fix the sidebar positioning by making it absolutely positioned or adding overflow handling */}
       <div className="flex-1 overflow-hidden relative">
-        {/* Header */}
-        <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 w-full">
-          {/* Main Header */}
-          <div className="px-6 py-4">
-            <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-              {/* Left side - Title and Add Button */}
-              <div className="flex items-center gap-4">
-                <h1 className="text-xl font-semibold">Tasks</h1>
-                <Button onClick={() => setIsAddTaskOpen(true)} size="sm" className="gap-1">
-                  <Plus className="h-4 w-4" />
-                  Add Task
-                </Button>
-              </div>
-              
-              {/* Right side - View Toggle */}
-              <div className="flex items-center gap-2">
-                <TooltipProvider>
-                  <ToggleGroup type="single" value={viewMode} onValueChange={handleViewChange}>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <ToggleGroupItem value="list" aria-label="List View">
-                          <List className="h-4 w-4" />
-                        </ToggleGroupItem>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>List View</p>
-                      </TooltipContent>
-                    </Tooltip>
-                    
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <ToggleGroupItem value="board" aria-label="Board View">
-                          <LayoutGrid className="h-4 w-4" />
-                        </ToggleGroupItem>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Board View</p>
-                      </TooltipContent>
-                    </Tooltip>
-                    
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <ToggleGroupItem value="focus" aria-label="Focus Mode">
-                          <Focus className="h-4 w-4" />
-                        </ToggleGroupItem>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Focus Mode</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </ToggleGroup>
-                </TooltipProvider>
-              </div>
-            </div>
-          </div>
-        </header>
+        <Header 
+          title="Tasks"
+          icon={<CheckSquare className="h-5 w-5 text-primary" />}
+          showDateTime={true}
+          actions={headerActions}
+        />
 
         {/* Filter Section */}
         {viewMode !== 'focus' && (
