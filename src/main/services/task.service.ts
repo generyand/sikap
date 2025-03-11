@@ -1,4 +1,5 @@
 import { DatabaseService } from './database.service';
+import { NotificationService } from './notification.service';
 import { 
   TaskAttributes, 
   TaskStatus, 
@@ -6,6 +7,7 @@ import {
   TaskCategory, 
   RecurrencePattern 
 } from '../database/types';
+import { Op } from 'sequelize';
 
 interface CreateTaskData {
   title: string;
@@ -38,9 +40,11 @@ interface UpdateTaskData {
 export class TaskService {
   private static instance: TaskService;
   private db: DatabaseService;
+  private notificationService: NotificationService;
 
   private constructor() {
     this.db = DatabaseService.getInstance();
+    this.notificationService = NotificationService.getInstance();
   }
 
   static getInstance(): TaskService {
@@ -70,6 +74,70 @@ export class TaskService {
     }
   }
 
+  async getDashboardData(profileId: string, timeframe: string) {
+    try {
+      const now = new Date();
+      let startDate = new Date();
+
+      // Calculate start date based on timeframe
+      switch (timeframe) {
+        case 'today':
+          startDate.setHours(0, 0, 0, 0);
+          break;
+        case '7days':
+          startDate.setDate(startDate.getDate() - 7);
+          break;
+        case '30days':
+          startDate.setDate(startDate.getDate() - 30);
+          break;
+        case '90days':
+          startDate.setDate(startDate.getDate() - 90);
+          break;
+        default:
+          startDate.setDate(startDate.getDate() - 7); // Default to 7 days
+      }
+
+      // Fetch tasks within the timeframe
+      const tasks = await this.db.task.findAll({
+        where: {
+          profileId,
+          createdAt: {
+            [Op.gte]: startDate
+          }
+        },
+        include: [
+          {
+            model: this.db.profile,
+            as: 'profile',
+            attributes: ['id', 'name']
+          }
+        ]
+      });
+
+      // Get previous period tasks for trend calculation
+      const previousPeriodStart = new Date(startDate);
+      const daysDiff = (now.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24);
+      previousPeriodStart.setDate(previousPeriodStart.getDate() - daysDiff);
+
+      const previousTasks = await this.db.task.findAll({
+        where: {
+          profileId,
+          createdAt: {
+            [Op.between]: [previousPeriodStart, startDate]
+          }
+        }
+      });
+
+      return {
+        tasks: tasks.map(task => task.get({ plain: true })),
+        previousPeriodTaskCount: previousTasks.length
+      };
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+      throw error;
+    }
+  }
+
   async createTask(taskData: CreateTaskData): Promise<TaskAttributes> {
     try {
       const task = await this.db.task.create({
@@ -78,7 +146,18 @@ export class TaskService {
         completedAt: null
       });
       
-      return task.get({ plain: true });
+      const createdTask = task.get({ plain: true });
+
+      // Handle notifications for the new task
+      if (taskData.dueDate) {
+        await this.notificationService.createDueSoonNotification(createdTask);
+      }
+
+      if (taskData.recurrence) {
+        await this.notificationService.createRecurringTaskNotification(createdTask);
+      }
+      
+      return createdTask;
     } catch (error) {
       console.error('Error creating task:', error);
       throw error;
@@ -118,8 +197,23 @@ export class TaskService {
       if (!updatedTask) {
         throw new Error(`Task with ID ${id} not found`);
       }
+
+      const plainTask = updatedTask.get({ plain: true });
+
+      // Handle notifications based on task updates
+      if (updateData.dueDate) {
+        await this.notificationService.createDueSoonNotification(plainTask);
+      }
+
+      if (!completedAt && plainTask.dueDate && new Date() > new Date(plainTask.dueDate)) {
+        await this.notificationService.createOverdueNotification(plainTask);
+      }
+
+      if (updateData.recurrence) {
+        await this.notificationService.createRecurringTaskNotification(plainTask);
+      }
       
-      return updatedTask.get({ plain: true });
+      return plainTask;
     } catch (error) {
       console.error('Error updating task:', error);
       throw error;
@@ -137,6 +231,25 @@ export class TaskService {
       });
     } catch (error) {
       console.error('Error deleting task:', error);
+      throw error;
+    }
+  }
+
+  // Add a custom reminder to a task
+  async addTaskReminder(taskId: string, reminderDate: Date, message?: string): Promise<void> {
+    try {
+      const task = await this.db.task.findByPk(taskId);
+      if (!task) {
+        throw new Error('Task not found');
+      }
+
+      await this.notificationService.createCustomReminder(
+        task.get({ plain: true }),
+        reminderDate,
+        message
+      );
+    } catch (error) {
+      console.error('Error adding task reminder:', error);
       throw error;
     }
   }

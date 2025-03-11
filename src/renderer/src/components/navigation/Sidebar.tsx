@@ -10,6 +10,7 @@ import {
   Loader2,
 } from 'lucide-react'
 import { useProfile } from '@/providers/ProfileProvider'
+import { useNotifications } from '@/hooks/useNotifications'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -62,6 +63,7 @@ const navItems = [
 export const Sidebar = () => {
   const location = useLocation()
   const { currentProfile, isLoading, signOut } = useProfile()
+  const { unreadCount } = useNotifications()
   const [showSignOutDialog, setShowSignOutDialog] = useState(false)
   const [sidebarWidth, setSidebarWidth] = useState(DEFAULT_SIDEBAR_WIDTH)
   const [isResizing, setIsResizing] = useState(false)
@@ -148,13 +150,14 @@ export const Sidebar = () => {
         <nav className="flex-1 overflow-y-auto p-2 sm:p-3 md:p-4 space-y-1">
           {navItems.map((item) => {
             const isActive = location.pathname === item.path
+            const isNotifications = item.path === '/notifications'
             return (
               <Tooltip key={item.path}>
                 <TooltipTrigger asChild>
                   <Link
                     to={item.path}
                     className={cn(
-                      "flex items-center gap-2 md:gap-3 rounded-lg px-2 sm:px-3 py-2 text-xs sm:text-sm transition-colors",
+                      "flex items-center gap-2 md:gap-3 rounded-lg px-2 sm:px-3 py-2 text-xs sm:text-sm transition-colors relative",
                       isActive 
                         ? "bg-primary text-primary-foreground" 
                         : "text-muted-foreground hover:bg-accent hover:text-foreground"
@@ -162,6 +165,16 @@ export const Sidebar = () => {
                   >
                     <item.icon className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
                     <span className="truncate">{item.label}</span>
+                    {isNotifications && unreadCount > 0 && (
+                      <span className={cn(
+                        "absolute right-2 top-1/2 -translate-y-1/2 min-w-[1.25rem] h-5 rounded-full flex items-center justify-center text-xs",
+                        isActive 
+                          ? "bg-primary-foreground text-primary" 
+                          : "bg-primary text-primary-foreground"
+                      )}>
+                        {unreadCount}
+                      </span>
+                    )}
                   </Link>
                 </TooltipTrigger>
                 <TooltipContent side="right">

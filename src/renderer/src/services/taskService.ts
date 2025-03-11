@@ -44,10 +44,74 @@ export const deleteTask = async (taskId: string): Promise<void> => {
   return taskAPI.deleteTask(taskId);
 }
 
+export const getDashboardData = async (profileId: string, timeframe: string) => {
+  try {
+    // Get current tasks
+    const tasks = await fetchTasks(profileId);
+    console.log('Fetched tasks:', tasks);
+    
+    // Get start date based on timeframe
+    const now = new Date();
+    let startDate = new Date();
+    switch (timeframe) {
+      case 'today':
+        startDate.setHours(0, 0, 0, 0);
+        break;
+      case '7days':
+        startDate.setDate(now.getDate() - 7);
+        break;
+      case '30days':
+        startDate.setDate(now.getDate() - 30);
+        break;
+      case '90days':
+        startDate.setDate(now.getDate() - 90);
+        break;
+      default:
+        startDate.setDate(now.getDate() - 7); // Default to 7 days
+    }
+
+    console.log('Filtering tasks from date:', startDate);
+
+    // Filter tasks for current period - include all tasks if timeframe is not 'today'
+    const currentPeriodTasks = timeframe === 'today'
+      ? tasks.filter(task => {
+          const createdAt = task.createdAt ? new Date(task.createdAt) : null;
+          return createdAt && createdAt >= startDate;
+        })
+      : tasks;
+
+    console.log('Filtered current period tasks:', currentPeriodTasks);
+
+    // Get previous period tasks count for trend calculation
+    const previousPeriodStart = new Date(startDate);
+    previousPeriodStart.setDate(startDate.getDate() - (timeframe === 'today' ? 1 : parseInt(timeframe.replace('days', ''))));
+    
+    const previousPeriodTasks = tasks.filter(task => {
+      const createdAt = task.createdAt ? new Date(task.createdAt) : null;
+      return createdAt && createdAt >= previousPeriodStart && createdAt < startDate;
+    });
+
+    console.log('Previous period tasks:', previousPeriodTasks);
+
+    return {
+      tasks: currentPeriodTasks,
+      previousPeriodTaskCount: previousPeriodTasks.length
+    };
+  } catch (error) {
+    console.error('Error fetching dashboard data:', error);
+    // Return empty data instead of throwing
+    return {
+      tasks: [],
+      previousPeriodTaskCount: 0
+    };
+  }
+}
+
 // Service object export
 export const taskService = {
   fetchTasks,
   createTask,
   updateTask,
-  deleteTask
+  deleteTask,
+  getDashboardData
 } 

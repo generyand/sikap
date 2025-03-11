@@ -175,17 +175,91 @@ function defineModels() {
     tableName: 'tasks',
     underscored: true,
   });
+
+  // Define notification types
+  const NotificationType = {
+    TASK_CREATED: 'TASK_CREATED',
+    TASK_UPDATED: 'TASK_UPDATED',
+    TASK_COMPLETED: 'TASK_COMPLETED',
+    TASK_DUE_SOON: 'TASK_DUE_SOON',
+    TASK_OVERDUE: 'TASK_OVERDUE',
+    TASK_REMINDER: 'TASK_REMINDER',
+    TASK_STATUS_CHANGED: 'TASK_STATUS_CHANGED'
+  };
+
+  // Create Notification model
+  const Notification = sequelize.define('Notification', {
+    id: {
+      type: DataTypes.UUID,
+      defaultValue: () => uuidv4(),
+      primaryKey: true,
+    },
+    type: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      validate: {
+        isIn: [Object.values(NotificationType)]
+      }
+    },
+    title: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    message: {
+      type: DataTypes.TEXT,
+      allowNull: false,
+    },
+    read: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
+    },
+    taskId: {
+      type: DataTypes.UUID,
+      allowNull: true,
+      references: {
+        model: 'tasks',
+        key: 'id',
+      }
+    },
+    profileId: {
+      type: DataTypes.UUID,
+      allowNull: false,
+      references: {
+        model: 'profiles',
+        key: 'id',
+      }
+    },
+    metadata: {
+      type: DataTypes.JSON,
+      allowNull: true,
+      defaultValue: {},
+    },
+    scheduledFor: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    }
+  }, {
+    tableName: 'notifications',
+    underscored: true,
+  });
   
   // Set up associations
   Profile.hasMany(Task, { foreignKey: 'profileId', as: 'tasks', onDelete: 'CASCADE' });
   Task.belongsTo(Profile, { foreignKey: 'profileId', as: 'profile' });
+
+  // Notification associations
+  Profile.hasMany(Notification, { foreignKey: 'profileId', as: 'notifications', onDelete: 'CASCADE' });
+  Task.hasMany(Notification, { foreignKey: 'taskId', as: 'notifications', onDelete: 'CASCADE' });
+  Notification.belongsTo(Profile, { foreignKey: 'profileId', as: 'profile' });
+  Notification.belongsTo(Task, { foreignKey: 'taskId', as: 'task' });
   
-  return { Profile, Task };
+  return { Profile, Task, Notification };
 }
 
 // Create sample data
 async function createSampleData(models) {
-  const { Profile, Task } = models;
+  const { Profile, Task, Notification } = models;
   
   // Create a default profile with password
   const profile = await Profile.create({
@@ -216,8 +290,30 @@ async function createSampleData(models) {
       dueDate: new Date(Date.now() + 86400000) // Tomorrow
     }
   ]);
+
+  // Create sample notifications
+  await Notification.bulkCreate([
+    {
+      type: 'TASK_DUE_SOON',
+      title: 'Task Due Tomorrow',
+      message: 'The task "Create your first task" is due tomorrow',
+      read: false,
+      taskId: tasks[1].id,
+      profileId: profile.id,
+      scheduledFor: new Date(Date.now() + 43200000) // 12 hours from now
+    },
+    {
+      type: 'TASK_REMINDER',
+      title: 'Daily Planning Reminder',
+      message: 'Time to review your tasks for today',
+      read: false,
+      taskId: tasks[0].id,
+      profileId: profile.id,
+      scheduledFor: new Date(new Date().setHours(9, 0, 0, 0)) // Today at 9 AM
+    }
+  ]);
   
-  console.log(`Created ${tasks.length} sample tasks`);
+  console.log(`Created ${tasks.length} sample tasks and notifications`);
 }
 
 async function init() {

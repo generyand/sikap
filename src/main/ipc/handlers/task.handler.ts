@@ -43,6 +43,11 @@ export class TaskHandler implements ITaskHandler {
       return await this.taskService.deleteTask(taskId)
     })
 
+    // Get dashboard data
+    ipcMain.handle('task:getDashboardData', async (_, profileId: string, timeframe: string) => {
+      return await this.taskService.getDashboardData(profileId, timeframe)
+    })
+
     this.handlersRegistered = true
   }
 } 

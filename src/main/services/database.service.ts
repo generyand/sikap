@@ -1,12 +1,22 @@
-import { sequelize, models } from '../database/models';
+import sequelize from '../database/config';
 import path from 'path';
 import fs from 'fs';
+import Task from '../database/models/task.model';
+import Profile from '../database/models/profile.model';
+import Notification from '../database/models/notification.model';
 
 export class DatabaseService {
   private static instance: DatabaseService;
+  readonly sequelize = sequelize;
+  readonly task = Task;
+  readonly profile = Profile;
+  readonly notification = Notification;
 
   private constructor() {
-    // Initialize the database
+    // Initialize associations
+    Task.associate({ Profile, Notification });
+    Profile.associate({ Task });
+    Notification.associate({ Task, Profile });
   }
 
   static getInstance(): DatabaseService {
@@ -63,15 +73,6 @@ export class DatabaseService {
 
   async disconnect(): Promise<void> {
     await sequelize.close();
-  }
-
-  // Access to models
-  get profile() {
-    return models.Profile;
-  }
-
-  get task() {
-    return models.Task;
   }
 }
 

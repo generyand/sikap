@@ -36,7 +36,6 @@ import { Button } from "@/components/ui/button"
 import { TaskCategory, TaskStatus, TaskPriority } from '@/types'
 import { useProfile } from '@/providers/ProfileProvider'
 import { useQuery } from '@tanstack/react-query'
-import { mockTasks } from '@/mocks/taskData'
 import { format, subDays, startOfDay, endOfDay, isToday, isThisWeek } from 'date-fns'
 import {
   Select,
@@ -65,6 +64,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { toast, Toaster } from 'sonner'
 import { Header } from '@/components/layout/Header'
+import { window, DashboardData } from '@/lib/electron'
 
 // Enhanced color palette with semantic meaning
 const PRIORITY_COLORS = {
@@ -136,97 +136,109 @@ const TaskDashboard: React.FC = () => {
   const [timeframe, setTimeframe] = useState('7days')
   const [exportLoading, setExportLoading] = useState<string | null>(null)
 
-  // Use mock data instead of API call
-  const { data: tasks = [], isLoading, error } = useQuery({
-    queryKey: ['tasks', profileId],
-    queryFn: () => Promise.resolve(mockTasks),
-    enabled: true, // Always enabled since we're using mock data
-    initialData: mockTasks // Provide initial data to avoid loading state
-  })
+  // Replace mock data with real data from TaskService
+  const { data: dashboardData, isLoading, error } = useQuery<DashboardData>({
+    queryKey: ['dashboard', profileId, timeframe],
+    queryFn: async () => {
+      if (!profileId) throw new Error('No profile selected');
+      
+      try {
+        console.log('Fetching dashboard data for profile:', profileId, 'timeframe:', timeframe);
+        const rawData = await window.taskService.getDashboardData(profileId, timeframe);
+        console.log('Raw dashboard data:', rawData);
 
-  // Memoized data transformations for performance
-  const dashboardData = useMemo(() => {
-    if (!tasks.length) return null
+        const { tasks = [], previousPeriodTaskCount = 0 } = rawData;
+        
+        // Return empty state if no tasks
+        if (!tasks || tasks.length === 0) {
+          console.log('No tasks found, returning empty state');
+          return {
+            stats: {
+              totalTasks: 0,
+              dueToday: 0,
+              highPriority: 0,
+              completedThisWeek: 0,
+              taskTrend: 0
+            },
+            charts: {
+              statusData: Object.values(TaskStatus).map(status => ({ name: status, value: 0 })),
+              priorityData: Object.values(TaskPriority).map(priority => ({ priority, count: 0 })),
+              categoryData: Object.values(TaskCategory).map(category => ({ name: category, value: 0 })),
+              completionTrend: Array.from({ length: timeframe === 'today' ? 1 : parseInt(timeframe.replace('days', '')) }, 
+                (_, i) => ({
+                  date: format(subDays(new Date(), i), 'MMM dd'),
+                  completed: 0,
+                  created: 0
+                })
+              ).reverse()
+            }
+          };
+        }
 
-    const now = new Date()
-    const startDate = timeframe === 'today' 
-      ? startOfDay(now)
-      : subDays(now, parseInt(timeframe.replace('days', '')))
+        const now = new Date();
+        
+        // Calculate statistics
+        const totalTasks = tasks.length;
+        const dueToday = tasks.filter(task => {
+          const dueDate = task.dueDate ? new Date(task.dueDate) : null;
+          return dueDate && isToday(dueDate);
+        }).length;
 
-    // Filter tasks based on timeframe
-    const filteredTasks = tasks.filter(task => {
-      const taskDate = task.createdAt ? new Date(task.createdAt) : null
-      return taskDate && taskDate >= startDate
-    })
-
-    // Calculate statistics using filtered tasks
-    const totalTasks = filteredTasks.length
-    const dueToday = filteredTasks.filter(task => {
-      const dueDate = task.dueDate ? new Date(task.dueDate) : null
-      return dueDate && isToday(dueDate)
-    }).length
-
-    const highPriority = filteredTasks.filter(task => 
+        const highPriority = tasks.filter(task => 
       task.priority === TaskPriority.HIGH || task.priority === TaskPriority.URGENT
-    ).length
+        ).length;
 
-    const completedThisWeek = filteredTasks.filter(task => 
+        const completedThisWeek = tasks.filter(task => 
       task.status === TaskStatus.COMPLETED && 
       task.completedAt && 
       isThisWeek(new Date(task.completedAt))
-    ).length
+        ).length;
 
-    // Calculate trends using the previous period
-    const previousPeriodStart = subDays(startDate, parseInt(timeframe.replace('days', '')))
-    const previousPeriodTasks = tasks.filter(task => {
-      const taskDate = task.createdAt ? new Date(task.createdAt) : null
-      return taskDate && taskDate >= previousPeriodStart && taskDate < startDate
-    }).length
+        // Calculate trend
+        const taskTrend = previousPeriodTaskCount > 0 
+          ? ((totalTasks - previousPeriodTaskCount) / previousPeriodTaskCount) * 100 
+          : 0;
 
-    const taskTrend = previousPeriodTasks > 0 
-      ? ((totalTasks - previousPeriodTasks) / previousPeriodTasks) * 100 
-      : 0
-
-    // Prepare chart data using filtered tasks
+        // Prepare chart data
     const statusData = Object.values(TaskStatus).map(status => ({
       name: status,
-      value: filteredTasks.filter(task => task.status === status).length
-    }))
+          value: tasks.filter(task => task.status === status).length
+        }));
 
     const priorityData = Object.values(TaskPriority).map(priority => ({
       priority,
-      count: filteredTasks.filter(task => task.priority === priority).length
-    }))
+          count: tasks.filter(task => task.priority === priority).length
+        }));
 
     const categoryData = Object.values(TaskCategory).map(category => ({
       name: category,
-      value: filteredTasks.filter(task => task.category === category).length
-    }))
+          value: tasks.filter(task => task.category === category).length
+        }));
 
-    // Generate daily completion trend within the selected timeframe
-    const days = timeframe === 'today' ? 1 : parseInt(timeframe.replace('days', ''))
+        // Generate daily completion trend
+        const days = timeframe === 'today' ? 1 : parseInt(timeframe.replace('days', ''));
     const completionTrend = Array.from({ length: days }, (_, i) => {
-      const date = subDays(now, i)
-      const dayStart = startOfDay(date)
-      const dayEnd = endOfDay(date)
+          const date = subDays(now, i);
+          const dayStart = startOfDay(date);
+          const dayEnd = endOfDay(date);
       
       return {
         date: format(date, 'MMM dd'),
-        completed: filteredTasks.filter(task => 
+            completed: tasks.filter(task => 
           task.status === TaskStatus.COMPLETED && 
           task.completedAt && 
           new Date(task.completedAt) >= dayStart &&
           new Date(task.completedAt) <= dayEnd
         ).length,
-        created: filteredTasks.filter(task => 
+            created: tasks.filter(task => 
           task.createdAt &&
           new Date(task.createdAt) >= dayStart &&
           new Date(task.createdAt) <= dayEnd
         ).length
-      }
-    }).reverse()
+          };
+        }).reverse();
 
-    return {
+        const processedData: DashboardData = {
       stats: {
         totalTasks,
         dueToday,
@@ -240,8 +252,22 @@ const TaskDashboard: React.FC = () => {
         categoryData,
         completionTrend
       }
-    }
-  }, [tasks, timeframe])
+        };
+
+        console.log('Processed dashboard data:', processedData);
+        return processedData;
+
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error);
+        throw new Error('Failed to load dashboard data. Please try again later.');
+      }
+    },
+    enabled: !!profileId,
+    refetchInterval: 5000, // Reduce interval to 5 seconds for testing
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
+    staleTime: 0 // Consider data immediately stale
+  });
 
   const handleExport = async (format: string, type: string) => {
     setExportLoading(`${type}-${format}`)
@@ -453,11 +479,11 @@ const TaskDashboard: React.FC = () => {
   if (error) {
     return (
       <div className="flex items-center justify-center h-screen">
-        <Alert variant="destructive" className="max-w-md">
+        <Alert variant="default" className="max-w-md">
           <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Error</AlertTitle>
+          <AlertTitle>No Tasks Found</AlertTitle>
           <AlertDescription>
-            Failed to load dashboard data. Please try again later.
+            There are no tasks in the selected timeframe. Create some tasks to see your dashboard statistics.
           </AlertDescription>
         </Alert>
       </div>
@@ -563,7 +589,7 @@ const TaskDashboard: React.FC = () => {
                         {dashboardData?.charts.statusData.map((entry, index) => (
                           <Cell 
                             key={`cell-${index}`} 
-                            fill={STATUS_COLORS[entry.name as TaskStatus]}
+                            fill={STATUS_COLORS[entry.name as TaskStatus]} 
                             stroke="white"
                             strokeWidth={2}
                           />
@@ -594,9 +620,9 @@ const TaskDashboard: React.FC = () => {
                           <stop offset="5%" stopColor="#10B981" stopOpacity={0.8}/>
                           <stop offset="95%" stopColor="#10B981" stopOpacity={0}/>
                         </linearGradient>
-                        <linearGradient id="created" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#6366F1" stopOpacity={0.8}/>
-                          <stop offset="95%" stopColor="#6366F1" stopOpacity={0}/>
+                          <linearGradient id="created" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#6366F1" stopOpacity={0.8}/>
+                            <stop offset="95%" stopColor="#6366F1" stopOpacity={0}/>
                         </linearGradient>
                       </defs>
                       <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
@@ -682,7 +708,7 @@ const TaskDashboard: React.FC = () => {
                         {dashboardData?.charts.priorityData.map((entry, index) => (
                           <Cell 
                             key={`cell-${index}`} 
-                            fill={PRIORITY_COLORS[entry.priority as TaskPriority]}
+                            fill={PRIORITY_COLORS[entry.priority as TaskPriority]} 
                             stroke="white"
                             strokeWidth={1}
                           />
@@ -721,7 +747,7 @@ const TaskDashboard: React.FC = () => {
                         {dashboardData?.charts.categoryData.map((entry, index) => (
                           <Cell 
                             key={`cell-${index}`} 
-                            fill={CATEGORY_COLORS[entry.name as TaskCategory]}
+                            fill={CATEGORY_COLORS[entry.name as TaskCategory]} 
                             stroke="white"
                             strokeWidth={2}
                           />
@@ -762,17 +788,17 @@ const StatCard = ({
   >
     <div className="absolute inset-0 bg-gradient-to-br from-transparent to-background/5 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
     <div className="relative">
-      <div className="flex items-center justify-between mb-4">
-        <span className="text-muted-foreground text-sm font-medium">{title}</span>
+    <div className="flex items-center justify-between mb-4">
+      <span className="text-muted-foreground text-sm font-medium">{title}</span>
         <Icon className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors duration-200" />
-      </div>
-      <div className="space-y-2">
+    </div>
+    <div className="space-y-2">
         <h3 className="text-3xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/80">
           {value}
         </h3>
-        <div className="flex items-center gap-2 text-sm">
+      <div className="flex items-center gap-2 text-sm">
           <TrendIcon className={`h-4 w-4 ${trendColor} group-hover:scale-110 transition-transform duration-200`} />
-          <span className="text-muted-foreground">{trend}</span>
+        <span className="text-muted-foreground">{trend}</span>
         </div>
       </div>
     </div>
