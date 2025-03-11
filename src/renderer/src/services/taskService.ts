@@ -15,6 +15,7 @@ interface CreateTaskDTO {
   notes?: string | null
 }
 
+// Individual exports for backward compatibility
 export const fetchTasks = async (profileId: string | null): Promise<Task[]> => {
   if (!profileId) return []
   return taskAPI.getTasks(profileId)
@@ -37,8 +38,16 @@ export const updateTask = async (taskData: Partial<Task> & { id: string }) => {
     console.error('Error in updateTask service:', error);
     throw error;
   }
-};
+}
 
 export const deleteTask = async (taskId: string): Promise<void> => {
   return taskAPI.deleteTask(taskId);
-}; 
+}
+
+// Service object export
+export const taskService = {
+  fetchTasks,
+  createTask,
+  updateTask,
+  deleteTask
+} 
