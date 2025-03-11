@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react'
+import React, { useMemo, useState, useEffect } from 'react'
 import { 
   ListTodo, 
   Calendar as CalendarIcon,
@@ -15,7 +15,6 @@ import {
   FileText,
   Table,
   FileSpreadsheet,
-  Check,
   BarChart as Chart
 } from 'lucide-react'
 import { 
@@ -127,6 +126,36 @@ const CustomLegend = ({ payload }: any) => {
           <span className="text-sm text-muted-foreground">{entry.value}</span>
         </div>
       ))}
+    </div>
+  )
+}
+
+const LiveDateTime = () => {
+  const [date, setDate] = useState(new Date())
+
+  useEffect(() => {
+    const timer = setInterval(() => setDate(new Date()), 1000)
+    return () => clearInterval(timer)
+  }, [])
+
+  return (
+    <div className="flex flex-col">
+      <span className="text-sm font-medium text-foreground">
+        {date.toLocaleTimeString('en-US', { 
+          hour: '2-digit', 
+          minute: '2-digit',
+          second: '2-digit',
+          hour12: true 
+        })}
+      </span>
+      <span className="text-xs text-muted-foreground">
+        {date.toLocaleDateString('en-US', { 
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        })}
+      </span>
     </div>
   )
 }
@@ -313,20 +342,42 @@ const TaskDashboard: React.FC = () => {
       <Toaster position="top-right" expand={true} richColors />
       <div className="flex h-screen">
         <main className="flex-1 flex flex-col min-w-0">
-          <header className="h-16 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-10">
-            <div className="flex items-center justify-between h-full px-6">
-              <div className="flex items-center gap-4">
-                <h1 className="text-xl font-semibold flex items-center gap-2">
-                  <LayoutDashboard className="h-5 w-5" />
-                  Dashboard
-                </h1>
+          <header className="h-16 bg-card border-b border-border sticky top-0 z-10">
+            <div className="flex items-center justify-between h-full px-4">
+              <div className="flex items-center gap-6">
+                <div className="flex items-center gap-3">
+                  <div className="relative">
+                    <div className="absolute inset-0 bg-primary/10 rounded-lg blur opacity-70" />
+                    <div className="relative bg-primary/10 p-2 rounded-lg shadow-sm">
+                      <LayoutDashboard className="h-5 w-5 text-primary" />
+                    </div>
+                  </div>
+                  <h1 className="text-xl font-semibold text-foreground">
+                    Dashboard
+                  </h1>
+                </div>
+                <div className="h-6 w-px bg-border/20" />
+                <div className="flex items-center gap-3">
+                  <div className="relative">
+                    <div className="absolute inset-0 bg-primary/10 rounded-lg blur opacity-70" />
+                    <div className="relative bg-primary/10 p-2 rounded-lg shadow-sm">
+                      <Clock3 className="h-4 w-4 text-primary" />
+                    </div>
+                  </div>
+                  <LiveDateTime />
+                </div>
               </div>
 
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2">
-                  <CalendarRange className="h-4 w-4 text-muted-foreground" />
+              <div className="flex items-center gap-6">
+                <div className="flex items-center gap-3">
+                  <div className="relative">
+                    <div className="absolute inset-0 bg-primary/10 rounded-lg blur opacity-70" />
+                    <div className="relative bg-primary/10 p-2 rounded-lg shadow-sm">
+                      <CalendarRange className="h-4 w-4 text-primary" />
+                    </div>
+                  </div>
                   <Select value={timeframe} onValueChange={setTimeframe}>
-                    <SelectTrigger className="w-[180px]">
+                    <SelectTrigger className="w-[180px] bg-card hover:bg-accent transition-colors">
                       <SelectValue placeholder="Select timeframe" />
                     </SelectTrigger>
                     <SelectContent>
@@ -338,33 +389,52 @@ const TaskDashboard: React.FC = () => {
                   </Select>
                 </div>
 
+                <div className="h-6 w-px bg-border" />
+
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="sm" className="flex items-center gap-2">
-                      <Download className="h-4 w-4" />
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="flex items-center gap-2 bg-card hover:bg-accent transition-colors"
+                    >
+                      <div className="relative">
+                        <div className="absolute inset-0 bg-primary/10 rounded-lg blur opacity-70" />
+                        <div className="relative bg-primary/10 p-1.5 rounded-lg">
+                          <Download className="h-4 w-4 text-primary" />
+                        </div>
+                      </div>
                       Export
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-56">
-                    <DropdownMenuLabel>Export Dashboard Data</DropdownMenuLabel>
-                    <DropdownMenuSeparator />
+                  <DropdownMenuContent className="w-56 bg-card border-border">
+                    <DropdownMenuLabel className="text-xs font-medium text-muted-foreground">Export Dashboard Data</DropdownMenuLabel>
+                    <DropdownMenuSeparator className="bg-border/40" />
                     
                     <DropdownMenuGroup>
                       <DropdownMenuSub>
-                        <DropdownMenuSubTrigger>
+                        <DropdownMenuSubTrigger className="focus:bg-background/80">
                           <FileText className="mr-2 h-4 w-4" />
                           <span>Complete Dashboard</span>
                         </DropdownMenuSubTrigger>
                         <DropdownMenuPortal>
-                          <DropdownMenuSubContent>
-                            <DropdownMenuItem onClick={() => handleExport('CSV', 'all')} disabled={exportLoading === 'all-CSV'}>
+                          <DropdownMenuSubContent className="bg-background/95 backdrop-blur-xl border-border/40">
+                            <DropdownMenuItem 
+                              onClick={() => handleExport('CSV', 'all')} 
+                              disabled={exportLoading === 'all-CSV'}
+                              className="focus:bg-background/80"
+                            >
                               <FileSpreadsheet className="mr-2 h-4 w-4" />
                               <span>As CSV</span>
                               {exportLoading === 'all-CSV' && (
                                 <Download className="ml-auto h-4 w-4 animate-spin" />
                               )}
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleExport('JSON', 'all')} disabled={exportLoading === 'all-JSON'}>
+                            <DropdownMenuItem 
+                              onClick={() => handleExport('JSON', 'all')} 
+                              disabled={exportLoading === 'all-JSON'}
+                              className="focus:bg-background/80"
+                            >
                               <FileText className="mr-2 h-4 w-4" />
                               <span>As JSON</span>
                               {exportLoading === 'all-JSON' && (
@@ -376,20 +446,28 @@ const TaskDashboard: React.FC = () => {
                       </DropdownMenuSub>
 
                       <DropdownMenuSub>
-                        <DropdownMenuSubTrigger>
+                        <DropdownMenuSubTrigger className="focus:bg-background/80">
                           <Table className="mr-2 h-4 w-4" />
                           <span>Statistics Only</span>
                         </DropdownMenuSubTrigger>
                         <DropdownMenuPortal>
-                          <DropdownMenuSubContent>
-                            <DropdownMenuItem onClick={() => handleExport('CSV', 'stats')} disabled={exportLoading === 'stats-CSV'}>
+                          <DropdownMenuSubContent className="bg-background/95 backdrop-blur-xl border-border/40">
+                            <DropdownMenuItem 
+                              onClick={() => handleExport('CSV', 'stats')} 
+                              disabled={exportLoading === 'stats-CSV'}
+                              className="focus:bg-background/80"
+                            >
                               <FileSpreadsheet className="mr-2 h-4 w-4" />
                               <span>As CSV</span>
                               {exportLoading === 'stats-CSV' && (
                                 <Download className="ml-auto h-4 w-4 animate-spin" />
                               )}
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleExport('JSON', 'stats')} disabled={exportLoading === 'stats-JSON'}>
+                            <DropdownMenuItem 
+                              onClick={() => handleExport('JSON', 'stats')} 
+                              disabled={exportLoading === 'stats-JSON'}
+                              className="focus:bg-background/80"
+                            >
                               <FileText className="mr-2 h-4 w-4" />
                               <span>As JSON</span>
                               {exportLoading === 'stats-JSON' && (
@@ -401,21 +479,22 @@ const TaskDashboard: React.FC = () => {
                       </DropdownMenuSub>
                     </DropdownMenuGroup>
 
-                    <DropdownMenuSeparator />
-                    <DropdownMenuLabel>Export Individual Charts</DropdownMenuLabel>
+                    <DropdownMenuSeparator className="bg-border/40" />
+                    <DropdownMenuLabel className="text-xs font-medium text-muted-foreground">Export Individual Charts</DropdownMenuLabel>
 
                     <DropdownMenuGroup>
                       {['statusData', 'priorityData', 'categoryData', 'completionTrend'].map((chartType) => (
                         <DropdownMenuSub key={chartType}>
-                          <DropdownMenuSubTrigger>
+                          <DropdownMenuSubTrigger className="focus:bg-background/80">
                             <Chart className="mr-2 h-4 w-4" />
                             <span>{chartType.replace(/([A-Z])/g, ' $1').trim()}</span>
                           </DropdownMenuSubTrigger>
                           <DropdownMenuPortal>
-                            <DropdownMenuSubContent>
+                            <DropdownMenuSubContent className="bg-background/95 backdrop-blur-xl border-border/40">
                               <DropdownMenuItem 
                                 onClick={() => handleExport('CSV', chartType)}
                                 disabled={exportLoading === `${chartType}-CSV`}
+                                className="focus:bg-background/80"
                               >
                                 <FileSpreadsheet className="mr-2 h-4 w-4" />
                                 <span>As CSV</span>
@@ -426,6 +505,7 @@ const TaskDashboard: React.FC = () => {
                               <DropdownMenuItem 
                                 onClick={() => handleExport('JSON', chartType)}
                                 disabled={exportLoading === `${chartType}-JSON`}
+                                className="focus:bg-background/80"
                               >
                                 <FileText className="mr-2 h-4 w-4" />
                                 <span>As JSON</span>

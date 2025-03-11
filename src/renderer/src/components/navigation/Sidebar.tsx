@@ -100,7 +100,7 @@ export const Sidebar = () => {
 
   return (
     <aside 
-      className="flex-none flex flex-col min-h-0 border-r bg-card/50 shrink-0 relative"
+      className="flex-none flex flex-col min-h-0 border-r bg-card shrink-0 relative"
       style={{ width: sidebarWidth }}
     >
       <div
@@ -112,13 +112,13 @@ export const Sidebar = () => {
       />
       
       <TooltipProvider>
-        <div className="shrink-0 flex items-center gap-3 border-b p-3 md:p-4">
+        <div className="h-16 shrink-0 flex items-center gap-3 border-b px-4">
           <Tooltip>
             <TooltipTrigger asChild>
-              <Avatar className="h-8 w-8 md:h-10 md:w-10 overflow-hidden cursor-pointer">
+              <Avatar className="h-8 w-8 overflow-hidden cursor-pointer">
                 <AvatarImage src={currentProfile?.avatar || ''} className="object-cover" />
                 <AvatarFallback>
-                  <UserCircle2 className="h-5 w-5 md:h-6 md:w-6" />
+                  <UserCircle2 className="h-5 w-5" />
                 </AvatarFallback>
               </Avatar>
             </TooltipTrigger>
@@ -128,16 +128,16 @@ export const Sidebar = () => {
           </Tooltip>
           <div className="flex-1 min-w-0">
             {isLoading ? (
-              <div className="flex items-center gap-2 text-xs md:text-sm text-muted-foreground">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Loader2 className="h-3 w-3 animate-spin" />
                 <span>Loading profile...</span>
               </div>
             ) : (
               <>
-                <p className="text-xs md:text-sm font-medium truncate">
+                <p className="text-sm font-medium truncate">
                   {currentProfile?.name || 'No profile selected'}
                 </p>
-                <p className="text-xs text-muted-foreground hidden sm:block">
+                <p className="text-xs text-muted-foreground">
                   Workspace
                 </p>
               </>
