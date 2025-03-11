@@ -47,8 +47,8 @@ export const ProfileSelector = () => {
       setProfileId(id)
       navigate('/dashboard')
     },
-    onError: (error) => {
-      setError('Invalid password. Please try again.')
+    onError: (error: Error) => {
+      setError(error.message || 'Invalid password. Please try again.')
       setPassword('')
     }
   })
