@@ -81,6 +81,9 @@ function createWindow(): void {
   } else {
     mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
   }
+
+  // Set app user model id for windows
+  electronApp.setAppUserModelId('com.sikap.app')
 }
 
 // Initialize database before creating window

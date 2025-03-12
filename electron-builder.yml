@@ -1,5 +1,5 @@
 appId: com.electron.app
-productName: sikap
+productName: Sikap
 directories:
   buildResources: build
 files:
