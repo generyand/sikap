@@ -39,9 +39,9 @@ Profile.init(
       allowNull: true,
     },
     theme: {
-      type: DataTypes.STRING,
+      type: DataTypes.ENUM('light', 'dark', 'system'),
       allowNull: false,
-      defaultValue: 'light',
+      defaultValue: 'system',
     },
   },
   {

@@ -32,12 +32,14 @@ export enum RecurrencePattern {
   CUSTOM = 'CUSTOM'
 }
 
+export type ThemeType = 'light' | 'dark' | 'system';
+
 // Profile type definition
 export interface ProfileAttributes {
   id: string;
   name: string;
   avatar?: string | null;
-  theme: string;
+  theme: ThemeType;
   password: string;
   createdAt?: Date;
   updatedAt?: Date;

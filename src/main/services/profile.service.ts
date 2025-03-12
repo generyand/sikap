@@ -107,4 +107,17 @@ export class ProfileService {
       throw error
     }
   }
+
+  async getProfile(id: string): Promise<ProfileAttributes> {
+    try {
+      const profile = await this.db.profile.findByPk(id);
+      if (!profile) {
+        throw new Error('Profile not found');
+      }
+      return profile.get({ plain: true });
+    } catch (error) {
+      console.error('Failed to get profile:', error);
+      throw error;
+    }
+  }
 } 

@@ -9,6 +9,7 @@ import { DatabaseService, initializeDatabase } from './services/database.service
 import { ProfileHandler } from './ipc/handlers/profile.handler'
 import { TaskHandler } from './ipc/handlers/task.handler'
 import { setupNotificationHandlers } from './ipc/notification.ipc'
+import { ThemeHandler } from './ipc/handlers/theme.handler'
 
 function createWindow(): void {
   // Create the browser window.
@@ -128,6 +129,7 @@ app.whenReady().then(async () => {
     profileHandler.registerHandlers()  // This will handle all profile-related IPC
     TaskHandler.getInstance().registerHandlers()  // Add this line
     setupNotificationHandlers()  // Add notification handlers
+    ThemeHandler.getInstance().registerHandlers()  // Add this line
 
     electronApp.setAppUserModelId('com.electron')
 
