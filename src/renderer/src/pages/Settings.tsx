@@ -25,7 +25,7 @@ const ProfileDetails = ({
   onProfileUpdate,
   onPictureChange,
 }: {
-  profile: { name: string; picture: string };
+  profile: { name: string; avatar: string };
   isUpdatingProfile: boolean;
   isUploadingPicture: boolean;
   onProfileUpdate: (name: string) => void;
@@ -53,11 +53,19 @@ const ProfileDetails = ({
               <div className="w-full h-full flex items-center justify-center bg-gray-50 dark:bg-gray-800">
                 <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
               </div>
-            ) : profile.picture ? (
+            ) : profile.avatar ? (
               <img 
-                src={profile.picture} 
+                key={profile.avatar}
+                src={profile.avatar} 
                 alt="Profile" 
                 className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                onError={(e) => {
+                  console.error('Failed to load image:', profile.avatar);
+                  e.currentTarget.onerror = null; // Prevent infinite loop
+                  e.currentTarget.src = ''; // Clear the source
+                  // Show fallback user icon
+                  e.currentTarget.parentElement?.classList.add('fallback-active');
+                }}
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center">
@@ -320,7 +328,7 @@ const Settings = () => {
   // Profile settings
   const [profile, setProfile] = useState({
     name: '',
-    picture: '',
+    avatar: '',
   });
 
   // Loading states
@@ -346,13 +354,24 @@ const Settings = () => {
     const loadProfile = async () => {
       try {
         const currentProfileId = await window.electron.ipcRenderer.invoke('get-current-profile');
+        console.log('Current profile ID:', currentProfileId);
+        
         if (currentProfileId) {
           const profileData = await window.electron.ipcRenderer.invoke('get-profile', currentProfileId);
+          console.log('Profile data received:', profileData);
+          
           const currentTheme = await window.electron.ipcRenderer.invoke('get-theme', currentProfileId);
           if (profileData) {
+            const avatarUrl = profileData.avatar ? 
+              (profileData.avatar.startsWith('file://') ? 
+                profileData.avatar : 
+                `file://${profileData.avatar.replace(/\\/g, '/')}`) : 
+              '';
+            console.log('Setting avatar URL:', avatarUrl);
+            
             setProfile({
               name: profileData.name || '',
-              picture: profileData.picture || '',
+              avatar: avatarUrl ? `${avatarUrl}?t=${Date.now()}` : '',
             });
             setTheme(currentTheme || 'system');
             
@@ -386,8 +405,22 @@ const Settings = () => {
     if (file) {
       try {
         setIsUploadingPicture(true);
-        const pictureData = await window.electron.ipcRenderer.invoke('upload-profile-picture', file.path);
-        setProfile(prev => ({ ...prev, picture: pictureData }));
+        
+        // Read file as data URL
+        const reader = new FileReader();
+        const pictureData = await new Promise<string>((resolve, reject) => {
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = () => reject(reader.error);
+          reader.readAsDataURL(file);
+        });
+        
+        // Upload the data URL
+        const uploadedPath = await window.electron.ipcRenderer.invoke('upload-profile-picture', pictureData);
+        // Convert local path to file:// URL if it's not already a file:// URL
+        const avatarUrl = uploadedPath.startsWith('file://') ? uploadedPath : `file://${uploadedPath.replace(/\\/g, '/')}`;
+        // Add cache-busting parameter
+        const avatarUrlWithTimestamp = `${avatarUrl}?t=${Date.now()}`;
+        setProfile(prev => ({ ...prev, avatar: avatarUrlWithTimestamp }));
         toast.success('Profile picture updated successfully');
       } catch (error) {
         toast.error('Failed to upload profile picture');

@@ -174,32 +174,6 @@ app.whenReady().then(async () => {
       }
     });
 
-    ipcMain.handle('get-profile', async (_, profileId: string) => {
-      if (!profileId) {
-        console.error('No profile ID provided to get-profile');
-        return null;
-      }
-      
-      try {
-        console.log('Main process: Getting profile with ID:', profileId);
-        
-        const dbService = DatabaseService.getInstance();
-        const profile = await dbService.profile.findByPk(profileId);
-        
-        if (!profile) {
-          console.warn('Profile not found in database for ID:', profileId);
-          return null;
-        }
-        
-        const profileData = profile.toJSON();
-        console.log('Profile data retrieved:', profileData);
-        return profileData;
-      } catch (error) {
-        console.error('Error fetching profile:', error);
-        throw error;
-      }
-    })
-
     // Log system theme changes
     nativeTheme.on('updated', () => {
       console.log('System theme updated:', nativeTheme.shouldUseDarkColors ? 'dark' : 'light')

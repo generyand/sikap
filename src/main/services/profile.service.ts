@@ -124,11 +124,16 @@ export class ProfileService {
 
   async getProfile(id: string): Promise<ProfileAttributes> {
     try {
-      const profile = await this.db.profile.findByPk(id);
+      const profile = await this.db.profile.findByPk(id, {
+        attributes: { exclude: ['password'] } // Don't send password to client
+      });
+      
       if (!profile) {
         throw new Error('Profile not found');
       }
-      return profile.get({ plain: true });
+
+      const profileData = profile.get({ plain: true });
+      return profileData;
     } catch (error) {
       console.error('Failed to get profile:', error);
       throw error;

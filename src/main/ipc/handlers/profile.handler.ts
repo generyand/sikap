@@ -3,6 +3,10 @@ import { ProfileService } from '../../services/profile.service'
 import { IProfileHandler } from '../types'
 import { DatabaseService } from '../../services/database.service'
 import { ThemeType } from '../../database/types'
+import { promises as fs } from 'fs'
+import path from 'path'
+import { app } from 'electron'
+import { store } from '../../store'
 
 export class ProfileHandler implements IProfileHandler {
   private static instance: ProfileHandler
@@ -109,28 +113,77 @@ export class ProfileHandler implements IProfileHandler {
       }
     })
 
-    this.handlersRegistered = true
-  }
-
-  async getProfile(profileId: string) {
-    try {
-      console.log('ProfileHandler: Getting profile with ID:', profileId);
-      
-      // Make sure you're using the correct model and method
-      const dbService = DatabaseService.getInstance();
-      const profile = await dbService.profile.findByPk(profileId);
-      
-      // Critical debugging
-      if (!profile) {
-        console.warn('Profile not found in database:', profileId);
-        return null;
+    // Get profile handler
+    ipcMain.handle('get-profile', async (_, profileId: string) => {
+      try {
+        const profile = await this.profileService.getProfile(profileId);
+        if (!profile) {
+          throw new Error('Profile not found');
+        }
+        
+        // Convert avatar path to file:// URL if it exists
+        if (profile.avatar) {
+          // Normalize path by replacing backslashes with forward slashes
+          const normalizedPath = profile.avatar.split('\\').join('/');
+          profile.avatar = `file:///${normalizedPath}`;
+        }
+        
+        return profile;
+      } catch (error) {
+        console.error('IPC get-profile error:', error);
+        throw error;
       }
-      
-      console.log('Profile found:', profile.toJSON());
-      return profile;
-    } catch (error) {
-      console.error('Error in ProfileHandler.getProfile:', error);
-      throw error;
-    }
+    });
+
+    // Upload profile picture handler
+    ipcMain.handle('upload-profile-picture', async (_, dataUrl: string) => {
+      try {
+        // Get the current profile ID from store
+        const currentProfileId = store.get('currentProfileId') as string
+        if (!currentProfileId) {
+          throw new Error('No profile is currently active')
+        }
+
+        // Convert data URL to buffer
+        const matches = dataUrl.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/)
+        if (!matches || matches.length !== 3) {
+          throw new Error('Invalid data URL')
+        }
+
+        const buffer = Buffer.from(matches[2], 'base64')
+        const mimeType = matches[1]
+        const ext = mimeType.split('/')[1]
+        
+        // Create uploads directory if it doesn't exist
+        const uploadsDir = path.join(app.getPath('userData'), 'uploads')
+        await fs.mkdir(uploadsDir, { recursive: true })
+        
+        // Generate unique filename
+        const filename = `${currentProfileId}-${Date.now()}.${ext}`
+        const savePath = path.join(uploadsDir, filename)
+        
+        // Save the file
+        await fs.writeFile(savePath, buffer)
+        
+        // Update profile with new picture path
+        const updatedProfile = await this.profileService.updateProfile(currentProfileId, {
+          avatar: savePath
+        })
+        
+        if (!updatedProfile.avatar) {
+          throw new Error('Failed to update profile avatar')
+        }
+
+        // Convert local path to file:// URL with proper path normalization
+        const normalizedPath = updatedProfile.avatar.split('\\').join('/');
+        const fileUrl = `file:///${normalizedPath}`;
+        return fileUrl
+      } catch (error) {
+        console.error('IPC upload-profile-picture error:', error)
+        throw error
+      }
+    })
+
+    this.handlersRegistered = true
   }
 } 
