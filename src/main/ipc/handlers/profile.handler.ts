@@ -1,7 +1,6 @@
 import { ipcMain } from 'electron'
 import { ProfileService } from '../../services/profile.service'
 import { IProfileHandler } from '../types'
-import { DatabaseService } from '../../services/database.service'
 import { ThemeType } from '../../database/types'
 import { promises as fs } from 'fs'
 import path from 'path'

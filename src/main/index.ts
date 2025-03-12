@@ -10,6 +10,7 @@ import { ProfileHandler } from './ipc/handlers/profile.handler'
 import { TaskHandler } from './ipc/handlers/task.handler'
 import { setupNotificationHandlers } from './ipc/notification.ipc'
 import { ThemeHandler } from './ipc/handlers/theme.handler'
+import { ExportHandler } from './ipc/handlers/export.handler'
 
 function createWindow(): void {
   // Create the browser window.
@@ -130,6 +131,7 @@ app.whenReady().then(async () => {
     TaskHandler.getInstance().registerHandlers()  // Add this line
     setupNotificationHandlers()  // Add notification handlers
     ThemeHandler.getInstance().registerHandlers()  // Add this line
+    ExportHandler.getInstance().registerHandlers()  // Add export handler
 
     electronApp.setAppUserModelId('com.electron')
 
