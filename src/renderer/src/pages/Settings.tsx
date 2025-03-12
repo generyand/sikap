@@ -9,7 +9,9 @@ import {
   Eye,
   EyeOff,
   Settings as SettingsIcon,
+  Loader2,
 } from 'lucide-react';
+import { toast } from 'sonner';
 import { Header } from '@/components/layout/Header'
 
 type ThemeType = 'light' | 'dark' | 'system';
@@ -39,6 +41,18 @@ const Settings = () => {
 
   // Confirmation dialog state
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+
+  // Loading states
+  const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [isUploadingPicture, setIsUploadingPicture] = useState(false);
+
+  // Error states
+  const [passwordErrors, setPasswordErrors] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  });
 
   // Load profile and theme data
   useEffect(() => {
@@ -84,42 +98,89 @@ const Settings = () => {
     const file = event.target.files?.[0];
     if (file) {
       try {
+        setIsUploadingPicture(true);
         const pictureData = await window.electron.ipcRenderer.invoke('upload-profile-picture', file.path);
         setProfile(prev => ({ ...prev, picture: pictureData }));
+        toast.success('Profile picture updated successfully');
       } catch (error) {
+        toast.error('Failed to upload profile picture');
         console.error('Failed to upload profile picture:', error);
+      } finally {
+        setIsUploadingPicture(false);
       }
     }
   };
 
   // Handle profile update
   const handleProfileUpdate = async () => {
+    if (!profile.name.trim()) {
+      toast.error('Name cannot be empty');
+      return;
+    }
+
     try {
+      setIsUpdatingProfile(true);
       const currentProfileId = await window.electron.ipcRenderer.invoke('get-current-profile');
       if (currentProfileId) {
         await window.electron.ipcRenderer.invoke('update-profile', currentProfileId, profile);
+        toast.success('Profile updated successfully');
       }
     } catch (error) {
+      toast.error('Failed to update profile');
       console.error('Failed to update profile:', error);
+    } finally {
+      setIsUpdatingProfile(false);
     }
+  };
+
+  // Validate password
+  const validatePassword = () => {
+    const errors = {
+      currentPassword: '',
+      newPassword: '',
+      confirmPassword: '',
+    };
+
+    if (!passwordData.currentPassword) {
+      errors.currentPassword = 'Current password is required';
+    }
+
+    if (!passwordData.newPassword) {
+      errors.newPassword = 'New password is required';
+    } else if (passwordData.newPassword.length < 8) {
+      errors.newPassword = 'Password must be at least 8 characters';
+    }
+
+    if (!passwordData.confirmPassword) {
+      errors.confirmPassword = 'Please confirm your new password';
+    } else if (passwordData.newPassword !== passwordData.confirmPassword) {
+      errors.confirmPassword = 'Passwords do not match';
+    }
+
+    setPasswordErrors(errors);
+    return !Object.values(errors).some(error => error);
   };
 
   // Handle password change
   const handlePasswordChange = async () => {
-    if (passwordData.newPassword !== passwordData.confirmPassword) {
-      // Handle password mismatch error
+    if (!validatePassword()) {
       return;
     }
+
     try {
+      setIsChangingPassword(true);
       await window.electron.ipcRenderer.invoke('change-password', passwordData);
-      // Clear password fields after successful change
       setPasswordData({
         currentPassword: '',
         newPassword: '',
         confirmPassword: '',
       });
+      toast.success('Password changed successfully');
     } catch (error) {
+      toast.error('Failed to change password');
       console.error('Failed to change password:', error);
+    } finally {
+      setIsChangingPassword(false);
     }
   };
 
@@ -237,28 +298,33 @@ const Settings = () => {
         <div className="container mx-auto max-w-3xl">
           {/* Profile Section */}
           <SettingsSection title="Profile" icon={<User className="w-5 h-5" />}>
-            <div className="p-4 space-y-6">
+            <div className="p-6 space-y-8">
               {/* Profile Picture */}
               <div className="flex flex-col items-center">
-                <div className="relative">
-                  <div className="w-24 h-24 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-700">
-                    {profile.picture ? (
+                <div className="relative group">
+                  <div className="w-32 h-32 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-700 ring-4 ring-white dark:ring-gray-800 shadow-lg">
+                    {isUploadingPicture ? (
+                      <div className="w-full h-full flex items-center justify-center bg-gray-50 dark:bg-gray-800">
+                        <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
+                      </div>
+                    ) : profile.picture ? (
                       <img 
                         src={profile.picture} 
                         alt="Profile" 
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-cover transition-transform group-hover:scale-105"
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center">
-                        <User className="w-12 h-12 text-gray-400 dark:text-gray-500" />
+                        <User className="w-16 h-16 text-gray-400 dark:text-gray-500" />
                       </div>
                     )}
                   </div>
                   <button
                     onClick={() => fileInputRef.current?.click()}
-                    className="absolute bottom-0 right-0 p-1.5 bg-blue-600 dark:bg-blue-500 rounded-full text-white hover:bg-blue-700 dark:hover:bg-blue-600"
+                    disabled={isUploadingPicture}
+                    className="absolute bottom-0 right-0 p-2 bg-blue-600 dark:bg-blue-500 rounded-full text-white hover:bg-blue-700 dark:hover:bg-blue-600 shadow-lg transform transition-transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <Camera className="w-4 h-4" />
+                    <Camera className="w-5 h-5" />
                   </button>
                   <input
                     ref={fileInputRef}
@@ -268,29 +334,51 @@ const Settings = () => {
                     className="hidden"
                   />
                 </div>
+                <p className="mt-4 text-sm text-gray-500 dark:text-gray-400">
+                  Click the camera icon to update your profile picture
+                </p>
               </div>
 
               {/* Name Field */}
-              <div>
-                <label htmlFor="name" className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">
-                  Name
+              <div className="space-y-2">
+                <label htmlFor="name" className="block text-sm font-medium text-gray-900 dark:text-gray-100">
+                  Display Name
                 </label>
-                <input
-                  id="name"
-                  type="text"
-                  value={profile.name}
-                  onChange={(e) => setProfile(prev => ({ ...prev, name: e.target.value }))}
-                  className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 shadow-sm px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400"
-                />
+                <div className="relative">
+                  <input
+                    id="name"
+                    type="text"
+                    value={profile.name}
+                    onChange={(e) => setProfile(prev => ({ ...prev, name: e.target.value }))}
+                    className="block w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 shadow-sm px-4 py-2.5 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-colors"
+                    placeholder="Enter your display name"
+                  />
+                </div>
+                <button
+                  onClick={handleProfileUpdate}
+                  disabled={isUpdatingProfile}
+                  className="mt-4 w-full flex items-center justify-center px-4 py-2.5 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isUpdatingProfile ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    'Save Profile'
+                  )}
+                </button>
               </div>
 
               {/* Password Change Fields */}
-              <div className="space-y-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                <h3 className="text-sm font-medium text-gray-900 dark:text-white">Change Password</h3>
+              <div className="space-y-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-medium text-gray-900 dark:text-white">Change Password</h3>
+                </div>
                 
                 {/* Current Password */}
-                <div className="relative">
-                  <label htmlFor="currentPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <div className="space-y-2">
+                  <label htmlFor="currentPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                     Current Password
                   </label>
                   <div className="relative">
@@ -299,7 +387,12 @@ const Settings = () => {
                       type={showCurrentPassword ? "text" : "password"}
                       value={passwordData.currentPassword}
                       onChange={(e) => setPasswordData(prev => ({ ...prev, currentPassword: e.target.value }))}
-                      className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 shadow-sm px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 pr-10"
+                      className={`block w-full rounded-lg border ${
+                        passwordErrors.currentPassword 
+                          ? 'border-red-300 dark:border-red-500 focus:ring-red-500 focus:border-red-500' 
+                          : 'border-gray-300 dark:border-gray-600 focus:ring-blue-500 focus:border-blue-500'
+                      } bg-white dark:bg-gray-700 shadow-sm px-4 py-2.5 text-gray-900 dark:text-white focus:outline-none focus:ring-2 dark:focus:ring-offset-gray-900 transition-colors pr-10`}
+                      placeholder="Enter your current password"
                     />
                     <button
                       type="button"
@@ -307,17 +400,20 @@ const Settings = () => {
                       className="absolute inset-y-0 right-0 px-3 flex items-center"
                     >
                       {showCurrentPassword ? (
-                        <EyeOff className="w-4 h-4 text-gray-400 dark:text-gray-500" />
+                        <EyeOff className="w-5 h-5 text-gray-400 dark:text-gray-500" />
                       ) : (
-                        <Eye className="w-4 h-4 text-gray-400 dark:text-gray-500" />
+                        <Eye className="w-5 h-5 text-gray-400 dark:text-gray-500" />
                       )}
                     </button>
                   </div>
+                  {passwordErrors.currentPassword && (
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">{passwordErrors.currentPassword}</p>
+                  )}
                 </div>
 
                 {/* New Password */}
-                <div className="relative">
-                  <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <div className="space-y-2">
+                  <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                     New Password
                   </label>
                   <div className="relative">
@@ -326,7 +422,12 @@ const Settings = () => {
                       type={showNewPassword ? "text" : "password"}
                       value={passwordData.newPassword}
                       onChange={(e) => setPasswordData(prev => ({ ...prev, newPassword: e.target.value }))}
-                      className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 shadow-sm px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 pr-10"
+                      className={`block w-full rounded-lg border ${
+                        passwordErrors.newPassword 
+                          ? 'border-red-300 dark:border-red-500 focus:ring-red-500 focus:border-red-500' 
+                          : 'border-gray-300 dark:border-gray-600 focus:ring-blue-500 focus:border-blue-500'
+                      } bg-white dark:bg-gray-700 shadow-sm px-4 py-2.5 text-gray-900 dark:text-white focus:outline-none focus:ring-2 dark:focus:ring-offset-gray-900 transition-colors pr-10`}
+                      placeholder="Enter your new password"
                     />
                     <button
                       type="button"
@@ -334,17 +435,20 @@ const Settings = () => {
                       className="absolute inset-y-0 right-0 px-3 flex items-center"
                     >
                       {showNewPassword ? (
-                        <EyeOff className="w-4 h-4 text-gray-400 dark:text-gray-500" />
+                        <EyeOff className="w-5 h-5 text-gray-400 dark:text-gray-500" />
                       ) : (
-                        <Eye className="w-4 h-4 text-gray-400 dark:text-gray-500" />
+                        <Eye className="w-5 h-5 text-gray-400 dark:text-gray-500" />
                       )}
                     </button>
                   </div>
+                  {passwordErrors.newPassword && (
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">{passwordErrors.newPassword}</p>
+                  )}
                 </div>
 
                 {/* Confirm New Password */}
-                <div className="relative">
-                  <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <div className="space-y-2">
+                  <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                     Confirm New Password
                   </label>
                   <div className="relative">
@@ -353,7 +457,12 @@ const Settings = () => {
                       type={showConfirmPassword ? "text" : "password"}
                       value={passwordData.confirmPassword}
                       onChange={(e) => setPasswordData(prev => ({ ...prev, confirmPassword: e.target.value }))}
-                      className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 shadow-sm px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 pr-10"
+                      className={`block w-full rounded-lg border ${
+                        passwordErrors.confirmPassword 
+                          ? 'border-red-300 dark:border-red-500 focus:ring-red-500 focus:border-red-500' 
+                          : 'border-gray-300 dark:border-gray-600 focus:ring-blue-500 focus:border-blue-500'
+                      } bg-white dark:bg-gray-700 shadow-sm px-4 py-2.5 text-gray-900 dark:text-white focus:outline-none focus:ring-2 dark:focus:ring-offset-gray-900 transition-colors pr-10`}
+                      placeholder="Confirm your new password"
                     />
                     <button
                       type="button"
@@ -361,29 +470,31 @@ const Settings = () => {
                       className="absolute inset-y-0 right-0 px-3 flex items-center"
                     >
                       {showConfirmPassword ? (
-                        <EyeOff className="w-4 h-4 text-gray-400 dark:text-gray-500" />
+                        <EyeOff className="w-5 h-5 text-gray-400 dark:text-gray-500" />
                       ) : (
-                        <Eye className="w-4 h-4 text-gray-400 dark:text-gray-500" />
+                        <Eye className="w-5 h-5 text-gray-400 dark:text-gray-500" />
                       )}
                     </button>
                   </div>
+                  {passwordErrors.confirmPassword && (
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">{passwordErrors.confirmPassword}</p>
+                  )}
                 </div>
 
-                {/* Save Buttons */}
-                <div className="flex gap-3 pt-4">
-                  <button
-                    onClick={handleProfileUpdate}
-                    className="flex-1 px-4 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-md hover:bg-blue-700 dark:hover:bg-blue-600 text-sm font-medium transition-colors"
-                  >
-                    Save Profile
-                  </button>
-                  <button
-                    onClick={handlePasswordChange}
-                    className="flex-1 px-4 py-2 bg-blue-50 dark:bg-blue-900 text-blue-600 dark:text-blue-300 rounded-md hover:bg-blue-100 dark:hover:bg-blue-800 text-sm font-medium transition-colors"
-                  >
-                    Change Password
-                  </button>
-                </div>
+                <button
+                  onClick={handlePasswordChange}
+                  disabled={isChangingPassword}
+                  className="w-full flex items-center justify-center px-4 py-2.5 bg-blue-50 dark:bg-blue-900 text-blue-600 dark:text-blue-300 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isChangingPassword ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Changing Password...
+                    </>
+                  ) : (
+                    'Change Password'
+                  )}
+                </button>
               </div>
             </div>
           </SettingsSection>
