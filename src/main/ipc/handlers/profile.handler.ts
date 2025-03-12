@@ -2,6 +2,7 @@ import { ipcMain } from 'electron'
 import { ProfileService } from '../../services/profile.service'
 import { IProfileHandler } from '../types'
 import { DatabaseService } from '../../services/database.service'
+import { ThemeType } from '../../database/types'
 
 export class ProfileHandler implements IProfileHandler {
   private static instance: ProfileHandler
@@ -39,7 +40,7 @@ export class ProfileHandler implements IProfileHandler {
       name: string; 
       password: string;
       avatar?: string; 
-      theme?: string 
+      theme?: ThemeType 
     }) => {
       try {
         if (!profileData.password || profileData.password.length < 8) {
@@ -48,7 +49,10 @@ export class ProfileHandler implements IProfileHandler {
         return await this.profileService.createProfile(profileData)
       } catch (error) {
         console.error('IPC create-profile error:', error)
-        throw error
+        if (error instanceof Error) {
+          throw new Error(error.message)
+        }
+        throw new Error('Failed to create profile')
       }
     })
 
@@ -83,6 +87,25 @@ export class ProfileHandler implements IProfileHandler {
       } catch (error) {
         console.error('IPC delete-profile error:', error)
         throw error
+      }
+    })
+
+    // Change password handler
+    ipcMain.handle('change-password', async (_, { profileId, currentPassword, newPassword }) => {
+      try {
+        // First verify the current password
+        await this.profileService.verifyPassword(profileId, currentPassword)
+
+        // Update with new password
+        await this.profileService.updateProfile(profileId, { password: newPassword })
+        return true
+      } catch (error) {
+        console.error('IPC change-password error:', error)
+        // Propagate the error message to the frontend
+        if (error instanceof Error) {
+          throw new Error(error.message)
+        }
+        throw new Error('Failed to change password')
       }
     })
 

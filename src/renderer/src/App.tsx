@@ -6,6 +6,7 @@ import { Sidebar } from './components/navigation/Sidebar'
 import { QueryProvider } from './providers/QueryProvider'
 import { ProfileProvider } from './providers/ProfileProvider'
 import { ThemeProvider } from './providers/ThemeProvider'
+import { Toaster } from 'sonner'
 import  TaskDashboard  from './pages/TaskDashboard'
 import { Tasks } from './pages/Tasks'
 import  Calendar from './pages/Calendar'
@@ -101,6 +102,7 @@ const App: React.FC = () => {
         <HashRouter>
           <ProfileProvider>
             <ThemeProvider defaultTheme="system">
+              <Toaster richColors position="top-right" expand={true} />
               <AppContent />
             </ThemeProvider>
           </ProfileProvider>

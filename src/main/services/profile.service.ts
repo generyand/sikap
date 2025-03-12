@@ -1,5 +1,5 @@
 import { DatabaseService } from './database.service'
-import { ProfileAttributes } from '../database/types'
+import { ProfileAttributes, ThemeType } from '../database/types'
 import bcrypt from 'bcrypt'
 
 const SALT_ROUNDS = 10
@@ -37,7 +37,7 @@ export class ProfileService {
     name: string; 
     password: string;
     avatar?: string; 
-    theme?: string 
+    theme?: ThemeType 
   }): Promise<Omit<ProfileAttributes, 'password'>> {
     try {
       const hashedPassword = await bcrypt.hash(data.password, SALT_ROUNDS)
@@ -45,7 +45,7 @@ export class ProfileService {
         name: data.name,
         password: hashedPassword,
         avatar: data.avatar || null,
-        theme: data.theme || 'light'
+        theme: (data.theme || 'light') as ThemeType
       })
       
       // Return profile without password
@@ -59,20 +59,30 @@ export class ProfileService {
 
   async updateProfile(id: string, data: Partial<ProfileAttributes>): Promise<Omit<ProfileAttributes, 'password'>> {
     try {
-      // If password is being updated, hash it
+      // Verify profile exists
+      const existingProfile = await this.db.profile.findByPk(id)
+      if (!existingProfile) {
+        throw new Error(`Profile with ID ${id} not found`)
+      }
+
+      // If password is being updated, validate and hash it
       if (data.password) {
+        if (data.password.length < 8) {
+          throw new Error('New password must be at least 8 characters long')
+        }
         data.password = await bcrypt.hash(data.password, SALT_ROUNDS)
       }
 
+      // Update profile
       await this.db.profile.update(data, {
         where: { id }
       })
       
       const updatedProfile = await this.db.profile.findByPk(id, {
-        attributes: { exclude: ['password'] } // Don't send password back
+        attributes: { exclude: ['password'] }
       })
       if (!updatedProfile) {
-        throw new Error(`Profile with ID ${id} not found`)
+        throw new Error('Failed to retrieve updated profile')
       }
       
       return updatedProfile.get({ plain: true })
@@ -86,9 +96,13 @@ export class ProfileService {
     try {
       const profile = await this.db.profile.findByPk(id)
       if (!profile) {
-        return false
+        throw new Error('Profile not found')
       }
-      return await bcrypt.compare(password, profile.get('password') as string)
+      const isValid = await bcrypt.compare(password, profile.get('password') as string)
+      if (!isValid) {
+        throw new Error('Current password is incorrect')
+      }
+      return true
     } catch (error) {
       console.error('Failed to verify password:', error)
       throw error
