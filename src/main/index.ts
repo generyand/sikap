@@ -11,6 +11,7 @@ import { TaskHandler } from './ipc/handlers/task.handler'
 import { setupNotificationHandlers } from './ipc/notification.ipc'
 import { ThemeHandler } from './ipc/handlers/theme.handler'
 import { ExportHandler } from './ipc/handlers/export.handler'
+import seedDatabase from './database/seeder'
 
 function createWindow(): void {
   // Create the browser window.
@@ -101,7 +102,11 @@ async function initialize() {
     // Add this line to call the initialization function
     await initializeDatabase();
     
-    console.log('✅ Database initialized successfully');
+    // Run the seeder
+    console.log('Running database seeder...');
+    await seedDatabase();
+    
+    console.log('✅ Database initialized and seeded successfully');
     return true;
   } catch (error) {
     console.error('❌ Database initialization failed:', error);
