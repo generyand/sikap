@@ -144,6 +144,9 @@ const seedDatabase = async () => {
       const isCompleted = Math.random() > 0.5;
       const completedAt = isCompleted ? generateRandomDate(taskStartDate, taskDueDate) : null;
 
+      // Generate a random creation date
+      const createdAt = generateRandomDate(startDate, taskStartDate);
+
       tasks.push({
         title: taskTitles[i],
         description: taskDescriptions[i],
@@ -155,7 +158,8 @@ const seedDatabase = async () => {
         category: categories[Math.floor(Math.random() * categories.length)],
         recurrence: Math.random() > 0.7 ? recurrencePatterns[Math.floor(Math.random() * recurrencePatterns.length)] : null,
         notes: `Additional notes for ${taskTitles[i]}`,
-        completedAt
+        completedAt,
+        createdAt
       });
     }
 

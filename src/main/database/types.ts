@@ -65,4 +65,4 @@ export interface TaskAttributes {
   updatedAt?: Date;
 }
 
-export interface TaskCreationAttributes extends Omit<TaskAttributes, 'id' | 'createdAt' | 'updatedAt'> {} 
+export interface TaskCreationAttributes extends Omit<TaskAttributes, 'id'  | 'updatedAt'> {} 
