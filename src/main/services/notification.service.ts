@@ -195,4 +195,71 @@ export class NotificationService {
       throw error;
     }
   }
+
+  // Remove notifications for a task
+  async removeTaskNotifications(taskId: string, types?: NotificationType[]) {
+    try {
+      const whereClause: any = { taskId };
+      if (types && types.length > 0) {
+        whereClause.type = types;
+      }
+      
+      await this.db.notification.destroy({
+        where: whereClause
+      });
+    } catch (error) {
+      console.error('Error removing task notifications:', error);
+      throw error;
+    }
+  }
+
+  // Handle notifications for task updates
+  async handleTaskUpdate(oldTask: TaskAttributes, newTask: TaskAttributes) {
+    try {
+      // Handle status change to completed
+      if (newTask.status === TaskStatus.COMPLETED) {
+        // Remove all pending notifications for completed tasks
+        await this.removeTaskNotifications(newTask.id);
+        return;
+      }
+
+      // Handle due date changes
+      if (oldTask.dueDate !== newTask.dueDate) {
+        // Remove existing due date related notifications
+        await this.removeTaskNotifications(newTask.id, [
+          NotificationType.TASK_DUE_SOON,
+          NotificationType.TASK_OVERDUE
+        ]);
+
+        // Create new notifications if there's a due date
+        if (newTask.dueDate) {
+          const hoursUntilDue = differenceInHours(new Date(newTask.dueDate), new Date());
+          
+          // Create due soon notification if within 24 hours
+          if (hoursUntilDue <= 24 && hoursUntilDue > 0) {
+            await this.createDueSoonNotification(newTask);
+          }
+          
+          // Create overdue notification if past due
+          if (hoursUntilDue < 0 && (newTask.status === TaskStatus.TODO || newTask.status === TaskStatus.IN_PROGRESS)) {
+            await this.createOverdueNotification(newTask);
+          }
+        }
+      }
+
+      // Handle recurrence changes
+      if (oldTask.recurrence !== newTask.recurrence) {
+        // Remove existing recurring notifications
+        await this.removeTaskNotifications(newTask.id, [NotificationType.RECURRING_TASK]);
+        
+        // Create new recurring notification if recurrence is set
+        if (newTask.recurrence) {
+          await this.createRecurringTaskNotification(newTask);
+        }
+      }
+    } catch (error) {
+      console.error('Error handling task update notifications:', error);
+      throw error;
+    }
+  }
 } 

@@ -172,6 +172,13 @@ export class TaskService {
         throw new Error('Task ID is required for update');
       }
       
+      // Get the original task before update
+      const originalTask = await this.db.task.findByPk(id);
+      if (!originalTask) {
+        throw new Error(`Task with ID ${id} not found`);
+      }
+      const originalTaskData = originalTask.get({ plain: true });
+      
       // Handle completedAt based on status
       let completedAt = updateData.completedAt;
       if (updateData.status === TaskStatus.COMPLETED && !completedAt) {
@@ -200,18 +207,8 @@ export class TaskService {
 
       const plainTask = updatedTask.get({ plain: true });
 
-      // Handle notifications based on task updates
-      if (updateData.dueDate) {
-        await this.notificationService.createDueSoonNotification(plainTask);
-      }
-
-      if (!completedAt && plainTask.dueDate && new Date() > new Date(plainTask.dueDate)) {
-        await this.notificationService.createOverdueNotification(plainTask);
-      }
-
-      if (updateData.recurrence) {
-        await this.notificationService.createRecurringTaskNotification(plainTask);
-      }
+      // Handle notifications using the new approach
+      await this.notificationService.handleTaskUpdate(originalTaskData, plainTask);
       
       return plainTask;
     } catch (error) {
