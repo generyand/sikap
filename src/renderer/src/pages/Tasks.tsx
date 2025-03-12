@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useProfile } from '../providers/ProfileProvider'
 import { fetchTasks, createTask, updateTask, deleteTask } from '../services/taskService'
-import { useSearchParams, useNavigate } from 'react-router-dom'
+import { useSearchParams } from 'react-router-dom'
 import { 
   Plus, Search, List, LayoutGrid,
   Focus, CheckSquare
@@ -53,7 +53,6 @@ export const Tasks = () => {
   const { profileId } = useProfile()
   const queryClient = useQueryClient()
   const [searchParams, setSearchParams] = useSearchParams();
-  const navigate = useNavigate();
   const [isAddTaskOpen, setIsAddTaskOpen] = useState(false)
   const [newTask, setNewTask] = useState<NewTask>({
     title: '',
