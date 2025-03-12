@@ -1,9 +1,11 @@
 import { useState } from 'react';
-import { Bell, Check, Filter } from 'lucide-react';
+import { Bell, Check, CheckCircle2, Filter } from 'lucide-react';
 import { format, isToday, isYesterday } from 'date-fns';
 import { Header } from '@/components/layout/Header';
 import { useNotifications } from '@/hooks/useNotifications';
 import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
+import { cn } from '@/lib/utils';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,8 +15,13 @@ import {
 
 const Notifications = () => {
   const { notifications, unreadCount, markAsRead } = useNotifications();
-  const [filter, setFilter] = useState<'all' | 'unread'>('unread');
+  const [filter, setFilter] = useState<'all' | 'unread'>('all');
+  const navigate = useNavigate();
   
+  const filteredNotifications = notifications.filter(notification => 
+    filter === 'all' || !notification.read
+  );
+
   const formatTimestamp = (timestamp: string) => {
     const date = new Date(timestamp);
     if (isToday(date)) {
@@ -65,7 +72,7 @@ const Notifications = () => {
       <div className="flex-1 p-6">
         <div className="max-w-4xl mx-auto">
           <div className="bg-card rounded-lg border shadow-sm">
-            {notifications.length === 0 ? (
+            {filteredNotifications.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
                 <div className="bg-muted p-4 rounded-full inline-block mb-4">
                   <Bell className="w-8 h-8 text-muted-foreground" />
@@ -76,7 +83,7 @@ const Notifications = () => {
                     ? "You don't have any unread notifications at the moment." 
                     : "You're all caught up! No notifications to display."}
                 </p>
-                {filter === 'unread' && (
+                {filter === 'unread' && notifications.length > 0 && (
                   <Button 
                     variant="link" 
                     onClick={() => setFilter('all')}
@@ -88,10 +95,21 @@ const Notifications = () => {
               </div>
             ) : (
               <ul className="divide-y divide-border">
-                {notifications.map((notification) => (
+                {filteredNotifications.map((notification) => (
                   <li 
                     key={notification.id} 
-                    className="p-4 hover:bg-accent/50 transition-colors"
+                    className={cn(
+                      "p-4 transition-colors cursor-pointer",
+                      notification.read 
+                        ? "hover:bg-accent/50" 
+                        : "bg-accent/30 hover:bg-accent/40"
+                    )}
+                    onClick={() => {
+                      if (notification.task) {
+                        markAsRead(notification.id);
+                        navigate(`/tasks?taskId=${notification.task.id}`);
+                      }
+                    }}
                   >
                     <div className="flex items-start gap-4">
                       <div className="flex-shrink-0">
@@ -99,15 +117,26 @@ const Notifications = () => {
                       </div>
                       
                       <div className="flex-1 min-w-0">
-                        <div className="flex justify-between">
-                          <h3 className="text-sm font-medium">
+                        <div className="flex justify-between items-start">
+                          <h3 className={cn(
+                            "text-sm",
+                            notification.read ? "font-medium" : "font-semibold"
+                          )}>
                             {notification.title}
+                            {!notification.read && (
+                              <span className="ml-2 inline-block px-1.5 py-0.5 text-[10px] font-medium bg-primary/10 text-primary rounded-full">
+                                New
+                              </span>
+                            )}
                           </h3>
                           <span className="text-xs text-muted-foreground">
                             {formatTimestamp(notification.scheduledFor)}
                           </span>
                         </div>
-                        <p className="mt-1 text-sm text-muted-foreground line-clamp-2">
+                        <p className={cn(
+                          "mt-1 text-sm",
+                          notification.read ? "text-muted-foreground" : "text-foreground"
+                        )}>
                           {notification.message}
                         </p>
                         
@@ -115,9 +144,10 @@ const Notifications = () => {
                           <Button 
                             variant="link" 
                             className="mt-2 h-auto p-0"
-                            onClick={() => {
+                            onClick={(e) => {
+                              e.stopPropagation();
                               markAsRead(notification.id);
-                              // Navigate to task - implement this based on your routing
+                              navigate(`/tasks?taskId=${notification.task?.id}`);
                             }}
                           >
                             View task
@@ -128,10 +158,22 @@ const Notifications = () => {
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="flex-shrink-0"
-                        onClick={() => markAsRead(notification.id)}
+                        className={cn(
+                          "flex-shrink-0",
+                          notification.read && "text-muted-foreground"
+                        )}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (!notification.read) {
+                            markAsRead(notification.id);
+                          }
+                        }}
                       >
-                        <Check className="h-4 w-4" />
+                        {notification.read ? (
+                          <CheckCircle2 className="h-4 w-4" />
+                        ) : (
+                          <Check className="h-4 w-4" />
+                        )}
                       </Button>
                     </div>
                   </li>

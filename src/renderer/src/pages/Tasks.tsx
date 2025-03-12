@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useProfile } from '../providers/ProfileProvider'
 import { fetchTasks, createTask, updateTask, deleteTask } from '../services/taskService'
+import { useSearchParams, useNavigate } from 'react-router-dom'
 import { 
   Plus, Search, List, LayoutGrid,
   Focus, CheckSquare
@@ -15,7 +16,7 @@ import {
   ToggleGroupItem 
 } from '@/components/ui/toggle-group'
 import { cn } from '@/lib/utils'
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 
 import { Task, TaskPriority, TaskStatus } from '@/types'
 import React from 'react'
@@ -51,6 +52,8 @@ import { Header } from '@/components/layout/Header'
 export const Tasks = () => {
   const { profileId } = useProfile()
   const queryClient = useQueryClient()
+  const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
   const [isAddTaskOpen, setIsAddTaskOpen] = useState(false)
   const [newTask, setNewTask] = useState<NewTask>({
     title: '',
@@ -79,6 +82,19 @@ export const Tasks = () => {
     queryFn: () => fetchTasks(profileId),
     enabled: !!profileId
   })
+
+  // Add effect to handle task ID from URL
+  useEffect(() => {
+    const taskId = searchParams.get('taskId');
+    if (taskId && tasks) {
+      const task = tasks.find(t => t.id === taskId);
+      if (task) {
+        setSelectedTask(task);
+        // Remove taskId from URL after opening the sheet
+        setSearchParams({});
+      }
+    }
+  }, [searchParams, tasks]);
 
   const groupedTasks = React.useMemo(() => {
     if (!tasks) return { today: [], tomorrow: [], upcoming: [] }
@@ -311,6 +327,17 @@ export const Tasks = () => {
     </div>
   )
 
+  // Modify the sheet close handler to update URL
+  const handleSheetClose = () => {
+    setSelectedTask(null);
+    setEditTask(null);
+    setIsEditing(false);
+    // Clear taskId from URL if it exists
+    if (searchParams.has('taskId')) {
+      setSearchParams({});
+    }
+  };
+
   if (isLoading) return <div>Loading...</div>
 
   return (
@@ -462,9 +489,7 @@ export const Tasks = () => {
 
       <Sheet open={!!selectedTask} onOpenChange={(open) => {
         if (!open) {
-          setSelectedTask(null)
-          setEditTask(null)
-          setIsEditing(false)
+          handleSheetClose();
         }
       }}>
         <TaskDetail
@@ -477,7 +502,7 @@ export const Tasks = () => {
           onDelete={handleDeleteTask}
           onStatusChange={handleStatusChange}
           onEditTaskChange={handleEditTaskChange}
-          onClose={() => setSelectedTask(null)}
+          onClose={handleSheetClose}
         />
       </Sheet>
 

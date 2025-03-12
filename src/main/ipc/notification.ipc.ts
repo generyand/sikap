@@ -7,10 +7,21 @@ export function setupNotificationHandlers() {
   // Start the notification checker when the app starts
   notificationService.startNotificationChecker();
 
-  // Get all unread notifications
-  ipcMain.handle('get-unread-notifications', async () => {
+  // Get all notifications
+  ipcMain.handle('get-all-notifications', async (_, profileId: string) => {
     try {
-      const notifications = await notificationService.getUnreadNotifications();
+      const notifications = await notificationService.getAllNotifications(profileId);
+      return notifications;
+    } catch (error) {
+      console.error('Error fetching all notifications:', error);
+      throw error;
+    }
+  });
+
+  // Get all unread notifications
+  ipcMain.handle('get-unread-notifications', async (_, profileId: string) => {
+    try {
+      const notifications = await notificationService.getUnreadNotifications(profileId);
       return notifications;
     } catch (error) {
       console.error('Error fetching unread notifications:', error);

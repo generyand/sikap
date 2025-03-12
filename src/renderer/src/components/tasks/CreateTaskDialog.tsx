@@ -69,7 +69,7 @@ export const CreateTaskDialog = React.memo(({
                 <Input
                   id="startDate"
                   type="datetime-local"
-                  value={newTask.startDate ? new Date(newTask.startDate).toISOString().slice(0, 16) : ''}
+                  value={newTask.startDate ? new Date(newTask.startDate).toLocaleString('sv-SE', { dateStyle: 'short', timeStyle: 'short' }).replace(',', '').replace(' ', 'T') : ''}
                   onChange={(e) => {
                     const date = e.target.value ? new Date(e.target.value) : null
                     onChange({ startDate: date })
@@ -82,7 +82,7 @@ export const CreateTaskDialog = React.memo(({
                 <Input
                   id="dueDate"
                   type="datetime-local"
-                  value={newTask.dueDate ? new Date(newTask.dueDate).toISOString().slice(0, 16) : ''}
+                  value={newTask.dueDate ? new Date(newTask.dueDate).toLocaleString('sv-SE', { dateStyle: 'short', timeStyle: 'short' }).replace(',', '').replace(' ', 'T') : ''}
                   onChange={(e) => {
                     const date = e.target.value ? new Date(e.target.value) : null
                     onChange({ dueDate: date })

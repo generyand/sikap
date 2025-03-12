@@ -1,6 +1,6 @@
 import { DatabaseService } from './database.service';
 import { NotificationType } from '../database/models/notification.model';
-  import { TaskAttributes, TaskStatus, NotificationAttributes } from '../../shared/types';
+import { TaskAttributes, TaskStatus, NotificationAttributes } from '../../shared/types';
 import { differenceInHours, isAfter } from 'date-fns';
 import { Op } from 'sequelize';
 
@@ -145,10 +145,13 @@ export class NotificationService {
   }
 
   // Get all unread notifications
-  async getUnreadNotifications(): Promise<NotificationAttributes[]> {
+  async getUnreadNotifications(profileId: string): Promise<NotificationAttributes[]> {
     try {
       const notifications = await this.db.notification.findAll({
-        where: { read: false },
+        where: { 
+          read: false,
+          profileId 
+        },
         include: [{
           model: this.db.task,
           as: 'task'
@@ -158,6 +161,24 @@ export class NotificationService {
       return notifications.map(n => n.get({ plain: true }));
     } catch (error) {
       console.error('Error fetching unread notifications:', error);
+      throw error;
+    }
+  }
+
+  // Get all notifications
+  async getAllNotifications(profileId: string): Promise<NotificationAttributes[]> {
+    try {
+      const notifications = await this.db.notification.findAll({
+        where: { profileId },
+        include: [{
+          model: this.db.task,
+          as: 'task'
+        }],
+        order: [['scheduledFor', 'DESC']]
+      });
+      return notifications.map(n => n.get({ plain: true }));
+    } catch (error) {
+      console.error('Error fetching all notifications:', error);
       throw error;
     }
   }
