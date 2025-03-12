@@ -8,6 +8,7 @@ import {
 } from '../../shared/types';
 import { RecurrencePattern } from '../database/types';
 import { Op } from 'sequelize';
+import Task from '../database/models/task.model'
 
 interface CreateTaskData {
   title: string;
@@ -248,6 +249,19 @@ export class TaskService {
     } catch (error) {
       console.error('Error adding task reminder:', error);
       throw error;
+    }
+  }
+
+  async resetTasksForProfile(profileId: string): Promise<void> {
+    try {
+      await Task.destroy({
+        where: {
+          profileId: profileId
+        }
+      });
+    } catch (error) {
+      console.error('Error resetting tasks:', error);
+      throw new Error('Failed to reset tasks');
     }
   }
 } 

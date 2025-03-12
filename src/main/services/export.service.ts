@@ -1,4 +1,4 @@
-import { app, dialog } from 'electron'
+import { app } from 'electron'
 import { promises as fs } from 'fs'
 import path from 'path'
 import { ProfileService } from './profile.service'

@@ -48,6 +48,17 @@ export class TaskHandler implements ITaskHandler {
       return await this.taskService.getDashboardData(profileId, timeframe)
     })
 
+    // Reset tasks for a profile
+    ipcMain.handle('reset-profile-tasks', async (_, profileId: string) => {
+      try {
+        await this.taskService.resetTasksForProfile(profileId);
+        return true;
+      } catch (error) {
+        console.error('Failed to reset tasks:', error);
+        throw error;
+      }
+    });
+
     this.handlersRegistered = true
   }
 } 

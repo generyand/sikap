@@ -557,12 +557,20 @@ const Settings = () => {
   // Handle data reset
   const handleResetData = async () => {
     try {
-      await window.electron.ipcRenderer.invoke('reset-all-data');
+      const currentProfileId = await window.electron.ipcRenderer.invoke('get-current-profile');
+      if (!currentProfileId) {
+        toast.error('No active profile found');
+        return;
+      }
+
+      await window.electron.ipcRenderer.invoke('reset-profile-tasks', currentProfileId);
       setShowConfirmDialog(false);
-      // Optionally refresh the page or show success message
+      toast.success('Tasks have been reset successfully');
+      // Optionally refresh the page or update the UI
       window.location.reload();
     } catch (error) {
-      console.error('Failed to reset data:', error);
+      console.error('Failed to reset tasks:', error);
+      toast.error('Failed to reset tasks');
     }
   };
 
@@ -622,10 +630,10 @@ const Settings = () => {
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
         <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
-          Reset All Data
+          Reset Tasks
         </h3>
         <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
-          Are you sure you want to reset all data? This action cannot be undone and will permanently delete all your tasks, profiles, and settings.
+          Are you sure you want to reset all your tasks? This action cannot be undone and will permanently delete all your tasks. Your profile and settings will remain unchanged.
         </p>
         <div className="flex justify-end gap-3">
           <button
@@ -638,7 +646,7 @@ const Settings = () => {
             onClick={handleResetData}
             className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-800 rounded-md"
           >
-            Reset All Data
+            Reset Tasks
           </button>
         </div>
       </div>
@@ -730,10 +738,10 @@ const Settings = () => {
                   className="w-full px-4 py-2 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-md hover:bg-red-100 dark:hover:bg-red-900/50 text-sm font-medium transition-colors flex items-center justify-center gap-2"
                 >
                   <Trash2 className="w-4 h-4" />
-                  Reset All Data
+                  Reset Tasks
                 </button>
                 <p className="mt-2 text-xs text-red-500 dark:text-red-400">
-                  Warning: This will permanently delete all your data
+                  Warning: This will permanently delete all your tasks
                 </p>
               </div>
             </div>
